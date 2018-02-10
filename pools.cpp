@@ -254,8 +254,6 @@ bool pool_switch(int thr_id, int pooln)
 			// temporary... until stratum code cleanup
 			stratum = p->stratum;
 			stratum.pooln = cur_pooln;
-			stratum.rpc2 = (p->algo == ALGO_WILDKECCAK || p->algo == ALGO_CRYPTONIGHT);
-			stratum.rpc2 |= p->algo == ALGO_CRYPTOLIGHT;
 
 			// unlock the stratum thread
 			tq_push(thr_info[stratum_thr_id].q, strdup(rpc_url));
@@ -277,9 +275,6 @@ bool pool_switch(int thr_id, int pooln)
 		}
 
 	}
-
-	stratum.rpc2 = (p->algo == ALGO_WILDKECCAK || p->algo == ALGO_CRYPTONIGHT);
-	stratum.rpc2 |= p->algo == ALGO_CRYPTOLIGHT;
 
 	return true;
 }

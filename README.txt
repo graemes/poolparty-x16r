@@ -23,38 +23,7 @@ cbuchner v1.2:
 
 This is a CUDA accelerated mining application which handle :
 
-Decred (Blake256 14-rounds - 180 bytes)
-HeavyCoin & MjollnirCoin
-FugueCoin
-GroestlCoin & Myriad-Groestl
-Lbry Credits
-JackpotCoin (JHA)
-QuarkCoin family & AnimeCoin
-TalkCoin
-DarkCoin and other X11 coins
-Chaincoin and Flaxscript (C11)
-Saffroncoin blake (256 14-rounds)
-BlakeCoin (256 8-rounds)
-Qubit (Digibyte, ...)
-Luffa (Joincoin)
-Keccak (Maxcoin)
-Pentablake (Blake 512 x5)
-1Coin Triple S
-Neoscrypt (FeatherCoin)
-Revolver (X11evo)
-Scrypt and Scrypt:N
-Scrypt-Jane (Chacha)
-Sibcoin (sib)
-Skein (Skein + SHA)
-Signatum (Skein cubehash fugue Streebog)
-Tribus (JH, keccak, simd)
-Woodcoin (Double Skein)
-Vanilla (Blake256 8-rounds - double sha256)
-Vertcoin Lyra2RE
-Ziftrcoin (ZR5)
-Boolberry (Wild Keccak)
-Monero (Cryptonight)
-Aeon (Cryptonight-lite)
+Raven (X16R)
 
 where some of these coins have a VERY NOTABLE nVidia advantage
 over competing AMD (OpenCL Only) implementations.
@@ -73,62 +42,7 @@ This code is based on the pooler cpuminer and inherits
 its command line interface and options.
 
   -a, --algo=ALGO       specify the algorithm to use
-                          bastion     use to mine Joincoin
-                          bitcore     use to mine Bitcore's Timetravel10
-                          blake       use to mine Saffroncoin (Blake256)
-                          blakecoin   use to mine Old Blake 256
-                          blake2s     use to mine Nevacoin (Blake2-S 256)
-                          bmw         use to mine Midnight
-                          cryptolight use to mine AEON cryptonight (MEM/2)
-                          cryptonight use to mine XMR cryptonight, Bytecoin, Dash, DigitalNote, etc
-                          c11/flax    use to mine Chaincoin and Flax
-                          decred      use to mine Decred 180 bytes Blake256-14
-                          deep        use to mine Deepcoin
-                          dmd-gr      use to mine Diamond-Groestl
-                          equihash    use to mine ZEC, HUSH and KMD
-                          fresh       use to mine Freshcoin
-                          fugue256    use to mine Fuguecoin
-                          groestl     use to mine Groestlcoin
-                          hsr         use to mine Hshare
-                          jackpot     use to mine Sweepcoin
-                          keccak      use to mine Maxcoin
-                          keccakc     use to mine CreativeCoin
-                          lbry        use to mine LBRY Credits
-                          luffa       use to mine Joincoin
-                          lyra2       use to mine CryptoCoin
-                          lyra2v2     use to mine Vertcoin
-                          lyra2z      use to mine Zerocoin (XZC)
-                          myr-gr      use to mine Myriad-Groest
-                          neoscrypt   use to mine FeatherCoin, Trezarcoin, Orbitcoin, etc
-                          nist5       use to mine TalkCoin
-                          penta       use to mine Joincoin / Pentablake
-                          phi         use to mine LUXCoin
-                          polytimos   use to mine Polytimos
-                          quark       use to mine Quarkcoin
-                          qubit       use to mine Qubit
-                          scrypt      use to mine Scrypt coins (Litecoin, Dogecoin, etc)
-                          scrypt:N    use to mine Scrypt-N (:10 for 2048 iterations)
-                          scrypt-jane use to mine Chacha coins like Cache and Ultracoin
-                          s3          use to mine 1coin (ONE)
-                          sha256t     use to mine OneCoin (OC)
-                          sia         use to mine SIA
-                          sib         use to mine Sibcoin
-                          skein       use to mine Skeincoin
-                          skein2      use to mine Woodcoin
-                          skunk       use to mine Signatum
-                          timetravel  use to mine MachineCoin
-                          tribus      use to mine Denarius
-                          x11evo      use to mine Revolver
-                          x11         use to mine DarkCoin
-                          x14         use to mine X14Coin
-                          x15         use to mine Halcyon
                           x16r        use to mine Raven
-                          x17         use to mine X17
-                          vanilla     use to mine Vanilla (Blake256)
-                          veltor      use to mine VeltorCoin
-                          whirlpool   use to mine Joincoin
-                          wildkeccak  use to mine Boolberry (Stratum only)
-                          zr5         use to mine ZiftrCoin
 
   -d, --devices         gives a comma separated list of CUDA device IDs
                         to operate on. Device IDs start counting from 0!
@@ -203,46 +117,12 @@ Scrypt specific options:
                         cache for mining. Kepler devices may profit.
       --no-autotune     disable auto-tuning of kernel launch parameters
 
-CryptoNight specific options:
-  -l, --launch-config   gives the launch configuration for each kernel
-                        in a comma separated list, one per device.
-      --bfactor=[0-12]  Run Cryptonight core kernel in smaller pieces,
-                        From 0 (ui freeze) to 12 (smooth), win default is 11
-                        This is a per-device setting like the launch config.
-
-Wildkeccak specific:
-  -l, --launch-config   gives the launch configuration for each kernel
-                        in a comma separated list, one per device.
-  -k, --scratchpad url  Url used to download the scratchpad cache.
-
 
 >>> Examples <<<
 
 
-Example for Heavycoin Mining on heavycoinpool.com with a single gpu in your system
-    ccminer -t 1 -a heavy -o stratum+tcp://stratum01.heavycoinpool.com:5333 -u <<username.worker>> -p <<workerpassword>> -v 8
-
-
-Example for Heavycoin Mining on hvc.1gh.com with a dual gpu in your system
-    ccminer -t 2 -a heavy -o stratum+tcp://hvcpool.1gh.com:5333/ -u <<WALLET>> -p x -v 8
-
-
-Example for Fuguecoin solo-mining with 4 gpu's in your system and a Fuguecoin-wallet running on localhost
-    ccminer -q -s 1 -t 4 -a fugue256 -o http://localhost:9089/ -u <<myusername>> -p <<mypassword>>
-
-
-Example for Fuguecoin pool mining on dwarfpool.com with all your GPUs
-    ccminer -q -a fugue256 -o stratum+tcp://erebor.dwarfpool.com:3340/ -u YOURWALLETADDRESS.1 -p YOUREMAILADDRESS
-
-
-Example for Groestlcoin solo mining
-    ccminer -q -s 1 -a groestl -o http://127.0.0.1:1441/ -u USERNAME -p PASSWORD
-
-Example for Boolberry
-    ccminer -a wildkeccak -o stratum+tcp://bbr.suprnova.cc:7777 -u tpruvot.donate -p x -k http://bbr.suprnova.cc/scratchpad.bin -l 64x360
-
-Example for Scrypt-N (2048) on Nicehash
-    ccminer -a scrypt:10 -o stratum+tcp://stratum.nicehash.com:3335 -u 3EujYFcoBzWvpUEvbe3obEG95mBuU88QBD -p x
+Example for Raven Mining on yiimp.eu with a single gpu in your system
+    ccminer -t 1 -a x16r -o stratum+tcp://yiimp.eu:3666 -u <<WALLET>> -p <<worker>> -v 8
 
 For solo-mining you typically use -o http://127.0.0.1:xxxx where xxxx represents
 the rpcport number specified in your wallet's .conf file and you have to pass the same username

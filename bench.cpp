@@ -49,67 +49,7 @@ void bench_free()
 void algo_free_all(int thr_id)
 {
 	// only initialized algos will be freed
-	free_bastion(thr_id);
-	free_bitcore(thr_id);
-	free_blake256(thr_id);
-	free_blake2s(thr_id);
-	free_bmw(thr_id);
-	free_c11(thr_id);
-	free_cryptolight(thr_id);
-	free_cryptonight(thr_id);
-	free_decred(thr_id);
-	free_deep(thr_id);
-	free_equihash(thr_id);
-	free_keccak256(thr_id);
-	free_fresh(thr_id);
-	free_fugue256(thr_id);
-	free_groestlcoin(thr_id);
-#ifdef WITH_HEAVY_ALGO
-	free_heavy(thr_id);
-#endif
-	free_hmq17(thr_id);
-	free_hsr(thr_id);
-	free_jackpot(thr_id);
-	free_jha(thr_id);
-	free_lbry(thr_id);
-	free_luffa(thr_id);
-	free_lyra2(thr_id);
-	free_lyra2v2(thr_id);
-	free_lyra2Z(thr_id);
-	free_myriad(thr_id);
-	free_neoscrypt(thr_id);
-	free_nist5(thr_id);
-	free_pentablake(thr_id);
-	free_phi(thr_id);
-	free_polytimos(thr_id);
-	free_quark(thr_id);
-	free_qubit(thr_id);
-	free_skeincoin(thr_id);
-	free_skein2(thr_id);
-	free_skunk(thr_id);
-	free_sha256d(thr_id);
-	free_sha256t(thr_id);
-	free_sia(thr_id);
-	free_sib(thr_id);
-	free_s3(thr_id);
-	free_vanilla(thr_id);
-	free_veltor(thr_id);
-	free_whirl(thr_id);
-	//free_whirlx(thr_id);
-	free_wildkeccak(thr_id);
-	free_x11evo(thr_id);
-	free_x11(thr_id);
-	free_x13(thr_id);
-	free_x14(thr_id);
-	free_x15(thr_id);
 	free_x16r(thr_id);
-	free_x17(thr_id);
-	free_zr5(thr_id);
-	free_scrypt(thr_id);
-	free_scrypt_jane(thr_id);
-	free_timetravel(thr_id);
-	free_tribus(thr_id);
-	free_bitcore(thr_id);
 }
 
 // benchmark all algos (called once per mining thread)
@@ -124,32 +64,6 @@ bool bench_algo_switch_next(int thr_id)
 	bool need_reset = (gpu_threads == 1);
 
 	algo++;
-
-	// skip some duplicated algos
-	if (algo == ALGO_C11) algo++; // same as x11
-	if (algo == ALGO_DMD_GR) algo++; // same as groestl
-	if (algo == ALGO_HEAVY) algo++; // dead
-	if (algo == ALGO_MJOLLNIR) algo++; // same as heavy
-	if (algo == ALGO_KECCAKC) algo++; // same as keccak
-	if (algo == ALGO_WHIRLCOIN) algo++; // same as whirlpool
-	if (algo == ALGO_WHIRLPOOLX) algo++; // disabled
-	// todo: algo switch from RPC 2.0
-	if (algo == ALGO_CRYPTOLIGHT) algo++;
-	if (algo == ALGO_CRYPTONIGHT) algo++;
-	if (algo == ALGO_WILDKECCAK) algo++;
-	if (algo == ALGO_QUARK) algo++; // to fix
-	if (algo == ALGO_LBRY && CUDART_VERSION < 7000) algo++;
-
-	if (device_sm[dev_id] && device_sm[dev_id] < 300) {
-		// incompatible SM 2.1 kernels...
-		if (algo == ALGO_GROESTL) algo++;
-		if (algo == ALGO_MYR_GR) algo++;
-		if (algo == ALGO_NEOSCRYPT) algo++;
-		if (algo == ALGO_WHIRLPOOLX) algo++;
-	}
-	// and unwanted ones...
-	if (algo == ALGO_SCRYPT) algo++;
-	if (algo == ALGO_SCRYPT_JANE) algo++;
 
 	// free current algo memory and track mem usage
 	mused = cuda_available_memory(thr_id);
