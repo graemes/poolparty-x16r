@@ -32,11 +32,11 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  sph/hamsi.c sph/hamsi_helper.c sph/streebog.c \
 			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
 			  sph/ripemd.c sph/sph_sha2.c \
-			  qubit/qubit_luffa512.cu \
+			  qubit/qubit_luffa512.cu qubit/qubit_luffa512_alexis.cu \
 			  x11/cuda_x11_luffa512.cu x11/cuda_x11_cubehash512.cu \
-			  x11/cuda_x11_shavite512.cu x11/cuda_x11_simd512.cu x11/cuda_x11_echo.cu \
-			  x13/cuda_x13_hamsi512.cu x13/cuda_x13_fugue512.cu \
-			  x15/cuda_x14_shabal512.cu x15/cuda_x15_whirlpool.cu \
+			  x11/cuda_x11_shavite512.cu x11/cuda_x11_shavite512_alexis.cu x11/cuda_x11_simd512.cu x11/cuda_x11_echo.cu x11/cuda_x11_echo_alexis.cu \
+			  x13/cuda_x13_hamsi512.cu x13/cuda_x13_fugue512.cu x13/cuda_x13_fugue512_alexis.cu \
+			  x15/cuda_x14_shabal512.cu x15/cuda_x14_shabal512_alexis.cu x15/cuda_x15_whirlpool.cu \
 			  x15/whirlpool.cu x15/cuda_x15_whirlpool_sm3.cu \
 			  x16r/x16r.cu x16r/cuda_x16_echo512.cu x16r/cuda_x16_fugue512.cu \
 			  x16r/cuda_x16_shabal512.cu x16r/cuda_x16_simd512_80.cu \
@@ -67,9 +67,9 @@ endif
 ccminer_LDADD += -lcuda
 
 nvcc_ARCH :=
-#nvcc_ARCH += -gencode=arch=compute_61,code=\"sm_61,compute_61\"
+nvcc_ARCH += -gencode=arch=compute_61,code=\"sm_61,compute_61\"
 nvcc_ARCH += -gencode=arch=compute_52,code=\"sm_52,compute_52\"
-nvcc_ARCH += -gencode=arch=compute_50,code=\"sm_50,compute_50\"
+#nvcc_ARCH += -gencode=arch=compute_50,code=\"sm_50,compute_50\"
 #nvcc_ARCH += -gencode=arch=compute_35,code=\"sm_35,compute_35\"
 #nvcc_ARCH += -gencode=arch=compute_30,code=\"sm_30,compute_30\"
 

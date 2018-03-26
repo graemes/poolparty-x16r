@@ -1287,8 +1287,8 @@ static bool stratum_gen_work(struct stratum_ctx *sctx, struct work *work)
 	utm = swab32(utm);
 	char *tm = atime2str(utm - sctx->srvtime_diff);
 	char *xnonce2str = bin2hex(work->xnonce2, sctx->xnonce2_size);
-	applog(LOG_DEBUG, "DEBUG: job_id=%s xnonce2=%s time=%s",
-		   work->job_id, xnonce2str, tm);
+	//applog(LOG_DEBUG, "DEBUG: job_id=%s xnonce2=%s time=%s",
+	//	   work->job_id, xnonce2str, tm);
 	free(tm);
 	free(xnonce2str);
 

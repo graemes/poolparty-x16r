@@ -1,14 +1,11 @@
-#include <stdio.h>
+#include "miner.h"
+
+extern "C" {
+#include <stdint.h>
 #include <memory.h>
-#include <sys/types.h> // off_t
+}
 
 #include "cuda_helper.h"
-
-#define U32TO64_LE(p) \
-	(((uint64_t)(*p)) | (((uint64_t)(*(p + 1))) << 32))
-
-#define U64TO32_LE(p, v) \
-	*p = (uint32_t)((v)); *(p+1) = (uint32_t)((v) >> 32);
 
 static const uint64_t host_keccak_round_constants[24] = {
 	0x0000000000000001ull, 0x0000000000008082ull,
@@ -25,14 +22,20 @@ static const uint64_t host_keccak_round_constants[24] = {
 	0x0000000080000001ull, 0x8000000080008008ull
 };
 
-__constant__ uint64_t d_keccak_round_constants[24];
+static uint32_t *d_KNonce[MAX_GPUS];
 
+__constant__ uint32_t pTarget[8];
+__constant__ uint64_t keccak_round_constants[24];
+__constant__ uint64_t c_PaddedMessage80[10]; // padded message (80 bytes + padding?)
+
+#if __CUDA_ARCH__ >= 350
 __device__ __forceinline__
-static void keccak_block(uint2 *s)
+static void keccak_blockv35(uint2 *s, const uint64_t *keccak_round_constants)
 {
 	size_t i;
 	uint2 t[5], u[5], v, w;
 
+	#pragma unroll
 	for (i = 0; i < 24; i++) {
 		/* theta: c = a[0,i] ^ a[1,i] ^ .. a[4,i] */
 		t[0] = s[0] ^ s[5] ^ s[10] ^ s[15] ^ s[20];
@@ -57,29 +60,29 @@ static void keccak_block(uint2 *s)
 
 		/* rho pi: b[..] = rotl(a[..], ..) */
 		v = s[1];
-		s[1]  = ROL2(s[6], 44);
-		s[6]  = ROL2(s[9], 20);
-		s[9]  = ROL2(s[22], 61);
+		s[1] = ROL2(s[6], 44);
+		s[6] = ROL2(s[9], 20);
+		s[9] = ROL2(s[22], 61);
 		s[22] = ROL2(s[14], 39);
 		s[14] = ROL2(s[20], 18);
 		s[20] = ROL2(s[2], 62);
-		s[2]  = ROL2(s[12], 43);
+		s[2] = ROL2(s[12], 43);
 		s[12] = ROL2(s[13], 25);
 		s[13] = ROL2(s[19], 8);
 		s[19] = ROL2(s[23], 56);
 		s[23] = ROL2(s[15], 41);
 		s[15] = ROL2(s[4], 27);
-		s[4]  = ROL2(s[24], 14);
+		s[4] = ROL2(s[24], 14);
 		s[24] = ROL2(s[21], 2);
 		s[21] = ROL2(s[8], 55);
-		s[8]  = ROL2(s[16], 45);
+		s[8] = ROL2(s[16], 45);
 		s[16] = ROL2(s[5], 36);
-		s[5]  = ROL2(s[3], 28);
-		s[3]  = ROL2(s[18], 21);
+		s[5] = ROL2(s[3], 28);
+		s[3] = ROL2(s[18], 21);
 		s[18] = ROL2(s[17], 15);
 		s[17] = ROL2(s[11], 10);
 		s[11] = ROL2(s[7], 6);
-		s[7]  = ROL2(s[10], 3);
+		s[7] = ROL2(s[10], 3);
 		s[10] = ROL2(v, 1);
 
 		/* chi: a[i,j] ^= ~b[i,j+1] & b[i,j+2] */
@@ -90,47 +93,18 @@ static void keccak_block(uint2 *s)
 		v = s[20]; w = s[21]; s[20] ^= (~w) & s[22]; s[21] ^= (~s[22]) & s[23]; s[22] ^= (~s[23]) & s[24]; s[23] ^= (~s[24]) & v; s[24] ^= (~v) & w;
 
 		/* iota: a[0,0] ^= round constant */
-		s[0] ^= vectorize(d_keccak_round_constants[i]);
+		s[0] ^= vectorize(keccak_round_constants[i]);
 	}
 }
-
-__global__
-void quark_keccak512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *g_hash, uint32_t *g_nonceVector)
-{
-	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-	if (thread < threads)
-	{
-		uint32_t nounce = (g_nonceVector != NULL) ? g_nonceVector[thread] : (startNounce + thread);
-
-		off_t hashPosition = nounce - startNounce;
-		uint64_t *inpHash = &g_hash[hashPosition * 8];
-		uint2 keccak_gpu_state[25];
-
-		for (int i = 0; i<8; i++) {
-			keccak_gpu_state[i] = vectorize(inpHash[i]);
-		}
-		keccak_gpu_state[8] = vectorize(0x8000000000000001ULL);
-
-		for (int i=9; i<25; i++) {
-			keccak_gpu_state[i] = make_uint2(0, 0);
-		}
-		keccak_block(keccak_gpu_state);
-
-		for(int i=0; i<8; i++) {
-			inpHash[i] = devectorize(keccak_gpu_state[i]);
-		}
-	}
-}
+#else
 
 __device__ __forceinline__
-static void keccak_block_v30(uint64_t *s, const uint32_t *in)
+static void keccak_blockv30(uint64_t *s, const uint64_t *keccak_round_constants)
 {
 	size_t i;
 	uint64_t t[5], u[5], v, w;
 
-	#pragma unroll 9
-	for (i = 0; i < 72 / 8; i++, in += 2)
-		s[i] ^= U32TO64_LE(in);
+	/* absorb input */
 
 	for (i = 0; i < 24; i++) {
 		/* theta: c = a[0,i] ^ a[1,i] ^ .. a[4,i] */
@@ -189,89 +163,141 @@ static void keccak_block_v30(uint64_t *s, const uint32_t *in)
 		v = s[20]; w = s[21]; s[20] ^= (~w) & s[22]; s[21] ^= (~s[22]) & s[23]; s[22] ^= (~s[23]) & s[24]; s[23] ^= (~s[24]) & v; s[24] ^= (~v) & w;
 
 		/* iota: a[0,0] ^= round constant */
-		s[0] ^= d_keccak_round_constants[i];
+		s[0] ^= keccak_round_constants[i];
 	}
 }
+#endif
 
-__global__
-void quark_keccak512_gpu_hash_64_v30(uint32_t threads, uint32_t startNounce, uint64_t *g_hash, uint32_t *g_nonceVector)
+__global__ __launch_bounds__(128,5)
+void keccak256_sm3_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint32_t *resNounce)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
 	{
-		uint32_t nounce = (g_nonceVector != NULL) ? g_nonceVector[thread] : (startNounce + thread);
+		uint32_t nounce = startNounce + thread;
 
-		off_t hashPosition = nounce - startNounce;
-		uint32_t *inpHash = (uint32_t*)&g_hash[hashPosition * 8];
-
-		uint32_t message[18];
-		#pragma unroll 16
-		for(int i=0;i<16;i++)
-			message[i] = inpHash[i];
-
-		message[16] = 0x01;
-		message[17] = 0x80000000;
-
-		uint64_t keccak_gpu_state[25];
+#if __CUDA_ARCH__ >= 350
+		uint2 keccak_gpu_state[25];
 		#pragma unroll 25
-		for (int i=0; i<25; i++)
-			keccak_gpu_state[i] = 0;
-
-		keccak_block_v30(keccak_gpu_state, message);
-
-		uint32_t hash[16];
-		#pragma unroll 8
-		for (size_t i = 0; i < 64; i += 8) {
-			U64TO32_LE((&hash[i/4]), keccak_gpu_state[i / 8]);
+		for (int i=0; i<25; i++) {
+			if (i<9) keccak_gpu_state[i] = vectorize(c_PaddedMessage80[i]);
+			else     keccak_gpu_state[i] = make_uint2(0, 0);
 		}
 
-		uint32_t *outpHash = (uint32_t*)&g_hash[hashPosition * 8];
-		#pragma unroll 16
-		for(int i=0; i<16; i++)
-			outpHash[i] = hash[i];
+		keccak_gpu_state[9]= vectorize(c_PaddedMessage80[9]);
+		keccak_gpu_state[9].y = cuda_swab32(nounce);
+		keccak_gpu_state[10] = make_uint2(1, 0);
+		keccak_gpu_state[16] = make_uint2(0, 0x80000000);
+
+		keccak_blockv35(keccak_gpu_state,keccak_round_constants);
+		if (devectorize(keccak_gpu_state[3]) <= ((uint64_t*)pTarget)[3]) {resNounce[0] = nounce;}
+#else
+		uint64_t keccak_gpu_state[25];
+		#pragma unroll 25
+		for (int i=0; i<25; i++) {
+			if (i<9) keccak_gpu_state[i] = c_PaddedMessage80[i];
+			else     keccak_gpu_state[i] = 0;
+		}
+		keccak_gpu_state[9]  = REPLACE_HIDWORD(c_PaddedMessage80[9], cuda_swab32(nounce));
+		keccak_gpu_state[10] = 0x0000000000000001;
+		keccak_gpu_state[16] = 0x8000000000000000;
+
+		keccak_blockv30(keccak_gpu_state, keccak_round_constants);
+		if (keccak_gpu_state[3] <= ((uint64_t*)pTarget)[3]) { resNounce[0] = nounce; }
+#endif
 	}
 }
 
 __host__
-void quark_keccak512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order)
+void keccak256_sm3_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *resNonces, int order)
 {
-	const uint32_t threadsperblock = 256;
+	cudaMemset(d_KNonce[thr_id], 0xff, 2*sizeof(uint32_t));
+	const uint32_t threadsperblock = 128;
 
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 
-	int dev_id = device_map[thr_id];
+	size_t shared_size = 0;
 
-	if (device_sm[dev_id] >= 320)
-		quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
-	else
-		quark_keccak512_gpu_hash_64_v30<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
+	keccak256_sm3_gpu_hash_80<<<grid, block, shared_size>>>(threads, startNounce, d_KNonce[thr_id]);
 
-	//MyStreamSynchronize(NULL, order, thr_id);
+	cudaMemcpy(resNonces, d_KNonce[thr_id], 2*sizeof(uint32_t), cudaMemcpyDeviceToHost);
+	cudaThreadSynchronize();
 }
 
-void jackpot_keccak512_cpu_init(int thr_id, uint32_t threads);
-void jackpot_keccak512_cpu_setBlock(void *pdata, size_t inlen);
-void jackpot_keccak512_cpu_hash(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, int order);
-
-__host__
-void quark_keccak512_cpu_init(int thr_id, uint32_t threads)
+#if 0
+__global__ __launch_bounds__(256,3)
+void keccak256_sm3_gpu_hash_32(uint32_t threads, uint32_t startNounce, uint64_t *outputHash)
 {
-	// required for the 64 bytes one
-	cudaMemcpyToSymbol(d_keccak_round_constants, host_keccak_round_constants,
-			sizeof(host_keccak_round_constants), 0, cudaMemcpyHostToDevice);
+	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
+	if (thread < threads)
+	{
+#if __CUDA_ARCH__ >= 350 /* tpr: to double check if faster on SM5+ */
+		uint2 keccak_gpu_state[25];
+		#pragma unroll 25
+		for (int i = 0; i<25; i++) {
+			if (i<4) keccak_gpu_state[i] = vectorize(outputHash[i*threads+thread]);
+			else     keccak_gpu_state[i] = make_uint2(0, 0);
+		}
+		keccak_gpu_state[4]  = make_uint2(1, 0);
+		keccak_gpu_state[16] = make_uint2(0, 0x80000000);
+		keccak_blockv35(keccak_gpu_state, keccak_round_constants);
 
-	jackpot_keccak512_cpu_init(thr_id, threads);
+		#pragma unroll 4
+		for (int i=0; i<4; i++)
+			outputHash[i*threads+thread] = devectorize(keccak_gpu_state[i]);
+#else
+		uint64_t keccak_gpu_state[25];
+		#pragma unroll 25
+		for (int i = 0; i<25; i++) {
+			if (i<4)
+				keccak_gpu_state[i] = outputHash[i*threads+thread];
+			else
+				keccak_gpu_state[i] = 0;
+		}
+		keccak_gpu_state[4]  = 0x0000000000000001;
+		keccak_gpu_state[16] = 0x8000000000000000;
+
+		keccak_blockv30(keccak_gpu_state, keccak_round_constants);
+		#pragma unroll 4
+		for (int i = 0; i<4; i++)
+			outputHash[i*threads + thread] = keccak_gpu_state[i];
+#endif
+	}
 }
 
 __host__
-void keccak512_setBlock_80(int thr_id, uint32_t *endiandata)
+void keccak256_sm3_hash_32(int thr_id, uint32_t threads, uint32_t startNounce, uint64_t *d_outputHash, int order)
 {
-	jackpot_keccak512_cpu_setBlock((void*)endiandata, 80);
+	const uint32_t threadsperblock = 256;
+
+	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
+	dim3 block(threadsperblock);
+
+	keccak256_sm3_gpu_hash_32 <<<grid, block>>> (threads, startNounce, d_outputHash);
+	MyStreamSynchronize(NULL, order, thr_id);
+}
+#endif
+
+__host__
+void keccak256_sm3_setBlock_80(void *pdata,const void *pTargetIn)
+{
+	unsigned char PaddedMessage[80];
+	memcpy(PaddedMessage, pdata, 80);
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(pTarget, pTargetIn, 8*sizeof(uint32_t), 0, cudaMemcpyHostToDevice));
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(c_PaddedMessage80, PaddedMessage, 10*sizeof(uint64_t), 0, cudaMemcpyHostToDevice));
 }
 
 __host__
-void keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
+void keccak256_sm3_init(int thr_id, uint32_t threads)
 {
-	jackpot_keccak512_cpu_hash(thr_id, threads, startNounce, d_hash, 0);
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(keccak_round_constants, host_keccak_round_constants,
+				sizeof(host_keccak_round_constants), 0, cudaMemcpyHostToDevice));
+	CUDA_SAFE_CALL(cudaMalloc(&d_KNonce[thr_id], 2*sizeof(uint32_t)));
+}
+
+__host__
+void keccak256_sm3_free(int thr_id)
+{
+	cudaFree(d_KNonce[thr_id]);
 }
