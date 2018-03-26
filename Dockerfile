@@ -1,13 +1,15 @@
 #
 # Dockerfile for ccminer
+#
+# requires: nvidia-docker (https://github.com/NVIDIA/nvidia-docker)
+#
 # usage: docker build -t cccminer:latest .
-# run: docker run -it --rm ccminer:latest [ARGS]
-# ex: docker run -it --rm ccminer:latest -a cryptonight -o cryptonight.eu.nicehash.com:3355 -u 1MiningDW2GKzf4VQfmp4q2XoUvR6iy6PD.worker1 -p x -t 3
+# run: docker run -it --rm --runtime=nvidia ccminer:latest [ARGS]
+# ex: docker run -it --rm --runtime=nvidia ccminer:latest -o cryptopool.party:3636 -u RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU -p x
 #
 
 # Build
 FROM nvidia/cuda:9.1-devel as builder
-
 
 RUN apt-get update && apt-get install -y \
     build-essential \
@@ -23,6 +25,8 @@ RUN cd /app/ && ./build.sh
 
 # App
 FROM nvidia/cuda:9.1-base
+
+LABEL maintainer="graemes@graemes.com"
 
 RUN apt-get update && apt-get install -y \
     libcurl3 \
