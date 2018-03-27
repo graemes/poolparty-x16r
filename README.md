@@ -2,6 +2,11 @@
 
 If you find this version useful please consider a donation to: RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU (graemes)
 
+Things to watch out for:
+- the cpuarch in configure.sh has been set to haswell rather than native ;
+- only builds for compute_52 & compute_61 - change Makefile.am if you want to include other nvidia architectures ;
+- only tested against cuda 9.1
+
 Based on Christian Buchner's &amp; Christian H.'s CUDA project, no more active on github since 2014.
 
 Check the [README.txt](README.txt) for the additions
