@@ -7,6 +7,13 @@ Things to watch out for:
 - only builds for compute_52 & compute_61 - change Makefile.am if you want to include other nvidia architectures ;
 - only tested against cuda 9.1
 
+This version is based primarily on:
+- the Nevermore miner (https://github.com/brian112358/nevermore-miner) ;
+- the work of Penfold in stripping down the original ccminer (https://github.com/todd1251/ccminer-x16r/tree/x16r-only) ;
+- along with changes hand-picked from other tree's ;
+
+Standing on the shoulders of giants.
+
 Based on Christian Buchner's &amp; Christian H.'s CUDA project, no more active on github since 2014.
 
 Check the [README.txt](README.txt) for the additions
