@@ -28,7 +28,7 @@
 
 #define MIN_DEV_DONATE_PERCENT 0.5
 
-// 240 minutes
-#define DONATE_CYCLE_TIME 14400
+// 180 minutes
+#define DONATE_CYCLE_TIME 10800
 
 #endif

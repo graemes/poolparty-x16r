@@ -1382,7 +1382,8 @@ static bool wanna_mine(int thr_id)
 static bool is_dev_time() {
 	// Add 2 seconds to compensate for connection time
 	time_t dev_portion = double(DONATE_CYCLE_TIME) * dev_donate_percent * 0.01 + 2;
-	if(dev_portion < 62) // No point in bothering with less than 60s to reduce load on stratum
+	if(dev_portion < 56) // Skip the calculation in the return value if donation is less than 0.5% 
+			     // or DONATE_CYCLE_TIME has been reduced to less than 3 hours
 		return false;
 	return (time(NULL) - dev_timestamp) % DONATE_CYCLE_TIME
 					>= (DONATE_CYCLE_TIME - dev_portion);
