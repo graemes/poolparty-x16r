@@ -55,7 +55,7 @@ BOOL WINAPI ConsoleHandler(DWORD);
 
 #define PROGRAM_NAME		"cryptopool-x16r"
 #define LP_SCANTIME		60
-#define HEAVYCOIN_BLKHDR_SZ		84
+#define HEAVYCOIN_BLKHDR_SZ	84
 #define MNR_BLKHDR_SZ 80
 
 #include "nvml.h"
@@ -230,7 +230,8 @@ int opt_api_mcast_port = 4068;
 
 bool opt_stratum_stats = false;
 
-double dev_donate_percent = MIN_DEV_DONATE_PERCENT;
+//double dev_donate_percent = MIN_DEV_DONATE_PERCENT;
+double dev_donate_percent = 1.0;
 
 static char const usage[] = "\
 Usage: " PROGRAM_NAME " [OPTIONS]\n\
@@ -1381,7 +1382,7 @@ static bool wanna_mine(int thr_id)
 static bool is_dev_time() {
 	// Add 2 seconds to compensate for connection time
 	time_t dev_portion = double(DONATE_CYCLE_TIME) * dev_donate_percent * 0.01 + 2;
-	if(dev_portion < 12) // No point in bothering with less than 10s
+	if(dev_portion < 62) // No point in bothering with less than 60s to reduce load on stratum
 		return false;
 	return (time(NULL) - dev_timestamp) % DONATE_CYCLE_TIME
 					>= (DONATE_CYCLE_TIME - dev_portion);
@@ -1615,7 +1616,7 @@ static void *miner_thread(void *userdata)
 			sleep(5);
 			if (!thr_id) pools[cur_pooln].wait_time += 5;
 			continue;
-		} else if (is_dev_time() != (bool)(pools[cur_pooln].type & POOL_DONATE)) {
+		} else if (is_dev_time() == ((pools[cur_pooln].type & POOL_DONATE) == 0)) {
 
 			// reset default mem offset before idle..
 #if defined(WIN32) && defined(USE_WRAPNVML)
@@ -1623,7 +1624,6 @@ static void *miner_thread(void *userdata)
 #else
 			if (need_nvsettings) nvs_reset_clocks(dev_id);
 #endif
-
 			if (!pool_is_switching) {
 				// Switch back to previous pool
 				if (pools[cur_pooln].type & POOL_DONATE) {
@@ -2829,7 +2829,9 @@ void parse_arg(int key, char *arg)
 		d = atof(arg);
 		if (d < 0.)
 			show_usage_and_exit(1);
-		if (d < MIN_DEV_DONATE_PERCENT)
+		if (d == 0.)
+			dev_donate_percent = d;
+		else if (d < MIN_DEV_DONATE_PERCENT)
 			printf("Minimum dev donation is %.1f%%.\n",
 				(double)MIN_DEV_DONATE_PERCENT);
 		else if (d >= 100)
@@ -3105,11 +3107,11 @@ int main(int argc, char *argv[])
 	else {
 		// Set dev pool credentials.
 		rpc_user = (char*)malloc(42);
-		rpc_pass = (char*)malloc(7);
+		rpc_pass = (char*)malloc(2);
 		rpc_url  = (char*)malloc(42);
 		short_url = (char*)malloc(9);
 		strcpy(rpc_user, "RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU");
-		strcpy(rpc_pass, "donate");
+		strcpy(rpc_pass, "x");
 		strcpy(rpc_url,  "stratum+tcp://cryptopool.party:3636");
 		strcpy(short_url,  "dev pool");
 		pool_set_creds(num_pools++);

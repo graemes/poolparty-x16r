@@ -21,10 +21,14 @@
  * BTC donation address: 1FHLroBZaB74QvQW5mBmAxCNVJNXa14mH5
  * RVN donation address: RWoSZX6j6WU6SVTVq5hKmdgPmmrYE9be5R
  *
+ * graemes (various enhancements/optimizations)
+ * RVN donation address: RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU
+ *
  */
-#define MIN_DEV_DONATE_PERCENT 1
 
-// 100 minutes
-#define DONATE_CYCLE_TIME 6000
+#define MIN_DEV_DONATE_PERCENT 0.5
+
+// 240 minutes
+#define DONATE_CYCLE_TIME 14400
 
 #endif

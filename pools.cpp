@@ -291,7 +291,7 @@ int pool_get_first_valid(int startfrom, bool donate)
 			continue;
 		if (p->status & (POOL_ST_DISABLED | POOL_ST_REMOVED))
 			continue;
-		if ((bool)(p->type & POOL_DONATE) != donate)
+		if (((p->type & POOL_DONATE) == 0) == donate)
 			continue;
 		next = pooln;
 		break;
