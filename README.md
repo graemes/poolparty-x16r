@@ -1,5 +1,7 @@
 # ccminer
 
+If you find this version useful please consider a donation to: RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU (graemes)
+
 Based on Christian Buchner's &amp; Christian H.'s CUDA project, no more active on github since 2014.
 
 Check the [README.txt](README.txt) for the additions
