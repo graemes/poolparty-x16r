@@ -308,7 +308,7 @@ Options:\n\
   -B, --background      run the miner in the background\n\
       --benchmark       run in offline benchmark mode\n\
       --cputest         debug hashes from cpu algorithms\n\
-      --donate          percentage of time to donate to dev\n\
+      --donate          percentage of time to donate to dev (set to 0 to disable)\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
