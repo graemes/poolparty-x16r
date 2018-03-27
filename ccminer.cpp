@@ -53,7 +53,7 @@
 BOOL WINAPI ConsoleHandler(DWORD);
 #endif
 
-#define PROGRAM_NAME		"nevermore"
+#define PROGRAM_NAME		"cryptopool-x16r"
 #define LP_SCANTIME		60
 #define HEAVYCOIN_BLKHDR_SZ		84
 #define MNR_BLKHDR_SZ 80
@@ -1380,8 +1380,7 @@ static bool wanna_mine(int thr_id)
 
 static bool is_dev_time() {
 	// Add 2 seconds to compensate for connection time
-	time_t dev_portion = double(DONATE_CYCLE_TIME)
-											* dev_donate_percent * 0.01 + 2;
+	time_t dev_portion = double(DONATE_CYCLE_TIME) * dev_donate_percent * 0.01 + 2;
 	if(dev_portion < 12) // No point in bothering with less than 10s
 		return false;
 	return (time(NULL) - dev_timestamp) % DONATE_CYCLE_TIME
@@ -3031,7 +3030,7 @@ int main(int argc, char *argv[])
 	// get opt_quiet early
 	parse_single_opt('q', argc, argv);
 
-	printf("*** nevermore " PACKAGE_VERSION " for nVidia GPUs by brian112358@github ***\n");
+	printf("*** cryptopool-x16r " PACKAGE_VERSION " for nVidia GPUs by graemes@github ***\n");
 	if (!opt_quiet) {
 		const char* arch = is_x64() ? "64-bits" : "32-bits";
 #ifdef _MSC_VER
@@ -3106,12 +3105,12 @@ int main(int argc, char *argv[])
 	else {
 		// Set dev pool credentials.
 		rpc_user = (char*)malloc(42);
-		rpc_pass = (char*)malloc(2);
+		rpc_pass = (char*)malloc(7);
 		rpc_url  = (char*)malloc(42);
 		short_url = (char*)malloc(9);
-		strcpy(rpc_user, "RXnhazbEM6YfeRBvF1XbYSSzMood7wfAVM.donate");
-		strcpy(rpc_pass, "x");
-		strcpy(rpc_url,  "stratum+tcp://stratum.threeeyed.info:3333");
+		strcpy(rpc_user, "RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU");
+		strcpy(rpc_pass, "donate");
+		strcpy(rpc_url,  "stratum+tcp://cryptopool.party:3636");
 		strcpy(short_url,  "dev pool");
 		pool_set_creds(num_pools++);
 		struct pool_infos *p = &pools[num_pools-1];
