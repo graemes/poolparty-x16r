@@ -1,5 +1,9 @@
 #include "x11/cuda_x11.h"
 
+
+extern void x13_hamsi512_cpu_init_gs(int thr_id, uint32_t threads);
+extern void x13_hamsi512_cpu_hash_64_gs(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
+
 extern void x11_echo512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 extern void x11_luffa512_cpu_hash_64_alexis(int thr_id, uint32_t threads,uint32_t *d_hash);
 extern void x11_shavite512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);

@@ -35,12 +35,15 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  qubit/qubit_luffa512.cu qubit/qubit_luffa512_alexis.cu \
 			  x11/cuda_x11_luffa512.cu x11/cuda_x11_cubehash512.cu \
 			  x11/cuda_x11_shavite512.cu x11/cuda_x11_shavite512_alexis.cu x11/cuda_x11_simd512.cu x11/cuda_x11_echo.cu x11/cuda_x11_echo_alexis.cu \
-			  x13/cuda_x13_hamsi512.cu x13/cuda_x13_fugue512.cu x13/cuda_x13_fugue512_alexis.cu \
+			  x13/cuda_x13_hamsi512.cu \
+                          x13/cuda_x13_fugue512.cu x13/cuda_x13_fugue512_alexis.cu \
 			  x15/cuda_x14_shabal512.cu x15/cuda_x14_shabal512_alexis.cu x15/cuda_x15_whirlpool.cu \
 			  x15/whirlpool.cu x15/cuda_x15_whirlpool_sm3.cu \
 			  x16r/x16r.cu x16r/cuda_x16_echo512.cu x16r/cuda_x16_fugue512.cu \
 			  x16r/cuda_x16_shabal512.cu x16r/cuda_x16_simd512_80.cu \
 			  x17/cuda_x17_sha512.cu
+
+#			  x13/cuda_x13_hamsi512.cu x13/cuda_x13_hamsi512_gs.cu 
 
 if HAVE_NVML
 nvml_defs = -DUSE_WRAPNVML
@@ -67,11 +70,18 @@ endif
 ccminer_LDADD += -lcuda
 
 nvcc_ARCH :=
+if COMPUTE61
+nvcc_ARCH += -gencode=arch=compute_61,code=\"sm_61,compute_61\"
+else
+if COMPUTE52
+nvcc_ARCH += -gencode=arch=compute_52,code=\"sm_52,compute_52\"
+else
 nvcc_ARCH += -gencode=arch=compute_61,code=\"sm_61,compute_61\"
 nvcc_ARCH += -gencode=arch=compute_52,code=\"sm_52,compute_52\"
-#nvcc_ARCH += -gencode=arch=compute_50,code=\"sm_50,compute_50\"
-#nvcc_ARCH += -gencode=arch=compute_35,code=\"sm_35,compute_35\"
-#nvcc_ARCH += -gencode=arch=compute_30,code=\"sm_30,compute_30\"
+nvcc_ARCH += -gencode=arch=compute_50,code=\"sm_50,compute_50\"
+nvcc_ARCH += -gencode=arch=compute_35,code=\"sm_35,compute_35\"
+endif
+endif
 
 nvcc_FLAGS = $(nvcc_ARCH) @CUDA_INCLUDES@ -I. @CUDA_CFLAGS@
 nvcc_FLAGS += $(JANSSON_INCLUDES) --ptxas-options="-v"
@@ -89,6 +99,9 @@ x11/cuda_x11_simd512.o: x11/cuda_x11_simd512.cu
 
 x13/cuda_x13_hamsi512.o: x13/cuda_x13_hamsi512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
+
+x13/cuda_x13_hamsi512_gs.o: x13/cuda_x13_hamsi512_gs.cu
+	CUDA_CFLAGS="-O3 -std=c++11 -Xcompiler -Wall -D_FORCE_INLINES" $(NVCC) $(nvcc_FLAGS) -std=c++11 --maxrregcount=72 -o $@ -c $<
 
 x17/cuda_x17_sha512.o: x17/cuda_x17_sha512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<

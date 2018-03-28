@@ -11,6 +11,8 @@
 # Build
 FROM nvidia/cuda:9.1-devel as builder
 
+ARG COMPUTE
+
 RUN apt-get update && apt-get install -y \
     build-essential \
     libssl-dev \
@@ -21,7 +23,14 @@ RUN apt-get update && apt-get install -y \
   && rm -rf /var/lib/apt/lists/*
 
 COPY . /app/
-RUN cd /app/ && ./build.sh
+#RUN cd /app/ && ./build.sh
+RUN cd /app/ && \
+    make distclean || echo clean && \
+    rm -f Makefile.in && \
+    rm -f config.status && \
+    ./autogen.sh || echo done && \
+    ./configure.sh --enable-compute=$COMPUTE && \
+    make -j 8
 
 # App
 FROM nvidia/cuda:9.1-base

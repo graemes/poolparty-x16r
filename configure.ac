@@ -86,6 +86,21 @@ AM_CONDITIONAL([HAVE_OSX], [test x$have_osx = xtrue])
 AM_CONDITIONAL([ARCH_x86], [test x$have_x86 = xtrue])
 AM_CONDITIONAL([ARCH_x86_64], [test x$have_x86_64 = xtrue])
 
+dnl Enable compute specification support
+#AC_ARG_ENABLE([compute], 
+#              [AS_HELP_STRING([--enable-compute],
+#                [specify which compute model will be used; (default --enable-compute=61]))],
+#              [enable_compute=$enableval],
+#              [enable_compute=61])
+
+AC_ARG_ENABLE([compute], 
+              [AS_HELP_STRING([--enable-compute],
+                [specify which compute model will be used])],
+              [enable_compute=$enableval])
+
+AM_CONDITIONAL([COMPUTE61], [test "x$enable_compute" = "x61"])
+AM_CONDITIONAL([COMPUTE52], [test "x$enable_compute" = "x52"])
+
 if test x$request_jansson = xtrue
 then
 	JANSSON_LIBS="compat/jansson/libjansson.a"

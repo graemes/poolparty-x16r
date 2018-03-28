@@ -1180,6 +1180,8 @@ bool get_work(struct thr_info *thr, struct work *work)
 		memset(work->data + 19, 0x00, 52);
 		work->data[20] = 0x80000000;
 		work->data[31] = 0x00000280;
+		//work->data[20] = 0x01234567;
+		//work->data[31] = 0x89ABCDEF;
 		memset(work->target, 0x00, sizeof(work->target));
 		return true;
 	}
@@ -1555,7 +1557,7 @@ static void *miner_thread(void *userdata)
 
 		if (opt_benchmark) {
 			// randomize work
-			nonceptr[-1] += 1;
+			//nonceptr[-1] += 1;
 		}
 
 		pthread_mutex_unlock(&g_work_lock);
