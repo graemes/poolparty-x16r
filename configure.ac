@@ -1,4 +1,4 @@
-AC_INIT([cryptopool], [0.1], [], [cryptopool], [https://github.com/graemes/cryptopool-x16r])
+AC_INIT([cryptopool], [1.0.0], [], [cryptopool], [https://github.com/graemes/cryptopool-x16r])
 
 AC_PREREQ([2.59c])
 AC_CANONICAL_SYSTEM
