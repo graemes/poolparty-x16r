@@ -8,6 +8,7 @@ There are however a number of benefits:
 - Updates are a simple matter of docker pull latest ;
 - The bare minimum required within the container can be packaged to remove bloat ;
 - Newer versions of the OS/libaraies can be packaged without touching the host server ;
+- The code within the container is isolated from the rest of the system and uses a container-local user ;
 
 The one downside at this point is that nvidia-docker is only possible on Linux machines at this time.
 
