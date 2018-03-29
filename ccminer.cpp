@@ -1791,15 +1791,10 @@ static void *miner_thread(void *userdata)
 
 		work.valid_nonces = 0;
 
+		/****************************************/
 		/* scan nonces for a proof-of-work hash */
-		switch (opt_algo) {
-		case ALGO_X16R:
-			rc = scanhash_x16r(thr_id, &work, max_nonce, &hashes_done);
-			break;
-		default:
-			/* should never happen */
-			goto out;
-		}
+		rc = scanhash_x16r(thr_id, &work, max_nonce, &hashes_done);
+		/****************************************/
 
 		if (opt_led_mode == LED_MODE_MINING)
 			gpu_led_off(dev_id);
