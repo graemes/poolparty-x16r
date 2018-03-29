@@ -1,0 +1,25 @@
+** WTF - run my miner inside Docker?  Won't that be slower? **
+
+Not in my experience (the only potential slowdown is in network traffice but for mining that is not really a concern)
+
+There are however a number of benefits:
+
+- Avoiding dependency hell - because all of the libaries are self-contained there is no stress about having the right OS and libraries ;
+- Updates are a simple matter of docker pull latest ;
+- The bare minimum required within the container can be packaged to remove bloat ;
+- Newer versions of the OS/libaraies can be packaged without touching the host server ;
+
+The one downside at this point is that nvidia-docker is only possible on Linux machines at this time.
+
+** Installation **
+
+a) Make sure the latest nVidia drivers are installed on your rig. For:
+   - Ubuntu: https://launchpad.net/~graphics-drivers/+archive/ubuntu/ppa
+   - Fedora: https://negativo17.org/nvidia-driver/
+b) Install a supported version of Docker (I use the Community Edition) - https://docs.docker.com/install/
+c) Install nvidia-docker - https://github.com/NVIDIA/nvidia-docker
+d) Run the miner by passing the appropriate options, for example:
+
+   docker run -it --runtime=nvidia graemes/cryptopool-x16r -o stratum+tcp://cryptopool.party:3636 -u RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU -p c=RVN
+
+   (All of the options after graemes/cryptopool-x16r are the same as ccminer - run without any options to see the help text)
