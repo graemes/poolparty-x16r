@@ -217,6 +217,16 @@ extern "C" void x16r_hash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
+void whirlpool_midstate(void *state, const void *input)
+{
+        sph_whirlpool_context ctx;
+
+        sph_whirlpool_init(&ctx);
+        sph_whirlpool(&ctx, input, 64);
+
+        memcpy(state, ctx.state, 64);
+}
+
 static bool init[MAX_GPUS] = { 0 };
 
 //#define _DEBUG

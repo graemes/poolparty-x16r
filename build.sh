@@ -11,6 +11,6 @@ rm -f config.status
 ./autogen.sh || echo done
 
 # CFLAGS="-O2" ./configure
-./configure.sh  
+./configure.sh --enable-compute=61 
 
 make -j 8
