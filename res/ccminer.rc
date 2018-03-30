@@ -76,10 +76,10 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "FileVersion", "1.0.0"
+            VALUE "FileVersion", "0.2.0"
             VALUE "LegalCopyright", "Copyright (C) 2018"
-            VALUE "ProductName", "ccminer"
-            VALUE "ProductVersion", "1.0.0"
+            VALUE "ProductName", "cryptopool"
+            VALUE "ProductVersion", "0.2.0"
         END
     END
     BLOCK "VarFileInfo"

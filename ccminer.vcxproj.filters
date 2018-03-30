@@ -64,7 +64,7 @@
     <Filter Include="Header Files\compat\nvapi">
       <UniqueIdentifier>{ef6f9983-bda5-4fb2-adfa-ac4f29b74f25}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Ressources">
+    <Filter Include="Resources">
       <UniqueIdentifier>{f5117ccb-a70d-411a-b7ea-d6faed230bc7}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
@@ -381,7 +381,7 @@
       <Filter>Source Files\CUDA\quark</Filter>
     </ClInclude>
     <ClInclude Include="res\resource.h">
-      <Filter>Ressources</Filter>
+      <Filter>Resources</Filter>
     </ClInclude>
     <ClInclude Include="bignum.hpp">
       <Filter>Header Files</Filter>
@@ -401,6 +401,7 @@
     <ClInclude Include="x16r\cuda_x16r.h">
       <Filter>Header Files\CUDA</Filter>
     </ClInclude>
+    <ClInclude Include="x11\cuda_x11_aes_alexis.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda.cpp">
@@ -463,9 +464,6 @@
     <CudaCompile Include="x15\cuda_x14_shabal512.cu">
       <Filter>Source Files\CUDA\x15</Filter>
     </CudaCompile>
-    <CudaCompile Include="x15\cuda_x15_whirlpool.cu">
-      <Filter>Source Files\CUDA\x15</Filter>
-    </CudaCompile>
     <CudaCompile Include="x15\whirlpool.cu">
       <Filter>Source Files\CUDA\x15</Filter>
     </CudaCompile>
@@ -490,20 +488,26 @@
     <CudaCompile Include="x16r\x16r.cu">
       <Filter>Source Files\CUDA\x16r</Filter>
     </CudaCompile>
+    <CudaCompile Include="qubit\qubit_luffa512_alexis.cu" />
+    <CudaCompile Include="x11\cuda_x11_echo_alexis.cu" />
+    <CudaCompile Include="x11\cuda_x11_shavite512_alexis.cu" />
+    <CudaCompile Include="x13\cuda_x13_fugue512_alexis.cu" />
+    <CudaCompile Include="x15\cuda_x14_shabal512_alexis.cu" />
+    <CudaCompile Include="x15\cuda_x15_whirlpool_alexis.cu" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ccminer.ico">
-      <Filter>Ressources</Filter>
+      <Filter>Resources</Filter>
     </Image>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="res\ccminer.rc">
-      <Filter>Ressources</Filter>
+      <Filter>Resources</Filter>
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
     <Text Include="README.txt">
-      <Filter>Ressources</Filter>
+      <Filter>Resources</Filter>
     </Text>
   </ItemGroup>
 </Project>
