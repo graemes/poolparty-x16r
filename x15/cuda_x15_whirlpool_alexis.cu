@@ -708,7 +708,8 @@ void x15_whirlpool_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 }
 
 __host__
-static void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
+//static void x15_whirlpool_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash)
+void x15_whirlpool_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
 	dim3 grid((threads + TPB64-1) / TPB64);
 	dim3 block(TPB64);
@@ -716,11 +717,11 @@ static void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_
 	x15_whirlpool_gpu_hash_64 <<<grid, block>>> (threads, (uint64_t*)d_hash);
 }
 
-__host__
-void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order)
-{
-        x15_whirlpool_cpu_hash_64(thr_id, threads, d_hash);
-}
+//__host__
+//void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order)
+//{
+//        x15_whirlpool_cpu_hash_64(thr_id, threads, d_hash);
+//}
 
 __global__ __launch_bounds__(TPB64,2)
 void x15_whirlpool_gpu_hash_64_final(uint32_t threads,const uint64_t* __restrict__ g_hash, uint32_t* resNonce, const uint64_t target)
