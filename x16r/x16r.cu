@@ -96,6 +96,51 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 	*sptr = '\0';
 }
 
+static uint32_t throughput;
+static bool init[MAX_GPUS] = { 0 };
+
+extern "C" uint32_t init_x16r(int thr_id)
+{
+	const int dev_id = device_map[thr_id];
+	int intensity = (device_sm[dev_id] > 500 && !is_windows()) ? 19 : 19;
+	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
+	if (strstr(device_name[dev_id], "GTX 1080")) intensity = 20;
+	throughput = cuda_default_throughput(thr_id, 1U << intensity);
+	//if (init[thr_id]) throughput = min(throughput, max_nonce - first_nonce);
+
+	if (!init[thr_id])
+	{
+		cudaSetDevice(device_map[thr_id]);
+		if (opt_cudaschedule == -1 && gpu_threads == 1) {
+			cudaDeviceReset();
+			// reduce cpu usage
+			cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
+		}
+		gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
+
+		quark_blake512_cpu_init(thr_id, throughput);
+		quark_bmw512_cpu_init(thr_id, throughput);
+		quark_groestl512_cpu_init(thr_id, throughput);
+		quark_skein512_cpu_init(thr_id, throughput);
+		quark_jh512_cpu_init(thr_id, throughput);
+		quark_keccak512_cpu_init(thr_id, throughput);
+		x11_shavite512_cpu_init(thr_id, throughput);
+		x11_simd512_cpu_init(thr_id, throughput); // 64
+		x16_echo512_cuda_init(thr_id, throughput);
+		x16_fugue512_cpu_init(thr_id, throughput);
+		x15_whirlpool_cpu_init(thr_id, throughput, 0);
+		x16_whirlpool512_init(thr_id, throughput);
+		x17_sha512_cpu_init(thr_id, throughput);
+
+		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);
+
+		cuda_check_cpu_init(thr_id, throughput);
+
+		init[thr_id] = true;
+	}
+	return throughput;
+}
+
 // X16R CPU Hash (Validation)
 extern "C" void x16r_hash(void *output, const void *input)
 {
@@ -227,8 +272,6 @@ void whirlpool_midstate(void *state, const void *input)
         memcpy(state, ctx.state, 64);
 }
 
-static bool init[MAX_GPUS] = { 0 };
-
 //#define _DEBUG
 #define _DEBUG_PREFIX "x16r-"
 #include "cuda_debug.cuh"
@@ -242,42 +285,11 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	uint32_t *pdata = work->data;
 	uint32_t *ptarget = work->target;
 	const uint32_t first_nonce = pdata[19];
-	const int dev_id = device_map[thr_id];
-	int intensity = (device_sm[dev_id] > 500 && !is_windows()) ? 19 : 19;
-	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
-	if (strstr(device_name[dev_id], "GTX 1080")) intensity = 20;
-	uint32_t throughput = cuda_default_throughput(thr_id, 1U << intensity);
-	//if (init[thr_id]) throughput = min(throughput, max_nonce - first_nonce);
-
+	
+	// Only init (and calculate throughput when necessary)
 	if (!init[thr_id])
 	{
-		cudaSetDevice(device_map[thr_id]);
-		if (opt_cudaschedule == -1 && gpu_threads == 1) {
-			cudaDeviceReset();
-			// reduce cpu usage
-			cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
-		}
-		gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
-
-		quark_blake512_cpu_init(thr_id, throughput);
-		quark_bmw512_cpu_init(thr_id, throughput);
-		quark_groestl512_cpu_init(thr_id, throughput);
-		quark_skein512_cpu_init(thr_id, throughput);
-		quark_jh512_cpu_init(thr_id, throughput);
-		quark_keccak512_cpu_init(thr_id, throughput);
-		x11_shavite512_cpu_init(thr_id, throughput);
-		x11_simd512_cpu_init(thr_id, throughput); // 64
-		x16_echo512_cuda_init(thr_id, throughput);
-		x16_fugue512_cpu_init(thr_id, throughput);
-		x15_whirlpool_cpu_init(thr_id, throughput, 0);
-		x16_whirlpool512_init(thr_id, throughput);
-		x17_sha512_cpu_init(thr_id, throughput);
-
-		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);
-
-		cuda_check_cpu_init(thr_id, throughput);
-
-		init[thr_id] = true;
+		init_x16r(thr_id);
 	}
 
 	if (opt_benchmark) {

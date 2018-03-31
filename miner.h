@@ -274,6 +274,7 @@ void sha256d(unsigned char *hash, const unsigned char *data, int len);
 struct work;
 
 extern int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
+extern uint32_t init_x16r(int thr_id);
 
 /* free device allocated memory per algo */
 void algo_free_all(int thr_id);
