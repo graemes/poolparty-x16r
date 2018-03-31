@@ -37,10 +37,10 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  x11/cuda_x11_shavite512.cu x11/cuda_x11_shavite512_alexis.cu \
                           x11/cuda_x11_simd512.cu \
                           x11/cuda_x11_echo.cu x11/cuda_x11_echo_alexis.cu \
-			  x13/cuda_x13_hamsi512.cu x13/cuda_x13_hamsi512_alexis.cu \
+			  x13/cuda_x13_hamsi512_alexis.cu x13/cuda_x13_hamsi512.cu \
                           x13/cuda_x13_fugue512.cu x13/cuda_x13_fugue512_alexis.cu \
 			  x15/cuda_x14_shabal512.cu x15/cuda_x14_shabal512_alexis.cu \
-                          x15/cuda_x15_whirlpool_alexis.cu x15/whirlpool.cu x15/cuda_x15_whirlpool_sm3.cu \
+                          x15/whirlpool.cu x15/cuda_x15_whirlpool.cu x15/cuda_x15_whirlpool_sm3.cu \
 			  x16r/x16r.cu x16r/cuda_x16_echo512.cu x16r/cuda_x16_fugue512.cu \
 			  x16r/cuda_x16_shabal512.cu x16r/cuda_x16_simd512_80.cu \
 			  x17/cuda_x17_sha512.cu
@@ -91,14 +91,14 @@ nvcc_FLAGS += $(JANSSON_INCLUDES) --ptxas-options="-v"
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=128 -o $@ -c $<
 
 # Luffa and Echo are faster with 80 registers than 128
-x11/cuda_x11_luffa512.o: x11/cuda_x11_luffa512.cu
+x11/cuda_x11_luffa512_alexis.o: x11/cuda_x11_luffa512_alexis.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
 
 x11/cuda_x11_simd512.o: x11/cuda_x11_simd512.cu
 	$(NVCC) $(nvcc_FLAGS) -Xcompiler -Wno-unused-variable -o $@ -c $<
 
-x13/cuda_x13_hamsi512.o: x13/cuda_x13_hamsi512.cu
-	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
+#x13/cuda_x13_hamsi512.o: x13/cuda_x13_hamsi512_alexis.cu
+#	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
 
 x17/cuda_x17_sha512.o: x17/cuda_x17_sha512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
@@ -112,5 +112,5 @@ quark/cuda_jh512.o: quark/cuda_jh512.cu
 quark/cuda_quark_keccak512.o: quark/cuda_quark_keccak512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=88 -o $@ -c $<
 
-x15/cuda_x15_whirlpool_alexis.o: x15/cuda_x15_whirlpool_alexis.cu
-	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
+#x15/cuda_x15_whirlpool_alexis.o: x15/cuda_x15_whirlpool_alexis.cu
+#	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<

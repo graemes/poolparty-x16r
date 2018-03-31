@@ -11,7 +11,7 @@
 
 extern __device__ __device_builtin__ void __threadfence_block(void);
 
-#include "../x11/cuda_x11_aes.cuh"
+#include "x11/cuda_x11_aes.cuh"
 
 __device__ __forceinline__ void AES_2ROUND(const uint32_t* __restrict__ sharedMemory,
 	uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3,

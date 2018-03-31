@@ -175,7 +175,7 @@ static __constant__ const uint32_t d_T512[1024] = {
 	}
 
 __global__ __launch_bounds__(384,2)
-void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
+void x13_hamsi512_gpu_hash_64_alexis(uint32_t threads, uint32_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -261,7 +261,7 @@ void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 		h[ 4] ^= m[ 2]; h[ 5] ^= m[ 3]; h[ 6] ^= c[ 2]; h[ 7] ^= c[ 3];
 		h[ 8] ^= m[ 8]; h[ 9] ^= m[ 9]; h[10] ^= c[ 8]; h[11] ^= c[ 9];
 		h[12] ^= m[10]; h[13] ^= m[11]; h[14] ^= c[10]; h[15] ^= c[11];
-			
+
 		*(uint16*)&c[ 0] = *(uint16*)&h[ 0];
 
 		*(uint2x4*)&m[ 0] = *(uint2x4*)&d_T512[784];
@@ -270,15 +270,19 @@ void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 		#pragma unroll 12
 		for( int r = 0; r < 12; r++ )
 			ROUND_BIG(r, d_alpha_f);
-		
+
 		/* order is (no more) important */
 		h[ 0] ^= m[ 0]; h[ 1] ^= m[ 1]; h[ 2] ^= c[ 0]; h[ 3] ^= c[ 1];
 		h[ 4] ^= m[ 2]; h[ 5] ^= m[ 3]; h[ 6] ^= c[ 2]; h[ 7] ^= c[ 3];
 		h[ 8] ^= m[ 8]; h[ 9] ^= m[ 9]; h[10] ^= c[ 8]; h[11] ^= c[ 9];
 		h[12] ^= m[10]; h[13] ^= m[11]; h[14] ^= c[10]; h[15] ^= c[11];
-		
+
 		*(uint2x4*)&Hash[ 0] = *(uint2x4*)&h[ 0];
 		*(uint2x4*)&Hash[ 8] = *(uint2x4*)&h[ 8];
+
+		#pragma unroll 16
+		for(int i = 0; i < 16; i++)
+			Hash[i] = cuda_swab32(Hash[i]);
 	}
 }
 
@@ -290,6 +294,6 @@ void x13_hamsi512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_h
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 
-	x13_hamsi512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
+	x13_hamsi512_gpu_hash_64_alexis<<<grid, block>>>(threads, d_hash);
 
 }

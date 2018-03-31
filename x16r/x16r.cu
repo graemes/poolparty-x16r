@@ -244,7 +244,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	const uint32_t first_nonce = pdata[19];
 	const int dev_id = device_map[thr_id];
 	int intensity = (device_sm[dev_id] > 500 && !is_windows()) ? 19 : 19;
-	gpulog(LOG_INFO, thr_id, "Detected device %s", device_name[dev_id]);
+	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
 	if (strstr(device_name[dev_id], "GTX 1080")) intensity = 20;
 	uint32_t throughput = cuda_default_throughput(thr_id, 1U << intensity);
 	//if (init[thr_id]) throughput = min(throughput, max_nonce - first_nonce);
@@ -268,9 +268,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		x11_shavite512_cpu_init(thr_id, throughput);
 		x11_simd512_cpu_init(thr_id, throughput); // 64
 		x16_echo512_cuda_init(thr_id, throughput);
-		//x13_hamsi512_cpu_init(thr_id, throughput);
-		x13_fugue512_cpu_init(thr_id, throughput);
-		// x14_shabal512_cpu_init(thr_id, throughput);
+		x16_fugue512_cpu_init(thr_id, throughput);
 		x15_whirlpool_cpu_init(thr_id, throughput, 0);
 		x16_whirlpool512_init(thr_id, throughput);
 		x17_sha512_cpu_init(thr_id, throughput);
@@ -505,16 +503,14 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				break;
 			case FUGUE:
 				x13_fugue512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
-                		//x13_fugue512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
 				TRACE("fugue  :");
 				break;
 			case SHABAL:
-				// x14_shabal512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
 		                x14_shabal512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
 				TRACE("shabal :");
 				break;
 			case WHIRLPOOL:
-				x15_whirlpool_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
+				x15_whirlpool_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
 				TRACE("shabal :");
 				break;
 			case SHA512:
