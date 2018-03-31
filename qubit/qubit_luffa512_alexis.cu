@@ -3,7 +3,7 @@
  */
 
 #include <miner.h>
-#include "cuda_helper.h"
+#include "cuda_helper_alexis.h"
 #include "cuda_vectors_alexis.h"
 
 static unsigned char PaddedMessage[128];

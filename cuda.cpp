@@ -169,7 +169,7 @@ uint32_t cuda_default_throughput(int thr_id, uint32_t defcount)
 	uint32_t throughput = gpus_intensity[thr_id] ? gpus_intensity[thr_id] : defcount;
 	if (gpu_threads > 1 && throughput == defcount) throughput /= (gpu_threads-1);
 	if (api_thr_id != -1) api_set_throughput(thr_id, throughput);
-	//gpulog(LOG_INFO, thr_id, "throughput %u", throughput);
+	gpulog(LOG_INFO, thr_id, "throughput %u", throughput);
 	return throughput;
 }
 

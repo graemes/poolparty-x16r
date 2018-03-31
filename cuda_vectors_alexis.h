@@ -10,7 +10,7 @@
 #define __LDG_PTR   "r"
 #endif
 
-#include "cuda_helper.h"
+#include "cuda_helper_alexis.h"
 
 #if __CUDA_ARCH__ < 320 && !defined(__ldg4)
 #define __ldg4(x) (*(x))
@@ -629,26 +629,5 @@ static __device__ __forceinline__ ulonglong4 shuffle4(ulonglong4 var, int lane)
 	return var;
 #endif
 }
-
-#ifdef __CUDA_ARCH__
-__device__ __forceinline__
-uint32_t ROL8(const uint32_t a){
-    return __byte_perm(a, 0, 0x2103);
-}
-
-__device__ __forceinline__
-uint32_t ROR8(const uint32_t a){
-    return __byte_perm(a, 0, 0x0321);
-}
-
-__device__ __forceinline__
-uint32_t ROL16(const uint32_t a){
-    return __byte_perm(a, 0, 0x1032);
-}
-#else
-    #define ROL8(u)  ROTL32(u, 8)
-    #define ROR8(u)  ROTR32(u, 8)
-    #define ROL16(u) ROTL32(u,16)
-#endif
 
 #endif // #ifndef CUDA_LYRA_VECTOR_H

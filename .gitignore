@@ -68,4 +68,5 @@ compat/curl-for-windows/
 *.cudafe1.c
 *.cudafe2.c
 
-build-docker.sh
+build-docker*.sh
+releases/

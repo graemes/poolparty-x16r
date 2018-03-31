@@ -12,5 +12,6 @@ rm -f config.status
 
 # CFLAGS="-O2" ./configure
 ./configure.sh --enable-compute=61 
+#./configure.sh 
 
 make -j 8
