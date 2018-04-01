@@ -1341,59 +1341,6 @@ void shavite_gpu_init(uint32_t *sharedMemory)
 	}
 }
 
-// GPU Hash
-__global__ __launch_bounds__(TPB, 7) /* 64 registers with 128,8 - 72 regs with 128,7 */
-void x11_shavite512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint64_t *g_hash, uint32_t *g_nonceVector)
-{
-	__shared__ uint32_t sharedMemory[1024];
-
-	shavite_gpu_init(sharedMemory);
-	__threadfence_block();
-
-	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-	if (thread < threads)
-	{
-		uint32_t nounce = (g_nonceVector != NULL) ? g_nonceVector[thread] : (startNounce + thread);
-
-		int hashPosition = nounce - startNounce;
-		uint32_t *Hash = (uint32_t*)&g_hash[hashPosition<<3];
-
-		// kopiere init-state
-		uint32_t state[16] = {
-			SPH_C32(0x72FCCDD8), SPH_C32(0x79CA4727), SPH_C32(0x128A077B), SPH_C32(0x40D55AEC),
-			SPH_C32(0xD1901A06), SPH_C32(0x430AE307), SPH_C32(0xB29F5CD1), SPH_C32(0xDF07FBFC),
-			SPH_C32(0x8E45D73D), SPH_C32(0x681AB538), SPH_C32(0xBDE86578), SPH_C32(0xDD577E47),
-			SPH_C32(0xE275EADE), SPH_C32(0x502D9FCD), SPH_C32(0xB9357178), SPH_C32(0x022A4B9A)
-		};
-
-		// nachricht laden
-		uint32_t msg[32];
-
-		// fülle die Nachricht mit 64-byte (vorheriger Hash)
-		#pragma unroll 16
-		for(int i=0;i<16;i++)
-			msg[i] = Hash[i];
-
-		// Nachrichtenende
-		msg[16] = 0x80;
-		#pragma unroll 10
-		for(int i=17;i<27;i++)
-			msg[i] = 0;
-
-		msg[27] = 0x02000000;
-		msg[28] = 0;
-		msg[29] = 0;
-		msg[30] = 0;
-		msg[31] = 0x02000000;
-
-		c512(sharedMemory, state, msg, 512);
-
-		#pragma unroll 16
-		for(int i=0;i<16;i++)
-			Hash[i] = state[i];
-	}
-}
-
 __global__ __launch_bounds__(TPB, 7)
 void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *outputHash)
 {
@@ -1435,19 +1382,6 @@ void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *ou
 			outHash[i] = state[i];
 
 	} //thread < threads
-}
-
-__host__
-void x11_shavite512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_hash, int order)
-{
-	const uint32_t threadsperblock = TPB;
-
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
-
-	// note: 128 threads minimum are required to init the shared memory array
-	x11_shavite512_gpu_hash_64<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
-	//MyStreamSynchronize(NULL, order, thr_id);
 }
 
 __host__

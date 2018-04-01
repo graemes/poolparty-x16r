@@ -32,19 +32,19 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  sph/hamsi.c sph/hamsi_helper.c sph/streebog.c \
 			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
 			  sph/ripemd.c sph/sph_sha2.c \
-			  qubit/qubit_luffa512.cu qubit/qubit_luffa512_alexis.cu \
+			  qubit/qubit_luffa512_alexis.cu \
 			  x11/cuda_x11_luffa512.cu \
                           x11/cuda_x11_cubehash512_alexis.cu x11/cuda_x11_cubehash512_80.cu \
-			  x11/cuda_x11_shavite512.cu x11/cuda_x11_shavite512_alexis.cu \
-                          x11/cuda_x11_simd512.cu x11/cuda_x11_simd512_alexis.cu \
-                          x11/cuda_x11_echo.cu x11/cuda_x11_echo_alexis.cu \
-			  x13/cuda_x13_hamsi512_alexis.cu x13/cuda_x13_hamsi512.cu \
-                          x13/cuda_x13_fugue512.cu x13/cuda_x13_fugue512_alexis.cu \
-			  x15/cuda_x14_shabal512.cu x15/cuda_x14_shabal512_alexis.cu \
+			  x11/cuda_x11_shavite512_alexis.cu x11/cuda_x11_shavite512_80.cu \
+                          x11/cuda_x11_simd512_alexis.cu \
+                          x11/cuda_x11_echo_alexis.cu \
+			  x13/cuda_x13_hamsi512_alexis.cu x13/cuda_x13_hamsi512_80.cu \
+                          x13/cuda_x13_fugue512_alexis.cu \
+			  x15/cuda_x14_shabal512_alexis.cu \
                           x15/cuda_x15_whirlpool_alexis.cu x15/cuda_x15_whirlpool_sm3.cu x15/cuda_x15_whirlpool_midstate.cu \
 			  x16r/x16r.cu x16r/cuda_x16_echo512.cu x16r/cuda_x16_fugue512.cu \
 			  x16r/cuda_x16_shabal512.cu x16r/cuda_x16_simd512_80.cu \
-			  x17/cuda_x17_sha512.cu x17/cuda_x17_sha512_alexis.cu
+			  x17/cuda_x17_sha512_alexis.cu x17/cuda_x17_sha512_80.cu
 
 if HAVE_NVML
 nvml_defs = -DUSE_WRAPNVML

@@ -630,7 +630,6 @@ extern "C" void free_x16r(int thr_id)
 	quark_blake512_cpu_free(thr_id);
 	quark_groestl512_cpu_free(thr_id);
 	x11_simd512_cpu_free_alexis(thr_id);
-	x13_fugue512_cpu_free(thr_id);
 	x16_fugue512_cpu_free(thr_id); // to merge with x13_fugue512 ?
 	x15_whirlpool_cpu_free(thr_id);
 
