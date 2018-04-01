@@ -262,18 +262,6 @@ extern "C" void x16r_hash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
-/*
-void whirlpool_midstate(void *state, const void *input)
-{
-        sph_whirlpool_context ctx;
-
-        sph_whirlpool_init(&ctx);
-        sph_whirlpool(&ctx, input, 64);
-
-        memcpy(state, ctx.state, 64);
-}
-*/
-
 //#define _DEBUG
 #define _DEBUG_PREFIX "x16r-"
 #include "cuda_debug.cuh"
@@ -496,7 +484,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("luffa  :");
 				break;
 			case CUBEHASH:
-				//x11_cubehash512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
 				x11_cubehash512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
 				TRACE("cube   :");
 				break;
@@ -505,7 +492,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("shavite:");
 				break;
 			case SIMD:
-				//x11_simd512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
 				x11_simd512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
 				TRACE("simd   :");
 				break;
@@ -527,10 +513,9 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				break;
 			case WHIRLPOOL:
 				x15_whirlpool_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
-				TRACE("shabal :");
+				TRACE("whirl  :");
 				break;
 			case SHA512:
-				//x17_sha512_cpu_hash_64(thr_id, throughput, pdata[19], d_hash[thr_id]); order++;
 				x17_sha512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
 				TRACE("sha512 :");
 				break;
@@ -630,7 +615,7 @@ extern "C" void free_x16r(int thr_id)
 	quark_blake512_cpu_free(thr_id);
 	quark_groestl512_cpu_free(thr_id);
 	x11_simd512_cpu_free_alexis(thr_id);
-	x16_fugue512_cpu_free(thr_id); // to merge with x13_fugue512 ?
+	x16_fugue512_cpu_free(thr_id);
 	x15_whirlpool_cpu_free(thr_id);
 
 	cuda_check_cpu_free(thr_id);
