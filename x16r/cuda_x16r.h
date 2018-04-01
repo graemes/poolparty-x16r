@@ -13,6 +13,8 @@ extern void x11_simd512_cpu_init_alexis(int thr_id, uint32_t threads);
 extern void x11_simd512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 extern void x11_simd512_cpu_free_alexis(int thr_id);
 
+extern void x11_cubehash512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
+
 extern void x13_hamsi512_cpu_init(int thr_id, uint32_t threads);
 extern void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
 

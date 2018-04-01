@@ -494,7 +494,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("luffa  :");
 				break;
 			case CUBEHASH:
-				x11_cubehash512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+				//x11_cubehash512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+				x11_cubehash512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
 				TRACE("cube   :");
 				break;
 			case SHAVITE:
