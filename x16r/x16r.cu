@@ -294,8 +294,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-		((uint32_t*)pdata)[1] = 0x01234567;
-		((uint32_t*)pdata)[2] = 0x89ABCDEF;
+		((uint32_t*)pdata)[1] = 0xEFCDAB89;
+		((uint32_t*)pdata)[2] = 0x67452301;
 		//((uint32_t*)pdata)[1] = 0xCCCCCCCC;
 		//((uint32_t*)pdata)[2] = 0xCCCCCCCC;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
