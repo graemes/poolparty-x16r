@@ -6,7 +6,7 @@ extern void x11_shavite512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint
 extern void x13_fugue512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 extern void x13_hamsi512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 extern void x14_shabal512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
-//extern void x15_whirlpool_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
+extern void x15_whirlpool_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 extern void x17_sha512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 
 extern void x11_simd512_cpu_init_alexis(int thr_id, uint32_t threads);

@@ -262,6 +262,7 @@ extern "C" void x16r_hash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
+/*
 void whirlpool_midstate(void *state, const void *input)
 {
         sph_whirlpool_context ctx;
@@ -271,6 +272,7 @@ void whirlpool_midstate(void *state, const void *input)
 
         memcpy(state, ctx.state, 64);
 }
+*/
 
 //#define _DEBUG
 #define _DEBUG_PREFIX "x16r-"
@@ -294,10 +296,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-		((uint32_t*)pdata)[1] = 0xEFCDAB89;
-		((uint32_t*)pdata)[2] = 0x67452301;
-		//((uint32_t*)pdata)[1] = 0xCCCCCCCC;
-		//((uint32_t*)pdata)[2] = 0xCCCCCCCC;
+		//((uint32_t*)pdata)[1] = 0xEFCDAB89;
+		//((uint32_t*)pdata)[2] = 0x67452301;
+		((uint32_t*)pdata)[1] = 0xEEEEEEEE;
+		((uint32_t*)pdata)[2] = 0xEEEEEEEE;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xA0; // hashOrder[0] = 'A'; for echo 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xB0; // hashOrder[0] = 'B'; for hamsi 80 + blake512 64
@@ -524,7 +526,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("shabal :");
 				break;
 			case WHIRLPOOL:
-				x15_whirlpool_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+				x15_whirlpool_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
 				TRACE("shabal :");
 				break;
 			case SHA512:
