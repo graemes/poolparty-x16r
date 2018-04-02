@@ -356,20 +356,13 @@
     </CudaCompile>
     <CudaCompile Include="quark\cuda_skein512.cu">
     </CudaCompile>
-    <CudaCompile Include="qubit\qubit_luffa512.cu" />
     <CudaCompile Include="qubit\qubit_luffa512_alexis.cu" />
     <ClInclude Include="x11\cuda_x11_aes.cuh" />
     <CudaCompile Include="x11\cuda_x11_cubehash512_alexis.cu" />
     <CudaCompile Include="x11\cuda_x11_cubehash512_80.cu" />
-    <CudaCompile Include="x11\cuda_x11_echo.cu">
-    </CudaCompile>
     <CudaCompile Include="x11\cuda_x11_luffa512.cu" />
-    <CudaCompile Include="x11\cuda_x11_shavite512.cu">
+    <CudaCompile Include="x11\cuda_x11_shavite512_80.cu">
       <MaxRegCount>128</MaxRegCount>
-    </CudaCompile>
-    <ClInclude Include="x11\cuda_x11_simd512_func.cuh" />
-    <CudaCompile Include="x11\cuda_x11_simd512.cu">
-      <MaxRegCount>64</MaxRegCount>
     </CudaCompile>
     <ClInclude Include="x11\cuda_x11_simd512_func_alexis.cuh" />
     <CudaCompile Include="x11\cuda_x11_simd512_alexis.cu">
@@ -381,15 +374,11 @@
     <CudaCompile Include="x13\cuda_x13_hamsi512_alexis.cu">
       <MaxRegCount>72</MaxRegCount>
     </CudaCompile>
-    <CudaCompile Include="x13\cuda_x13_hamsi512.cu">
+    <CudaCompile Include="x13\cuda_x13_hamsi512_80.cu">
       <MaxRegCount>72</MaxRegCount>
     </CudaCompile>
-    <CudaCompile Include="x13\cuda_x13_fugue512.cu" />
-    <CudaCompile Include="x15\cuda_x14_shabal512.cu" />
-    <CudaCompile Include="x15\cuda_x15_whirlpool.cu" />
-    <CudaCompile Include="x15\whirlpool.cu" />
     <CudaCompile Include="x15\cuda_x14_shabal512_alexis.cu" />
-    <CudaCompile Include="x17\cuda_x17_sha512.cu">
+    <CudaCompile Include="x17\cuda_x17_sha512_80.cu">
       <MaxRegCount>80</MaxRegCount>
     </CudaCompile>
     <CudaCompile Include="x17\cuda_x17_sha512_alexis.cu">

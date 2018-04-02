@@ -23,28 +23,29 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  api.cpp hashlog.cpp nvml.cpp stats.cpp sysinfos.cpp cuda.cpp \
 			  nvsettings.cpp \
 			  sph/fugue.c uint256.h \
-			  JHA/cuda_jha_keccak512.cu \
 			  cuda_checkhash.cu \
-			  quark/cuda_jh512.cu quark/cuda_quark_blake512.cu quark/cuda_quark_groestl512.cu quark/cuda_skein512.cu \
-			  quark/cuda_bmw512.cu quark/cuda_quark_keccak512.cu \
 			  sph/bmw.c sph/blake.c sph/groestl.c sph/jh.c sph/keccak.c sph/skein.c \
 			  sph/cubehash.c sph/echo.c sph/luffa.c sph/sha2.c sph/shavite.c sph/simd.c \
 			  sph/hamsi.c sph/hamsi_helper.c sph/streebog.c \
 			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
 			  sph/ripemd.c sph/sph_sha2.c \
-			  qubit/qubit_luffa512_alexis.cu \
-			  x11/cuda_x11_luffa512.cu \
+			  quark/cuda_quark_blake512.cu \
+			  quark/cuda_bmw512.cu \
+			  quark/cuda_quark_groestl512.cu \
+			  quark/cuda_jh512.cu \
+			  quark/cuda_quark_keccak512.cu JHA/cuda_jha_keccak512.cu \
+			  quark/cuda_skein512.cu \
+			  qubit/qubit_luffa512_alexis.cu x11/cuda_x11_luffa512.cu \
                           x11/cuda_x11_cubehash512_alexis.cu x11/cuda_x11_cubehash512_80.cu \
 			  x11/cuda_x11_shavite512_alexis.cu x11/cuda_x11_shavite512_80.cu \
-                          x11/cuda_x11_simd512_alexis.cu \
-                          x11/cuda_x11_echo_alexis.cu \
+                          x11/cuda_x11_simd512_alexis.cu x16r/cuda_x16_simd512_80.cu \
+                          x11/cuda_x11_echo_alexis.cu x16r/cuda_x16_echo512.cu \
 			  x13/cuda_x13_hamsi512_alexis.cu x13/cuda_x13_hamsi512_80.cu \
-                          x13/cuda_x13_fugue512_alexis.cu \
-			  x15/cuda_x14_shabal512_alexis.cu \
+                          x13/cuda_x13_fugue512_alexis.cu x16r/cuda_x16_fugue512.cu \
+			  x15/cuda_x14_shabal512_alexis.cu x16r/cuda_x16_shabal512.cu \
                           x15/cuda_x15_whirlpool_alexis.cu x15/cuda_x15_whirlpool_sm3.cu \
-			  x16r/x16r.cu x16r/cuda_x16_echo512.cu x16r/cuda_x16_fugue512.cu \
-			  x16r/cuda_x16_shabal512.cu x16r/cuda_x16_simd512_80.cu \
-			  x17/cuda_x17_sha512_alexis.cu x17/cuda_x17_sha512_80.cu
+			  x17/cuda_x17_sha512_alexis.cu x17/cuda_x17_sha512_80.cu \
+			  x16r/x16r.cu 
 
 if HAVE_NVML
 nvml_defs = -DUSE_WRAPNVML
