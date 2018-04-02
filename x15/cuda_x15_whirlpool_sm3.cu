@@ -31,6 +31,7 @@
  */
 #include <stdio.h>
 #include <memory.h>
+#include "sph/sph_whirlpool.h"
 
 // don't change, used by shared mem fetch!
 #define threadsperblock 256
@@ -2345,9 +2346,6 @@ void whirlpool512_hash_80_sm3(int thr_id, uint32_t threads, uint32_t startNonce,
 	oldwhirlpool_gpu_hash_80<<<grid, block>>>(threads, startNonce, d_outputHash, 1);
 }
 
-//extern void whirl_midstate(void *state, const void *input);
-#include "sph/sph_whirlpool.h"
-
 void whirl_midstate(void *state, const void *input)
 {
         sph_whirlpool_context ctx;
@@ -2395,13 +2393,6 @@ void x16_whirlpool512_init(int thr_id, uint32_t threads)
 	cudaMemcpyToSymbol(mixTob7Tox, plain_T7, (256 * 8), 0, cudaMemcpyHostToDevice);
 #endif
 }
-
-//extern void whirlpool_midstate(void *state, const void *input);
-//extern "C"
-//{
-//#include "sph/sph_whirlpool.h"
-//#include "miner.h"
-//}
 
 void whirlpool_midstate(void *state, const void *input)
 {
