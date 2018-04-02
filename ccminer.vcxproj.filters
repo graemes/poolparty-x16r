@@ -180,9 +180,6 @@
     <ClCompile Include="sph\streebog.c">
       <Filter>Source Files\sph</Filter>
     </ClCompile>
-    <ClCompile Include="x13\sm3.c">
-      <Filter>Source Files\sph</Filter>
-    </ClCompile>
     <ClCompile Include="compat\winansi.c">
       <Filter>Source Files</Filter>
     </ClCompile>

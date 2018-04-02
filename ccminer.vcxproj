@@ -268,7 +268,6 @@
     <ClCompile Include="sph\hamsi.c" />
     <ClCompile Include="sph\hamsi_helper.c" />
     <ClCompile Include="sph\whirlpool.c" />
-    <ClCompile Include="x13\sm3.c" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="compat.h" />
@@ -330,6 +329,7 @@
   <ItemGroup>
     <CudaCompile Include="cuda.cpp" />
     <CudaCompile Include="x15\cuda_x15_whirlpool_sm3.cu" />
+    <CudaCompile Include="x15\cuda_x15_whirlpool_alexis.cu" />
     <CudaCompile Include="x16r\x16r.cu" />
     <CudaCompile Include="x16r\cuda_x16_echo512.cu" />
     <CudaCompile Include="x16r\cuda_x16_fugue512.cu" />
