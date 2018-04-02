@@ -121,7 +121,8 @@ extern "C" uint32_t init_x16r(int thr_id)
 	quark_jh512_cpu_init(thr_id, throughput);
 	quark_keccak512_cpu_init(thr_id, throughput);
 	x11_shavite512_cpu_init(thr_id, throughput);
-	x11_simd512_cpu_init_alexis(thr_id, throughput); // 64
+	//x11_simd512_cpu_init_alexis(thr_id, throughput); // 64
+	x11_simd512_cpu_init(thr_id, throughput); // 64
 	x16_echo512_cuda_init(thr_id, throughput);
 	x16_fugue512_cpu_init(thr_id, throughput);
 	x15_whirlpool_cpu_init(thr_id, throughput, 0);
@@ -281,10 +282,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-		//((uint32_t*)pdata)[1] = 0xEFCDAB89;
-		//((uint32_t*)pdata)[2] = 0x67452301;
-		((uint32_t*)pdata)[1] = 0xFFFFFFFF;
-		((uint32_t*)pdata)[2] = 0xFFFFFFFF;
+		((uint32_t*)pdata)[1] = 0xEFCDAB89;
+		((uint32_t*)pdata)[2] = 0x67452301;
+		//((uint32_t*)pdata)[1] = 0x99999999;
+		//((uint32_t*)pdata)[2] = 0x99999999;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xA0; // hashOrder[0] = 'A'; for echo 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xB0; // hashOrder[0] = 'B'; for hamsi 80 + blake512 64
@@ -489,7 +490,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("shavite:");
 				break;
 			case SIMD:
-				x11_simd512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
+				//x11_simd512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
+				x11_simd512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
 				TRACE("simd   :");
 				break;
 			case ECHO:
@@ -611,7 +613,8 @@ extern "C" void free_x16r(int thr_id)
 
 	quark_blake512_cpu_free(thr_id);
 	quark_groestl512_cpu_free(thr_id);
-	x11_simd512_cpu_free_alexis(thr_id);
+	//x11_simd512_cpu_free_alexis(thr_id);
+	x11_simd512_cpu_free(thr_id);
 	x16_fugue512_cpu_free(thr_id);
 	x15_whirlpool_cpu_free(thr_id);
 

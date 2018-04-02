@@ -364,8 +364,8 @@
     <CudaCompile Include="x11\cuda_x11_shavite512_80.cu">
       <MaxRegCount>128</MaxRegCount>
     </CudaCompile>
-    <ClInclude Include="x11\cuda_x11_simd512_func_alexis.cuh" />
-    <CudaCompile Include="x11\cuda_x11_simd512_alexis.cu">
+    <ClInclude Include="x11\cuda_x11_simd512_func.cuh" />
+    <CudaCompile Include="x11\cuda_x11_simd512.cu">
       <MaxRegCount>64</MaxRegCount>
     </CudaCompile>
     <CudaCompile Include="x11\cuda_x11_echo_alexis.cu" />
@@ -378,9 +378,6 @@
       <MaxRegCount>72</MaxRegCount>
     </CudaCompile>
     <CudaCompile Include="x15\cuda_x14_shabal512_alexis.cu" />
-    <CudaCompile Include="x17\cuda_x17_sha512_80.cu">
-      <MaxRegCount>80</MaxRegCount>
-    </CudaCompile>
     <CudaCompile Include="x17\cuda_x17_sha512_alexis.cu">
       <MaxRegCount>80</MaxRegCount>
     </CudaCompile>
