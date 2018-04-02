@@ -2345,7 +2345,18 @@ void whirlpool512_hash_80_sm3(int thr_id, uint32_t threads, uint32_t startNonce,
 	oldwhirlpool_gpu_hash_80<<<grid, block>>>(threads, startNonce, d_outputHash, 1);
 }
 
-extern void whirl_midstate(void *state, const void *input);
+//extern void whirl_midstate(void *state, const void *input);
+#include "sph/sph_whirlpool.h"
+
+void whirl_midstate(void *state, const void *input)
+{
+        sph_whirlpool_context ctx;
+
+        sph_whirlpool1_init(&ctx);
+        sph_whirlpool1(&ctx, input, 64);
+
+        memcpy(state, ctx.state, 64);
+}
 
 __host__
 void whirlpool512_setBlock_80_sm3(void *pdata, const void *ptarget)
@@ -2385,7 +2396,22 @@ void x16_whirlpool512_init(int thr_id, uint32_t threads)
 #endif
 }
 
-extern void whirlpool_midstate(void *state, const void *input);
+//extern void whirlpool_midstate(void *state, const void *input);
+//extern "C"
+//{
+//#include "sph/sph_whirlpool.h"
+//#include "miner.h"
+//}
+
+void whirlpool_midstate(void *state, const void *input)
+{
+        sph_whirlpool_context ctx;
+
+        sph_whirlpool_init(&ctx);
+        sph_whirlpool(&ctx, input, 64);
+
+        memcpy(state, ctx.state, 64);
+}
 
 __host__
 void x16_whirlpool512_setBlock_80(void *pdata)
