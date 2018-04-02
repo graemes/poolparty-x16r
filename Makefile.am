@@ -44,7 +44,7 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
                           x13/cuda_x13_fugue512_alexis.cu x16r/cuda_x16_fugue512.cu \
 			  x15/cuda_x14_shabal512_alexis.cu x16r/cuda_x16_shabal512.cu \
                           x15/cuda_x15_whirlpool_alexis.cu x15/cuda_x15_whirlpool_sm3.cu \
-			  x17/cuda_x17_sha512_alexis.cu x17/cuda_x17_sha512_80.cu \
+			  x17/cuda_x17_sha512_alexis.cu \
 			  x16r/x16r.cu 
 
 if HAVE_NVML
