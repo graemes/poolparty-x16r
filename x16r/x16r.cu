@@ -286,8 +286,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		((uint32_t*)ptarget)[7] = 0x003f;
 		//((uint32_t*)pdata)[1] = 0xEFCDAB89;
 		//((uint32_t*)pdata)[2] = 0x67452301;
-		((uint32_t*)pdata)[1] = 0x99999999;
-		((uint32_t*)pdata)[2] = 0x99999909;
+		((uint32_t*)pdata)[1] = 0x44444444;
+		((uint32_t*)pdata)[2] = 0x44444444;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xA0; // hashOrder[0] = 'A'; for echo 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xB0; // hashOrder[0] = 'B'; for hamsi 80 + blake512 64
@@ -472,7 +472,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("jh512    :");
 				break;
 			case KECCAK:
-				quark_keccak512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+				//quark_keccak512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+				quark_keccak512_cpu_hash_64_alexis(thr_id, throughput, NULL, d_hash[thr_id]); order++;
 				TRACE("keccak   :");
 				break;
 			case SKEIN:

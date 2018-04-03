@@ -33,7 +33,7 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  quark/cuda_bmw512.cu \
 			  quark/cuda_quark_groestl512.cu \
 			  quark/cuda_jh512.cu \
-			  quark/cuda_quark_keccak512.cu JHA/cuda_jha_keccak512.cu \
+			  quark/cuda_quark_keccak512_alexis.cu quark/cuda_quark_keccak512_80.cu JHA/cuda_jha_keccak512.cu \
 			  quark/cuda_skein512.cu \
 			  qubit/qubit_luffa512_alexis.cu x11/cuda_x11_luffa512.cu \
                           x11/cuda_x11_cubehash512_alexis.cu x11/cuda_x11_cubehash512_80.cu \
