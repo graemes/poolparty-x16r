@@ -103,7 +103,9 @@ extern "C" uint32_t init_x16r(int thr_id)
 	int dev_id = device_map[thr_id];
 	int intensity = (device_sm[dev_id] > 500 && !is_windows()) ? 19 : 19;
 	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
-	if (strstr(device_name[dev_id], "GTX 1080")) intensity = 20;
+	if (strstr(device_name[dev_id], "GTX 1080")) intensity = 19;
+	if (strstr(device_name[dev_id], "GTX 1060")) intensity = 18;
+	if (strstr(device_name[dev_id], "GTX 970")) intensity = 17;
 	uint32_t throughput = cuda_default_throughput(thr_id, 1U << intensity);
 
 	cudaSetDevice(device_map[thr_id]);
@@ -282,10 +284,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-		((uint32_t*)pdata)[1] = 0xEFCDAB89;
-		((uint32_t*)pdata)[2] = 0x67452301;
-		//((uint32_t*)pdata)[1] = 0x99999999;
-		//((uint32_t*)pdata)[2] = 0x99999999;
+		//((uint32_t*)pdata)[1] = 0xEFCDAB89;
+		//((uint32_t*)pdata)[2] = 0x67452301;
+		((uint32_t*)pdata)[1] = 0x99999999;
+		((uint32_t*)pdata)[2] = 0x99999909;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xA0; // hashOrder[0] = 'A'; for echo 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xB0; // hashOrder[0] = 'B'; for hamsi 80 + blake512 64
@@ -490,8 +492,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("shavite:");
 				break;
 			case SIMD:
-				//x11_simd512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
 				x11_simd512_cpu_hash_64(thr_id, throughput, pdata[19], NULL, d_hash[thr_id], order++);
+				//x11_simd512_cpu_hash_64_alexis(thr_id, throughput, d_hash[thr_id]); order++;
+				//x11_simd512_cpu_hash_64_xevan(thr_id, throughput, d_hash[thr_id]); order++;
+				//xevan_simd512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); order++;
 				TRACE("simd   :");
 				break;
 			case ECHO:

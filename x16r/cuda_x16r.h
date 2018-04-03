@@ -12,6 +12,8 @@ extern void x17_sha512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t
 //extern void x11_simd512_cpu_init_alexis(int thr_id, uint32_t threads);
 //extern void x11_simd512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 //extern void x11_simd512_cpu_free_alexis(int thr_id);
+//extern void xevan_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+//extern void x11_simd512_cpu_hash_64_xevan(int thr_id, uint32_t threads, uint32_t *d_hash);
 
 extern void x11_cubehash512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
 

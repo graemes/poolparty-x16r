@@ -445,7 +445,7 @@ __global__ __launch_bounds__(TPB52_1,9)
 #else
 __global__ __launch_bounds__(TPB50_1,9)
 #endif
-static void x11_simd512_gpu_expand_64_alexis(uint32_t threads,const uint32_t* __restrict__ g_hash, uint4 *g_temp4)
+static void x11_simd512_gpu_expand_64(uint32_t threads,const uint32_t* __restrict__ g_hash, uint4 *g_temp4)
 {
 	const uint32_t threadBloc = (blockDim.x * blockIdx.x + threadIdx.x)>>3;
 	const uint8_t thr        = (threadIdx.x & 7);
