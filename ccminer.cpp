@@ -55,7 +55,7 @@
 BOOL WINAPI ConsoleHandler(DWORD);
 #endif
 
-#define PROGRAM_NAME		"cryptopool-x16r"
+#define PROGRAM_NAME		"poolparty-x16r"
 #define LP_SCANTIME		60
 #define HEAVYCOIN_BLKHDR_SZ	84
 #define MNR_BLKHDR_SZ 80
@@ -3032,7 +3032,7 @@ int main(int argc, char *argv[])
 	// get opt_quiet early
 	parse_single_opt('q', argc, argv);
 
-	printf("*** cryptopool-x16r " PACKAGE_VERSION " for nVidia GPUs by graemes@github ***\n");
+	printf("*** poolparty-x16r " PACKAGE_VERSION " for nVidia GPUs by graemes@github ***\n");
 	if (!opt_quiet) {
 		const char* arch = is_x64() ? "64-bits" : "32-bits";
 #ifdef _MSC_VER

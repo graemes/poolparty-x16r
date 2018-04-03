@@ -152,19 +152,19 @@
 /* #undef NO_MINUS_C_MINUS_O */
 
 /* Name of package */
-#define PACKAGE "cryptopool"
+#define PACKAGE "poolparty"
 
 /* Define to the address where bug reports for this package should be sent. */
 #define PACKAGE_BUGREPORT ""
 
 /* Define to the full name of this package. */
-#define PACKAGE_NAME "cryptopool"
+#define PACKAGE_NAME "poolparty"
 
 /* Define to the home page for this package. */
-#define PACKAGE_URL "http://github.com/graemes/cryptopool-x16r"
+#define PACKAGE_URL "http://github.com/graemes/poolparty-x16r"
 
 /* Define to the version of this package. */
-#define PACKAGE_VERSION "0.5.0"
+#define PACKAGE_VERSION "1.0.0"
 
 /* If using the C implementation of alloca, define if you know the
    direction of stack growth for your system; otherwise it will be

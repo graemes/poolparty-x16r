@@ -4,8 +4,8 @@
 # requires: nvidia-docker (https://github.com/NVIDIA/nvidia-docker)
 #
 # usage: docker build -t cccminer:latest .
-# run: docker run -it --rm --runtime=nvidia ccminer:latest [ARGS]
-# ex: docker run -it --rm --runtime=nvidia ccminer:latest -o cryptopool.party:3636 -u RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU -p x
+# run: docker run -it --rm --runtime=nvidia graemes/poolparty:latest [ARGS]
+# ex: docker run -it --rm --runtime=nvidia graemes/poolparty:latest -o cryptopool.party:3636 -u RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU -p x
 #
 
 # Build

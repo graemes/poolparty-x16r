@@ -21,6 +21,6 @@ b) Install a supported version of Docker (I use the Community Edition) - https:/
 c) Install nvidia-docker - https://github.com/NVIDIA/nvidia-docker
 d) Run the miner by passing the appropriate options, for example:
 
-   docker run -it --runtime=nvidia graemes/cryptopool-x16r -o stratum+tcp://cryptopool.party:3636 -u RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU -p c=RVN
+   docker run -it --runtime=nvidia graemes/poolparty-x16r -o stratum+tcp://cryptopool.party:3636 -u RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU -p c=RVN
 
-   (All of the options after graemes/cryptopool-x16r are the same as ccminer - run without any options to see the help text)
+   (All of the options after graemes/poolparty-x16r are the same as ccminer - run without any options to see the help text)
