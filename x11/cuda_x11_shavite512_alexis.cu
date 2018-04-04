@@ -10,8 +10,6 @@
 
 #define TPB 384
 
-
-
 __device__ __forceinline__
 static void round_3_7_11(const uint32_t sharedMemory[4][256], uint32_t* r, uint4 *p, uint4 &x){
 	KEY_EXPAND_ELT(sharedMemory, &r[ 0]);
