@@ -419,7 +419,10 @@
     <CudaCompile Include="quark\cuda_bmw512.cu">
       <Filter>Source Files\CUDA\quark</Filter>
     </CudaCompile>
-    <CudaCompile Include="quark\cuda_quark_keccak512.cu">
+    <CudaCompile Include="quark\cuda_quark_keccak512_alexis.cu">
+      <Filter>Source Files\CUDA\quark</Filter>
+    </CudaCompile>
+    <CudaCompile Include="quark\cuda_quark_keccak512_80.cu">
       <Filter>Source Files\CUDA\quark</Filter>
     </CudaCompile>
     <ClInclude Include="x11\cuda_x11_aes.cuh">
