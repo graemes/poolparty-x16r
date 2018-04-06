@@ -100,13 +100,24 @@ static bool init[MAX_GPUS] = { 0 };
 
 extern "C" uint32_t init_x16r(int thr_id)
 {
+	uint32_t throughput = 0;
+
 	int dev_id = device_map[thr_id];
+
+	//if (opt_debug) {
+	//	dump_device_details_gs(dev_id);
+	//}
+
 	int intensity = (device_sm[dev_id] > 500 && !is_windows()) ? 19 : 19;
 	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
-	if (strstr(device_name[dev_id], "GTX 1080")) intensity = 20;
-	if (strstr(device_name[dev_id], "GTX 1060")) intensity = 19;
-	if (strstr(device_name[dev_id], "GTX 970")) intensity = 18;
-	uint32_t throughput = cuda_default_throughput(thr_id, 1U << intensity);
+	if (strstr(device_name[dev_id], "GTX 1080 Ti")) intensity = 20;
+	if (strstr(device_name[dev_id], "GTX 1060 6GB")) intensity = 19;
+	if (strstr(device_name[dev_id], "GTX 1060 3GB")) throughput = 589824;
+	if (strstr(device_name[dev_id], "GTX 970")) throughput = 212992;
+
+	if (throughput == 0) {
+		throughput = cuda_default_throughput(thr_id, 1U << intensity);
+	}
 
 	cudaSetDevice(device_map[thr_id]);
 	if (opt_cudaschedule == -1 && gpu_threads == 1) {
@@ -273,7 +284,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	uint32_t *ptarget = work->target;
 	const uint32_t first_nonce = pdata[19];
 
-	static uint32_t throughput;
+	static uint32_t throughput = 0;
 	
 	// Only init (and calculate throughput when necessary)
 	if (!init[thr_id])
@@ -283,10 +294,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-		//((uint32_t*)pdata)[1] = 0xEFCDAB89;
-		//((uint32_t*)pdata)[2] = 0x67452301;
-		((uint32_t*)pdata)[1] = 0xBBBBBBBB;
-		((uint32_t*)pdata)[2] = 0xBBBBBBBB;
+		((uint32_t*)pdata)[1] = 0xEFCDAB89;
+		((uint32_t*)pdata)[2] = 0x67452301;
+		//((uint32_t*)pdata)[1] = 0xBBBBBBBB;
+		//((uint32_t*)pdata)[2] = 0xBBBBBBBB;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xA0; // hashOrder[0] = 'A'; for echo 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xB0; // hashOrder[0] = 'B'; for hamsi 80 + blake512 64
