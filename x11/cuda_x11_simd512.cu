@@ -88,15 +88,12 @@ static const short h_FFT256_2_128_Twiddle[128] = {
 #define IF(x, y, z) (((y ^ z) & x) ^ z)
 #define MAJ(x, y, z) ((z &y) | ((z|y) & x))
 
-#include "cuda_x11_simd512_sm2.cuh"
 #include "cuda_x11_simd512_func.cuh"
 
 #ifdef __INTELLISENSE__
 /* just for vstudio code colors */
 #define __CUDA_ARCH__ 500
 #endif
-
-#if __CUDA_ARCH__ >= 300
 
 /********************* Message expansion ************************/
 
@@ -188,13 +185,6 @@ do { \
 #undef DO_REDUCE_FULL_S
 #undef BUTTERFLY
 }
-
-#if defined(__CUDA_ARCH__)
-#if __CUDA_ARCH__ < 300
-  #define __shfl(var, srcLane, width) (uint32_t)(var)
-  // #error __shfl() not supported by SM 2.x
-#endif
-#endif
 
 /**
  * FFT_16 using w=2 as 16th root of unity
@@ -650,23 +640,9 @@ void x11_simd512_gpu_final_64(uint32_t threads, uint32_t *g_hash, uint4 *g_fft4,
 	}
 }
 
-#else
-__global__ void x11_simd512_gpu_expand_64(uint32_t threads, uint32_t *g_hash, uint4 *g_temp4) {}
-__global__ void x11_simd512_gpu_compress1_64(uint32_t threads, uint32_t *g_hash, uint4 *g_fft4, uint32_t *g_state) {}
-__global__ void x11_simd512_gpu_compress2_64(uint32_t threads, uint4 *g_fft4, uint32_t *g_state) {}
-__global__ void x11_simd512_gpu_compress_64_maxwell(uint32_t threads, uint32_t *g_hash, uint4 *g_fft4, uint32_t *g_state) {}
-__global__ void x11_simd512_gpu_final_64(uint32_t threads, uint32_t *g_hash, uint4 *g_fft4, uint32_t *g_state) {}
-#endif /* SM3+ */
-
 __host__
 int x11_simd512_cpu_init(int thr_id, uint32_t threads)
 {
-	int dev_id = device_map[thr_id];
-	cuda_get_arch(thr_id);
-	if (device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300) {
-		x11_simd512_cpu_init_sm2(thr_id);
-		return 0;
-	}
 
 	CUDA_CALL_OR_RET_X(cudaMalloc(&d_temp4[thr_id], 64*sizeof(uint4)*threads), (int) err); /* todo: prevent -i 21 */
 	CUDA_CALL_OR_RET_X(cudaMalloc(&d_state[thr_id], 32*sizeof(int)*threads), (int) err);
@@ -713,11 +689,6 @@ void x11_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce,
 	dim3 block(threadsperblock);
 	dim3 grid((threads + threadsperblock-1) / threadsperblock);
 	dim3 gridX8(grid.x * 8);
-
-	if (d_nonceVector != NULL || device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300) {
-		x11_simd512_cpu_hash_64_sm2(thr_id, threads, startNounce, d_nonceVector, d_hash, order);
-		return;
-	}
 
 	x11_simd512_gpu_expand_64 <<<gridX8, block>>> (threads, d_hash, d_temp4[thr_id]);
 

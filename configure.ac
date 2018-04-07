@@ -100,6 +100,7 @@ AC_ARG_ENABLE([compute],
 
 AM_CONDITIONAL([COMPUTE61], [test "x$enable_compute" = "x61"])
 AM_CONDITIONAL([COMPUTE52], [test "x$enable_compute" = "x52"])
+AM_CONDITIONAL([COMPUTE50], [test "x$enable_compute" = "x50"])
 
 if test x$request_jansson = xtrue
 then

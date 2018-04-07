@@ -7,8 +7,6 @@
 
 __constant__ uint64_t c_PaddedMessage80[16]; // padded message (80 bytes + padding)
 
-#include "cuda_bmw512_sm3.cuh"
-
 #ifdef __INTELLISENSE__
 /* just for vstudio code colors */
 #define __CUDA_ARCH__ 500
@@ -462,12 +460,8 @@ void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce
 	const uint32_t threadsperblock = 128;
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
-	int dev_id = device_map[thr_id];
 
-	if (device_sm[dev_id] > 300 && cuda_arch[dev_id] > 300)
-		quark_bmw512_gpu_hash_80<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash);
-	else
-		quark_bmw512_gpu_hash_80_30<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash);
+	quark_bmw512_gpu_hash_80<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash);
 }
 
 __host__
@@ -483,9 +477,5 @@ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 
-	int dev_id = device_map[thr_id];
-	if (device_sm[dev_id] > 300 && cuda_arch[dev_id] > 300)
-		quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
-	else
-		quark_bmw512_gpu_hash_64_30<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
+	quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash, d_nonceVector);
 }
