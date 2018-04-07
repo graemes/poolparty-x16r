@@ -708,5 +708,16 @@ uint32_t bfi(uint32_t x, uint32_t a, uint32_t bit, uint32_t numBits) {
 	asm("bfi.b32 %0, %1, %2, %3,%4;" : "=r"(ret) : "r"(x), "r"(a), "r"(bit), "r"(numBits));
 	return ret;
 }
+
+// CUDA 9+ deprecated functions warnings (new mask param)
+#if CUDA_VERSION >= 9000 && __CUDA_ARCH__ >= 300
+#undef __shfl
+#define __shfl(var, srcLane, width)  __shfl_sync(0xFFFFFFFFu, var, srcLane, width)
+#undef __shfl_up
+#define __shfl_up(var, delta, width) __shfl_up_sync(0xFFFFFFFF, var, delta, width)
+#undef __any
+#define __any(p) __any_sync(0xFFFFFFFFu, p)
+#endif
+
 #endif // #ifndef CUDA_HELPER_H
 
