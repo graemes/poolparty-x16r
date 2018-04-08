@@ -241,7 +241,6 @@
     <ClCompile Include="api.cpp" />
     <ClCompile Include="sysinfos.cpp" />
     <ClCompile Include="crc32.c" />
-    <ClInclude Include="x11\cuda_x11_simd512_sm2.cuh" />
     <ClInclude Include="x16r\cuda_x16r.h" />
     <ClCompile Include="sph\aes_helper.c" />
     <ClCompile Include="sph\blake.c" />
@@ -294,8 +293,6 @@
     <ClInclude Include="algos.h" />
     <ClInclude Include="miner.h" />
     <ClInclude Include="nvml.h" />
-    <ClInclude Include="quark\cuda_bmw512_sm3.cuh" />
-    <ClInclude Include="quark\cuda_quark_groestl512_sm2.cuh" />
     <ClInclude Include="quark\cuda_quark_blake512_sp.cuh" />
     <ClInclude Include="res\resource.h" />
     <ClInclude Include="sph\blake2b.h" />

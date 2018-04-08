@@ -75,3 +75,4 @@ configure-local.sh
 configure-bench.sh
 releases/
 compiler-output/
+misc/
