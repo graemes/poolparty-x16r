@@ -33,6 +33,14 @@ extern "C" {
 #include "cuda_helper.h"
 #include "cuda_x16r.h"
 
+//#define _DEBUG
+#define _DEBUG_PREFIX "x16r-"
+#include "cuda_debug.cuh"
+
+// Internal functions
+static void getAlgoString(const uint32_t* prevblock, char *output);
+static uint32_t init_x16r(int thr_id);
+
 static uint32_t *d_hash[MAX_GPUS];
 
 enum Algo {
@@ -78,78 +86,7 @@ static const char* algo_strings[] = {
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread bool s_implemented = false;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
-
-static void getAlgoString(const uint32_t* prevblock, char *output)
-{
-	char *sptr = output;
-	uint8_t* data = (uint8_t*)prevblock;
-
-	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
-		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
-		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
-		if (algoDigit >= 10)
-			sprintf(sptr, "%c", 'A' + (algoDigit - 10));
-		else
-			sprintf(sptr, "%u", (uint32_t) algoDigit);
-		sptr++;
-	}
-	*sptr = '\0';
-}
-
 static bool init[MAX_GPUS] = { 0 };
-
-extern "C" uint32_t init_x16r(int thr_id)
-{
-	uint32_t throughput = 0;
-
-	int dev_id = device_map[thr_id];
-
-	//if (opt_debug) {
-	//	dump_device_details_gs(dev_id);
-	//}
-
-	int intensity = (device_sm[dev_id] > 500 && !is_windows()) ? 19 : 19;
-	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
-	if (strstr(device_name[dev_id], "GTX 1080 Ti")) intensity = 20;
-	if (strstr(device_name[dev_id], "GTX 1060 6GB")) intensity = 19;
-	if (strstr(device_name[dev_id], "GTX 1060 3GB")) throughput = 589824;
-	if (strstr(device_name[dev_id], "GTX 970")) throughput = 212992;
-
-	if (throughput == 0) {
-		throughput = cuda_default_throughput(thr_id, 1U << intensity);
-	}
-
-	cudaSetDevice(device_map[thr_id]);
-	if (opt_cudaschedule == -1 && gpu_threads == 1) {
-		cudaDeviceReset();
-		// reduce cpu usage
-		cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
-	}
-	gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
-
-	quark_blake512_cpu_init(thr_id, throughput);
-	quark_bmw512_cpu_init(thr_id, throughput);
-	quark_groestl512_cpu_init(thr_id, throughput);
-	quark_skein512_cpu_init(thr_id, throughput);
-	quark_jh512_cpu_init(thr_id, throughput);
-	quark_keccak512_cpu_init(thr_id, throughput);
-	x11_luffa512_cpu_init(thr_id, throughput); // 64
-	x11_shavite512_cpu_init(thr_id, throughput); //80
-	x11_simd512_cpu_init(thr_id, throughput); // 64
-	x16_echo512_cuda_init(thr_id, throughput);
-        x13_hamsi512_cpu_init(thr_id, throughput);
-	x16_fugue512_cpu_init(thr_id, throughput); //80
-	x15_whirlpool_cpu_init(thr_id, throughput, 0);
-	x16_whirlpool512_init(thr_id, throughput);
-
-	CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);
-
-	cuda_check_cpu_init(thr_id, throughput);
-
-	init[thr_id] = true;
-
-	return throughput;
-}
 
 // X16R CPU Hash (Validation)
 extern "C" void x16r_hash(void *output, const void *input)
@@ -272,10 +209,6 @@ extern "C" void x16r_hash(void *output, const void *input)
 	memcpy(output, hash, 32);
 }
 
-//#define _DEBUG
-#define _DEBUG_PREFIX "x16r-"
-#include "cuda_debug.cuh"
-
 static int algo80_fails[HASH_FUNC_COUNT] = { 0 };
 
 extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
@@ -294,10 +227,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-		((uint32_t*)pdata)[1] = 0xEFCDAB89;
-		((uint32_t*)pdata)[2] = 0x67452301;
-		//((uint32_t*)pdata)[1] = 0xBBBBBBBB;
-		//((uint32_t*)pdata)[2] = 0xBBBBBBBB;
+		//((uint32_t*)pdata)[1] = 0xEFCDAB89;
+		//((uint32_t*)pdata)[2] = 0x67452301;
+		((uint32_t*)pdata)[1] = 0x00000000;
+		((uint32_t*)pdata)[2] = 0x00000000;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xA0; // hashOrder[0] = 'A'; for echo 80 + blake512 64
 		//((uint8_t*)pdata)[8] = 0xB0; // hashOrder[0] = 'B'; for hamsi 80 + blake512 64
@@ -614,3 +547,76 @@ extern "C" void free_x16r(int thr_id)
 	cudaDeviceSynchronize();
 	init[thr_id] = false;
 }
+
+// Internal functions
+
+static void getAlgoString(const uint32_t* prevblock, char *output)
+{
+	char *sptr = output;
+	uint8_t* data = (uint8_t*)prevblock;
+
+	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
+		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
+		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
+		if (algoDigit >= 10)
+			sprintf(sptr, "%c", 'A' + (algoDigit - 10));
+		else
+			sprintf(sptr, "%u", (uint32_t) algoDigit);
+		sptr++;
+	}
+	*sptr = '\0';
+}
+
+//extern "C" uint32_t init_x16r(int thr_id)
+static uint32_t init_x16r(int thr_id)
+{
+	uint32_t throughput = 0;
+
+	int dev_id = device_map[thr_id];
+
+	//if (opt_debug) {
+	//	dump_device_details_gs(dev_id);
+	//}
+
+	int intensity = 19;
+	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
+	if (strstr(device_name[dev_id], "GTX 1080 Ti")) intensity = 20;
+	//if (strstr(device_name[dev_id], "GTX 1060 3GB")) throughput = 589824;
+	//if (strstr(device_name[dev_id], "GTX 970")) throughput = 212992;
+
+	if (throughput == 0) {
+		throughput = cuda_default_throughput(thr_id, 1U << intensity);
+	}
+
+	cudaSetDevice(device_map[thr_id]);
+	if (opt_cudaschedule == -1 && gpu_threads == 1) {
+		cudaDeviceReset();
+		// reduce cpu usage
+		cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
+	}
+	gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
+
+	quark_blake512_cpu_init(thr_id, throughput);
+	quark_bmw512_cpu_init(thr_id, throughput);
+	quark_groestl512_cpu_init(thr_id, throughput);
+	quark_skein512_cpu_init(thr_id, throughput);
+	quark_jh512_cpu_init(thr_id, throughput);
+	quark_keccak512_cpu_init(thr_id, throughput);
+	x11_luffa512_cpu_init(thr_id, throughput); // 64
+	x11_shavite512_cpu_init(thr_id, throughput); //80
+	x11_simd512_cpu_init(thr_id, throughput); // 64
+	x16_echo512_cuda_init(thr_id, throughput);
+        x13_hamsi512_cpu_init(thr_id, throughput);
+	x16_fugue512_cpu_init(thr_id, throughput); //80
+	x15_whirlpool_cpu_init(thr_id, throughput, 0);
+	x16_whirlpool512_init(thr_id, throughput);
+
+	CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);
+
+	cuda_check_cpu_init(thr_id, throughput);
+
+	init[thr_id] = true;
+
+	return throughput;
+}
+

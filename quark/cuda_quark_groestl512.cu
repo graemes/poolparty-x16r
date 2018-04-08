@@ -13,23 +13,17 @@
 #define TPB 256
 #define THF 4U
 
-#if __CUDA_ARCH__ >= 300
 #include "groestl_functions_quad.h"
 #include "groestl_transf_quad.h"
-#endif
 
 #define WANT_GROESTL80
 #ifdef WANT_GROESTL80
 __constant__ static uint32_t c_Message80[20];
 #endif
 
-#include "cuda_quark_groestl512_sm2.cuh"
-
 __global__ __launch_bounds__(TPB, THF)
 void quark_groestl512_gpu_hash_64_quad(const uint32_t threads, const uint32_t startNounce, uint32_t * g_hash, uint32_t * __restrict g_nonceVector)
 {
-#if __CUDA_ARCH__ >= 300
-
 	// BEWARE : 4-WAY CODE (one hash need 4 threads)
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
 
@@ -79,24 +73,16 @@ void quark_groestl512_gpu_hash_64_quad(const uint32_t threads, const uint32_t st
 			outpt[3] = phash[3];
 		}
 	}
-#endif
 }
 
 __host__
 void quark_groestl512_cpu_init(int thr_id, uint32_t threads)
 {
-	int dev_id = device_map[thr_id];
-	cuda_get_arch(thr_id);
-	if (device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300)
-		quark_groestl512_sm20_init(thr_id, threads);
 }
 
 __host__
 void quark_groestl512_cpu_free(int thr_id)
 {
-	int dev_id = device_map[thr_id];
-	if (device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300)
-		quark_groestl512_sm20_free(thr_id);
 }
 
 __host__
@@ -111,12 +97,7 @@ void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNo
 	dim3 grid(factor*((threads + threadsperblock-1)/threadsperblock));
 	dim3 block(threadsperblock);
 
-	int dev_id = device_map[thr_id];
-
-	if (device_sm[dev_id] >= 300 && cuda_arch[dev_id] >= 300)
-		quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, startNounce, d_hash, d_nonceVector);
-	else
-		quark_groestl512_sm20_hash_64(thr_id, threads, startNounce, d_nonceVector, d_hash, order);
+	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, startNounce, d_hash, d_nonceVector);
 }
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
@@ -132,7 +113,6 @@ void groestl512_setBlock_80(int thr_id, uint32_t *endiandata)
 __global__ __launch_bounds__(TPB, THF)
 void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
 {
-#if __CUDA_ARCH__ >= 300
 	// BEWARE : 4-WAY CODE (one hash need 4 threads)
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
 	if (thread < threads)
@@ -181,31 +161,18 @@ void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNou
 			outpt[3] = phash[3];
 		}
 	}
-#endif
 }
 
 __host__
 void groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
 {
-	int dev_id = device_map[thr_id];
+	const uint32_t threadsperblock = TPB;
+	const uint32_t factor = THF;
 
-	if (device_sm[dev_id] >= 300 && cuda_arch[dev_id] >= 300) {
-		const uint32_t threadsperblock = TPB;
-		const uint32_t factor = THF;
+	dim3 grid(factor*((threads + threadsperblock-1)/threadsperblock));
+	dim3 block(threadsperblock);
 
-		dim3 grid(factor*((threads + threadsperblock-1)/threadsperblock));
-		dim3 block(threadsperblock);
-
-		groestl512_gpu_hash_80_quad <<<grid, block>>> (threads, startNounce, d_hash);
-
-	} else {
-
-		const uint32_t threadsperblock = 256;
-		dim3 grid((threads + threadsperblock-1)/threadsperblock);
-		dim3 block(threadsperblock);
-
-		groestl512_gpu_hash_80_sm2 <<<grid, block>>> (threads, startNounce, d_hash);
-	}
+	groestl512_gpu_hash_80_quad <<<grid, block>>> (threads, startNounce, d_hash);
 }
 
 #endif

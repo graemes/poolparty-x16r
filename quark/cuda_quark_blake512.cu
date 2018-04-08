@@ -117,76 +117,11 @@ void quark_blake512_compress(uint64_t *h, const uint64_t *block, const uint8_t (
 __global__ __launch_bounds__(256, 4)
 void quark_blake512_gpu_hash_64(uint32_t threads, uint32_t startNounce, uint32_t *g_nonceVector, uint64_t *g_hash)
 {
-#if !defined(SP_KERNEL) || __CUDA_ARCH__ < 500
-	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-
-#if USE_SHUFFLE
-	const uint32_t warpBlockID = (thread + 15)>>4; // aufrunden auf volle Warp-Blöcke
-
-	if (warpBlockID < ( (threads+15)>>4 ))
-#else
-	if (thread < threads)
-#endif
-	{
-		uint32_t nounce = (g_nonceVector != NULL) ? g_nonceVector[thread] : (startNounce + thread);
-
-		off_t hashPosition = nounce - startNounce;
-		uint64_t *inpHash = &g_hash[hashPosition<<3]; // hashPosition * 8
-
-		// 128 Bytes
-		uint64_t buf[16];
-
-		// State
-		uint64_t h[8] = {
-			0x6a09e667f3bcc908ULL,
-			0xbb67ae8584caa73bULL,
-			0x3c6ef372fe94f82bULL,
-			0xa54ff53a5f1d36f1ULL,
-			0x510e527fade682d1ULL,
-			0x9b05688c2b3e6c1fULL,
-			0x1f83d9abfb41bd6bULL,
-			0x5be0cd19137e2179ULL
-		};
-
-		// Message for first round
-		#pragma unroll 8
-		for (int i=0; i < 8; ++i)
-			buf[i] = inpHash[i];
-
-		// Hash Pad
-		buf[8]  = 0x0000000000000080ull;
-		buf[9]  = 0;
-		buf[10] = 0;
-		buf[11] = 0;
-		buf[12] = 0;
-		buf[13] = 0x0100000000000000ull;
-		buf[14] = 0;
-		buf[15] = 0x0002000000000000ull;
-
-		// Ending round
-		quark_blake512_compress(h, buf, c_sigma_big, c_u512, 512);
-
-#if __CUDA_ARCH__ <= 350
-		uint32_t *outHash = (uint32_t*)&g_hash[hashPosition * 8U];
-		#pragma unroll 8
-		for (int i=0; i < 8; i++) {
-			outHash[2*i+0] = cuda_swab32( _HIDWORD(h[i]) );
-			outHash[2*i+1] = cuda_swab32( _LODWORD(h[i]) );
-		}
-#else
-		uint64_t *outHash = &g_hash[hashPosition * 8U];
-		for (int i=0; i < 8; i++) {
-			outHash[i] = cuda_swab64(h[i]);
-		}
-#endif
-	}
-#endif /* SP */
 }
 
 __global__ __launch_bounds__(256,4)
 void quark_blake512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *outputHash)
 {
-//#if !defined(SP_KERNEL) || __CUDA_ARCH__ < 500
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
 	{
@@ -212,61 +147,27 @@ void quark_blake512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *ou
 
 		quark_blake512_compress(h, buf, c_sigma_big, c_u512, 640);
 
-#if __CUDA_ARCH__ <= 350
-		uint32_t *outHash = (uint32_t*)outputHash + (thread * 16U);
-		#pragma unroll 8
-		for (uint32_t i=0; i < 8; i++) {
-			outHash[2*i]   = cuda_swab32( _HIDWORD(h[i]) );
-			outHash[2*i+1] = cuda_swab32( _LODWORD(h[i]) );
-		}
-#else
 		uint64_t *outHash = (uint64_t*)outputHash + (thread * 8U);
 		for (uint32_t i=0; i < 8; i++) {
 			outHash[i] = cuda_swab64( h[i] );
 		}
-#endif
 	}
-//#endif
 }
 
-#ifdef SP_KERNEL
 #include "cuda_quark_blake512_sp.cuh"
-#endif
 
 __host__
 void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_outputHash, int order)
 {
-#ifdef SP_KERNEL
-	int dev_id = device_map[thr_id];
-	if (device_sm[dev_id] >= 500 && cuda_arch[dev_id] >= 500)
-		quark_blake512_cpu_hash_64_sp(threads, startNounce, d_nonceVector, d_outputHash);
-	else
-#endif
-	{
-		const uint32_t threadsperblock = 256;
-		dim3 grid((threads + threadsperblock-1)/threadsperblock);
-		dim3 block(threadsperblock);
-		quark_blake512_gpu_hash_64<<<grid, block>>>(threads, startNounce, d_nonceVector, (uint64_t*)d_outputHash);
-	}
+	quark_blake512_cpu_hash_64_sp(threads, startNounce, d_nonceVector, d_outputHash);
+	
 	//MyStreamSynchronize(NULL, order, thr_id);
 }
 
 __host__
 void quark_blake512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash)
 {
-#ifdef SP_KERNEL
-	int dev_id = device_map[thr_id];
-	if (device_sm[dev_id] >= 500 && cuda_arch[dev_id] >= 500)
-		quark_blake512_cpu_hash_80_sp(threads, startNounce, d_outputHash);
-	else
-#endif
-	{
-		const uint32_t threadsperblock = 256;
-		dim3 grid((threads + threadsperblock-1)/threadsperblock);
-		dim3 block(threadsperblock);
-
-		quark_blake512_gpu_hash_80<<<grid, block>>>(threads, startNounce, d_outputHash);
-	}
+	quark_blake512_cpu_hash_80_sp(threads, startNounce, d_outputHash);
 }
 
 // ---------------------------- END CUDA quark_blake512 functions ------------------------------------
@@ -296,24 +197,7 @@ extern "C" {
 __host__
 void quark_blake512_cpu_setBlock_80(int thr_id, uint32_t *endiandata)
 {
-#ifdef SP_KERNEL
-	int dev_id = device_map[thr_id];
-	if (device_sm[dev_id] >= 500 && cuda_arch[dev_id] >= 500)
-		quark_blake512_cpu_setBlock_80_sp(thr_id, (uint64_t*) endiandata);
-	else
-#endif
-	{
-		uint64_t message[16];
-
-		memcpy(message, endiandata, 80);
-		message[10] = 0x80;
-		message[11] = 0;
-		message[12] = 0;
-		message[13] = 0x0100000000000000ull;
-		message[14] = 0;
-		message[15] = 0x8002000000000000ull; // 0x280
-
-		cudaMemcpyToSymbol(c_PaddedMessage80, message, sizeof(message), 0, cudaMemcpyHostToDevice);
-	}
+	quark_blake512_cpu_setBlock_80_sp(thr_id, (uint64_t*) endiandata);
+	
 	CUDA_LOG_ERROR();
 }

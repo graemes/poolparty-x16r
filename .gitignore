@@ -72,5 +72,6 @@ build-docker*.sh
 build-bench*.sh
 build-*local.sh
 configure-local.sh
+configure-bench.sh
 releases/
 compiler-output/

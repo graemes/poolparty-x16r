@@ -9,8 +9,6 @@
 __constant__ static uint2 c_PaddedM[16];
 __constant__ static uint2x4 c_Hostprecalc[4];
 
-#if __CUDA_ARCH__ >= 500  || !defined(__CUDA_ARCH__)
-
 #undef G
 #define vectorizelow(/* uint32_t*/ v) make_uint2(v,0)
 #define vectorizehigh(/*uint32_t*/ v) make_uint2(0,v)
@@ -643,13 +641,6 @@ __host__ void quark_blake512_cpu_setBlock_80_sp(int thr_id, uint64_t *pdata)
 
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol(c_Hostprecalc, v, 128, 0, cudaMemcpyHostToDevice));
 }
-
-#else
-// __CUDA_ARCH__ < 500
-__host__ void quark_blake512_cpu_setBlock_80_sp(int thr_id, uint64_t *pdata) {}
-__global__ void quark_blake512_gpu_hash_64_sp(uint32_t, uint32_t startNounce, uint32_t *const __restrict__ g_nonceVector, uint2 *const __restrict__ g_hash) {}
-__global__ void quark_blake512_gpu_hash_80_sp(uint32_t, uint32_t startNounce, uint2 *outputHash) {}
-#endif
 
 __host__
 void quark_blake512_cpu_hash_64_sp(uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_outputHash)
