@@ -602,11 +602,7 @@ static uint32_t init_x16r(int thr_id)
 	//qubit_luffa512_cpu_init(thr_id, throughput);
 	//x11_luffa512_cpu_init(thr_id, throughput); // 64
 	x11_shavite512_cpu_init(thr_id, throughput); //80
-	if (x11_simd512_cpu_init(thr_id, throughput))
-	{
-		applog(LOG_WARNING, "SIMD was unable to initialize :( exiting...");
-		exit(-1);
-	}
+	x11_simd512_cpu_init(thr_id, throughput);
 	x16_echo512_cuda_init(thr_id, throughput);
         x13_hamsi512_cpu_init(thr_id, throughput);
 	//x13_fugue512_cpu_init(thr_id, throughput);
