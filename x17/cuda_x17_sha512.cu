@@ -27,9 +27,9 @@
  *
  * ===========================(LICENSE END)=============================
  */
-#include "cuda_helper_alexis.h"
+#include "cuda_helper.h"
 #include "miner.h"
-#include "cuda_vectors_alexis.h"
+#include "cuda_vectors.h"
 
 #define SWAP64(u64) cuda_swab64(u64)
 
@@ -137,7 +137,7 @@ void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
 }
 
 __host__
-void x17_sha512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash)
+void x17_sha512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
 	const uint32_t threadsperblock = 256;
 

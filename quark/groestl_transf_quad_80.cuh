@@ -33,7 +33,7 @@
 
 
 __device__ __forceinline__
-void to_bitslice_quad(uint32_t *const __restrict__ input, uint32_t *const __restrict__ output)
+void to_bitslice_quad_80(uint32_t *const __restrict__ input, uint32_t *const __restrict__ output)
 {
 	uint32_t other[8];
 	uint32_t d[8];
@@ -87,7 +87,7 @@ void to_bitslice_quad(uint32_t *const __restrict__ input, uint32_t *const __rest
 }
 
 __device__ __forceinline__
-void from_bitslice_quad(const uint32_t *const __restrict__ input, uint32_t *const __restrict__ output)
+void from_bitslice_quad_80(const uint32_t *const __restrict__ input, uint32_t *const __restrict__ output)
 {
 	uint32_t d[8];
 	uint32_t t;

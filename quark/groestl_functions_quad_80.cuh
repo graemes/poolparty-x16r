@@ -1,7 +1,7 @@
 #include "cuda_helper.h"
 
 __device__ __forceinline__
-void G256_Mul2(uint32_t *regs)
+void G256_Mul2_80(uint32_t *regs)
 {
     uint32_t tmp = regs[7];
     regs[7] = regs[6];
@@ -15,7 +15,7 @@ void G256_Mul2(uint32_t *regs)
 }
 
 __device__ __forceinline__
-void G256_AddRoundConstantQ_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0, int rnd)
+void G256_AddRoundConstantQ_quad_80(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0, int rnd)
 {
     x0 = ~x0;
     x1 = ~x1;
@@ -48,7 +48,7 @@ void G256_AddRoundConstantQ_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint3
 }
 
 __device__ __forceinline__
-void G256_AddRoundConstantP_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0, int rnd)
+void G256_AddRoundConstantP_quad_80(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0, int rnd)
 {
     if (threadIdx.x & 3)
         return;
@@ -67,7 +67,7 @@ void G256_AddRoundConstantP_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint3
 }
 
 __device__ __forceinline__
-void G16mul_quad(uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0,
+void G16mul_quad_80(uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0,
                                        uint32_t &y3, uint32_t &y2, uint32_t &y1, uint32_t &y0)
 {
     uint32_t t0,t1,t2;
@@ -86,7 +86,7 @@ void G16mul_quad(uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0,
 }
 
 __device__ __forceinline__
-void G256_inv_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0)
+void G256_inv_quad_80(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0)
 {
     uint32_t t0,t1,t2,t3,t4,t5,t6,a,b;
 
@@ -95,7 +95,7 @@ void G256_inv_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint3
     t1 = x5;
     t0 = x4;
 
-    G16mul_quad(t3, t2, t1, t0, x3, x2, x1, x0);
+    G16mul_quad_80(t3, t2, t1, t0, x3, x2, x1, x0);
 
     a = (x4 ^ x0);
     t0 ^= a;
@@ -117,13 +117,13 @@ void G256_inv_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint3
     t3 = (t6 & t3) ^ t4;
     t2 = (t5 & t2) ^ t4;
 
-    G16mul_quad(x3, x2, x1, x0, t1, t0, t3, t2);
+    G16mul_quad_80(x3, x2, x1, x0, t1, t0, t3, t2);
 
-    G16mul_quad(x7, x6, x5, x4, t1, t0, t3, t2);
+    G16mul_quad_80(x7, x6, x5, x4, t1, t0, t3, t2);
 }
 
 __device__ __forceinline__
-void transAtoX_quad(uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3, uint32_t &x4, uint32_t &x5, uint32_t &x6, uint32_t &x7)
+void transAtoX_quad_80(uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3, uint32_t &x4, uint32_t &x5, uint32_t &x6, uint32_t &x7)
 {
     uint32_t t0, t1;
     t0 = x0 ^ x1 ^ x2;
@@ -139,7 +139,7 @@ void transAtoX_quad(uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3, uint
 }
 
 __device__ __forceinline__
-void transXtoA_quad(uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3, uint32_t &x4, uint32_t &x5, uint32_t &x6, uint32_t &x7)
+void transXtoA_quad_80(uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3, uint32_t &x4, uint32_t &x5, uint32_t &x6, uint32_t &x7)
 {
     uint32_t t0,t2,t3,t5;
 
@@ -164,13 +164,13 @@ void transXtoA_quad(uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3, uint
 }
 
 __device__ __forceinline__
-void sbox_quad(uint32_t *r)
+void sbox_quad_80(uint32_t *r)
 {
-    transAtoX_quad(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+    transAtoX_quad_80(r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
 
-    G256_inv_quad(r[2], r[4], r[1], r[7], r[3], r[0], r[5], r[6]);
+    G256_inv_quad_80(r[2], r[4], r[1], r[7], r[3], r[0], r[5], r[6]);
 
-    transXtoA_quad(r[7], r[1], r[4], r[2], r[6], r[5], r[0], r[3]);
+    transXtoA_quad_80(r[7], r[1], r[4], r[2], r[6], r[5], r[0], r[3]);
     
     r[0] = ~r[0];
     r[1] = ~r[1];
@@ -179,7 +179,7 @@ void sbox_quad(uint32_t *r)
 }
 
 __device__ __forceinline__
-void G256_ShiftBytesP_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0)
+void G256_ShiftBytesP_quad_80(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0)
 {
     uint32_t t0,t1;
 
@@ -221,7 +221,7 @@ void G256_ShiftBytesP_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x
 }
 
 __device__ __forceinline__
-void G256_ShiftBytesQ_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0)
+void G256_ShiftBytesQ_quad_80(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x4, uint32_t &x3, uint32_t &x2, uint32_t &x1, uint32_t &x0)
 {
     uint32_t t0,t1;
 
@@ -263,7 +263,7 @@ void G256_ShiftBytesQ_quad(uint32_t &x7, uint32_t &x6, uint32_t &x5, uint32_t &x
 }
 
 __device__ __forceinline__
-void G256_MixFunction_quad(uint32_t *r)
+void G256_MixFunction_quad_80(uint32_t *r)
 {
 #define SHIFT64_16(hi, lo)    __byte_perm(lo, hi, 0x5432)
 #define A(v, u)             __shfl((int)r[v], ((threadIdx.x+u)&0x03), 4)
@@ -280,12 +280,12 @@ void G256_MixFunction_quad(uint32_t *r)
     for(int i=0;i<8;i++)
         b[i] = DOUBLE_ODD(i, 1) ^ DOUBLE_EVEN(i, 3);
 
-    G256_Mul2(b);
+    G256_Mul2_80(b);
 #pragma unroll 8
     for(int i=0;i<8;i++)
         b[i] = b[i] ^ DOUBLE_ODD(i, 3) ^ DOUBLE_ODD(i, 4) ^ SINGLE_ODD(i, 6);
 
-    G256_Mul2(b);
+    G256_Mul2_80(b);
 #pragma unroll 8
     for(int i=0;i<8;i++)
         r[i] = b[i] ^ DOUBLE_EVEN(i, 2) ^ DOUBLE_EVEN(i, 3) ^ SINGLE_EVEN(i, 5);
@@ -298,44 +298,44 @@ void G256_MixFunction_quad(uint32_t *r)
 }
 
 __device__ __forceinline__
-void groestl512_perm_P_quad(uint32_t *r)
+void groestl512_perm_P_quad_80(uint32_t *r)
 {
     for(int round=0;round<14;round++)
     {
-        G256_AddRoundConstantP_quad(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0], round);
-        sbox_quad(r);
-        G256_ShiftBytesP_quad(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0]);
-        G256_MixFunction_quad(r);
+        G256_AddRoundConstantP_quad_80(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0], round);
+        sbox_quad_80(r);
+        G256_ShiftBytesP_quad_80(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0]);
+        G256_MixFunction_quad_80(r);
     }
 }
 
 __device__ __forceinline__
-void groestl512_perm_Q_quad(uint32_t *r)
+void groestl512_perm_Q_quad_80(uint32_t *r)
 {    
     for(int round=0;round<14;round++)
     {
-        G256_AddRoundConstantQ_quad(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0], round);
-        sbox_quad(r);
-        G256_ShiftBytesQ_quad(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0]);
-        G256_MixFunction_quad(r);
+        G256_AddRoundConstantQ_quad_80(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0], round);
+        sbox_quad_80(r);
+        G256_ShiftBytesQ_quad_80(r[7], r[6], r[5], r[4], r[3], r[2], r[1], r[0]);
+        G256_MixFunction_quad_80(r);
     }
 }
 
 __device__ __forceinline__
-void groestl512_progressMessage_quad(uint32_t *state, uint32_t *message)
+void groestl512_progressMessage_quad_80(uint32_t *state, uint32_t *message)
 {
 #pragma unroll 8
     for(int u=0;u<8;u++) state[u] = message[u];
 
     if ((threadIdx.x & 0x03) == 3) state[ 1] ^= 0x00008000;
-    groestl512_perm_P_quad(state);
+    groestl512_perm_P_quad_80(state);
     if ((threadIdx.x & 0x03) == 3) state[ 1] ^= 0x00008000;
-    groestl512_perm_Q_quad(message);
+    groestl512_perm_Q_quad_80(message);
 #pragma unroll 8
     for(int u=0;u<8;u++) state[u] ^= message[u];
 #pragma unroll 8
     for(int u=0;u<8;u++) message[u] = state[u];
-    groestl512_perm_P_quad(message);
+    groestl512_perm_P_quad_80(message);
 #pragma unroll 8
     for(int u=0;u<8;u++) state[u] ^= message[u];
 }

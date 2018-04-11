@@ -7,8 +7,8 @@
 #include <stdio.h>
 #include <memory.h>
 
-#include "cuda_helper_alexis.h"
-#include "cuda_vectors_alexis.h"
+#include "cuda_helper.h"
+#include "cuda_vectors.h"
 #include "miner.h"
 
 #define TPB52 128
@@ -29,13 +29,15 @@ __global__ __launch_bounds__(TPB52,7)
 #else
 __global__ __launch_bounds__(TPB50,3)
 #endif
-void quark_keccak512_gpu_hash_64_alexis(uint32_t threads, uint2* g_hash, uint32_t *g_nonceVector){
+//void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash, uint32_t *g_nonceVector){
+void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint2 t[5], u[5], v, w;
 	uint2 s[25];
 	if (thread < threads){
 	
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
+		//const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
+		const uint32_t hashPosition = thread;
 
 		uint2x4* d_hash = (uint2x4 *)&g_hash[hashPosition * 8];
 
@@ -219,7 +221,7 @@ __global__ __launch_bounds__(TPB52,6)
 #else
 __global__ __launch_bounds__(TPB50,3)
 #endif
-void quark_keccak512_gpu_hash_64_final_alexis(uint32_t threads, uint2* g_hash, uint32_t* g_nonceVector, uint32_t *resNonce, const uint64_t target){
+void quark_keccak512_gpu_hash_64_final(uint32_t threads, uint2* g_hash, uint32_t* g_nonceVector, uint32_t *resNonce, const uint64_t target){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint2 t[5], u[5], v, w;
 	uint2 s[25];
@@ -386,13 +388,13 @@ void quark_keccak512_gpu_hash_64_final_alexis(uint32_t threads, uint2* g_hash, u
 }
 
 __host__
-void quark_keccak512_cpu_init_alexis(int thr_id, uint32_t threads)
+void quark_keccak512_cpu_init(int thr_id, uint32_t threads)
 {
-
 }
 
 __host__
-void quark_keccak512_cpu_hash_64_alexis(int thr_id, uint32_t threads,uint32_t *d_nonceVector, uint32_t *d_hash)
+//void quark_keccak512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_nonceVector, uint32_t *d_hash)
+void quark_keccak512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
 	uint32_t tpb = TPB52;
 	int dev_id = device_map[thr_id];
@@ -400,11 +402,12 @@ void quark_keccak512_cpu_hash_64_alexis(int thr_id, uint32_t threads,uint32_t *d
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_keccak512_gpu_hash_64_alexis<<<grid, block>>>(threads, (uint2*)d_hash, d_nonceVector);
+	//quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_hash, d_nonceVector);
+	quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_hash);
 }
 
 __host__
-void quark_keccak512_cpu_hash_64_final_alexis(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash, uint64_t target, uint32_t *d_resNonce)
+void quark_keccak512_cpu_hash_64_final(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash, uint64_t target, uint32_t *d_resNonce)
 {
 	uint32_t tpb = TPB52;
 	int dev_id = device_map[thr_id];
@@ -412,5 +415,5 @@ void quark_keccak512_cpu_hash_64_final_alexis(int thr_id, uint32_t threads, uint
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_keccak512_gpu_hash_64_final_alexis<<<grid, block>>>(threads, (uint2*)d_hash, d_nonceVector, d_resNonce, target);
+	quark_keccak512_gpu_hash_64_final<<<grid, block>>>(threads, (uint2*)d_hash, d_nonceVector, d_resNonce, target);
 }

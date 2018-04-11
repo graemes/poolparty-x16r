@@ -1,38 +1,57 @@
-#include "x11/cuda_x11.h"
+// Include all of the function definitions here for ease of maintenance
 
-// alexis
-extern void quark_keccak512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash);
-extern void quark_keccak512_cpu_hash_64_final_alexis(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash, uint64_t target, uint32_t *d_resNonce);
+extern void quark_blake512_cpu_init(int thr_id, uint32_t threads);
+extern void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+extern void quark_blake512_cpu_hash_64_sp(uint32_t threads, uint32_t *d_outputHash);
+extern void quark_blake512_cpu_free(int thr_id);
 
-extern void x11_luffa512_cpu_hash_64_alexis(int thr_id, uint32_t threads,uint32_t *d_hash);
-extern void x11_echo512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
-extern void x11_simd_echo512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
-extern void x11_shavite512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
-extern void x13_fugue512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
+extern void quark_bmw512_cpu_init(int thr_id, uint32_t threads);
+extern void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+
+extern void quark_groestl512_cpu_init(int thr_id, uint32_t threads);
+extern void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+extern void quark_groestl512_cpu_free(int thr_id);
+
+extern void quark_jh512_cpu_init(int thr_id, uint32_t threads);
+extern void quark_jh512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+
+extern void quark_skein512_cpu_init(int thr_id, uint32_t threads);
+extern void quark_skein512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash);
+
+extern void quark_keccak512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+
+extern void x11_luffa512_cpu_init(int thr_id, uint32_t threads);
+extern void x11_luffa512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_hash);
+
+extern void x11_cubehash512_cpu_init(int thr_id, uint32_t threads);
+extern void x11_cubehash512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+
+extern void x11_shavite512_cpu_init(int thr_id, uint32_t threads);
+extern void x11_shavite512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+
+extern int  x11_simd512_cpu_init(int thr_id, uint32_t threads);
+extern void x11_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
+extern void x11_simd512_cpu_free(int thr_id);
+
+extern void x11_echo512_cpu_init(int thr_id, uint32_t threads);
+extern void x11_echo512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 
 extern void x13_hamsi512_cpu_init(int thr_id, uint32_t threads);
-extern void x13_hamsi512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
+extern void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 
-extern void x14_shabal512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
-extern void x15_whirlpool_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
-extern void x17_sha512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
+extern void x13_fugue512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 
-extern void x11_cubehash512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash);
-
-// tpruvot
-void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_outputHash, int order);
-void quark_blake512_cpu_hash_64_sp(uint32_t threads, uint32_t startNounce, uint32_t *d_nonceVector, uint32_t *d_outputHash);
+extern void x14_shabal512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 
 extern void x15_whirlpool_cpu_init(int thr_id, uint32_t threads, int flag);
-extern void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_hash, int order);
+extern void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 extern void x15_whirlpool_cpu_free(int thr_id);
 
-extern void x17_haval256_cpu_init(int thr_id, uint32_t threads);
-extern void x17_haval256_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const int outlen);
-
-void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_nonceVector, uint32_t *d_outputHash, int order);
+extern void x17_sha512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 
 // ---- 80 bytes kernels
+extern void quark_blake512_cpu_setBlock_80(int thr_id, uint32_t *pdata);
+extern void quark_blake512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash);
 
 void quark_bmw512_cpu_setBlock_80(void *pdata);
 void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, int order);
@@ -43,14 +62,15 @@ void groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, const uin
 void skein512_cpu_setBlock_80(void *pdata);
 void skein512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, int swap);
 
-extern void qubit_luffa512_cpu_setBlock_80_alexis(void *pdata);
-extern void qubit_luffa512_cpu_hash_80_alexis(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash);
+extern void qubit_luffa512_cpu_setBlock_80(void *pdata);
+extern void qubit_luffa512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash);
 
 void jh512_setBlock_80(int thr_id, uint32_t *endiandata);
 void jh512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
 
-void keccak512_setBlock_80(int thr_id, uint32_t *endiandata);
-void keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
+extern void quark_keccak512_cpu_init_80(int thr_id, uint32_t threads);
+extern void keccak512_setBlock_80(int thr_id, uint32_t *endiandata);
+extern void keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
 
 void cubehash512_setBlock_80(int thr_id, uint32_t* endiandata);
 void cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);

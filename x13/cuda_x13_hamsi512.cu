@@ -6,8 +6,8 @@
  */
 
 #include "miner.h"
-#include "cuda_helper_alexis.h"
-#include "cuda_vectors_alexis.h"
+#include "cuda_helper.h"
+#include "cuda_vectors.h"
 
 static __constant__ const uint32_t d_alpha_n[] = {
 	0xff00f0f0, 0xccccaaaa, 0xf0f0cccc, 0xff00aaaa, 0xccccaaaa, 0xf0f0ff00, 0xaaaacccc, 0xf0f0ff00,	0xf0f0cccc, 0xaaaaff00, 0xccccff00, 0xaaaaf0f0, 0xaaaaf0f0, 0xff00cccc, 0xccccf0f0, 0xff00aaaa,
@@ -175,7 +175,7 @@ static __constant__ const uint32_t d_T512[1024] = {
 	}
 
 __global__ __launch_bounds__(384,2)
-void x13_hamsi512_gpu_hash_64_alexis(uint32_t threads, uint32_t *g_hash){
+void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -287,13 +287,13 @@ void x13_hamsi512_gpu_hash_64_alexis(uint32_t threads, uint32_t *g_hash){
 }
 
 __host__
-void x13_hamsi512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash)
+void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
 	const uint32_t threadsperblock = 384;
 
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 
-	x13_hamsi512_gpu_hash_64_alexis<<<grid, block>>>(threads, d_hash);
+	x13_hamsi512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
 
 }

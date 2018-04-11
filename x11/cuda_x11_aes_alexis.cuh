@@ -1,5 +1,5 @@
 #include "miner.h"
-#include "cuda_vectors_alexis.h"
+#include "cuda_vectors.h"
 
 __device__ uint32_t d_AES0[256] = {
 	0xA56363C6, 0x847C7CF8, 0x997777EE, 0x8D7B7BF6,	0x0DF2F2FF, 0xBD6B6BD6, 0xB16F6FDE, 0x54C5C591,	0x50303060, 0x03010102, 0xA96767CE, 0x7D2B2B56,	0x19FEFEE7, 0x62D7D7B5, 0xE6ABAB4D, 0x9A7676EC,

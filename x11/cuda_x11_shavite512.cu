@@ -2,8 +2,8 @@
 	Based on Tanguy Pruvot's repo
 	Provos Alexis - 2016
 */
-#include "cuda_helper_alexis.h"
-#include "cuda_vectors_alexis.h"
+#include "cuda_helper.h"
+#include "cuda_vectors.h"
 
 #define INTENSIVE_GMF
 #include "cuda_x11_aes_alexis.cuh"
@@ -104,7 +104,7 @@ static void round_4_8_12(const uint32_t sharedMemory[4][256], uint32_t* r, uint4
 
 // GPU Hash
 __global__ __launch_bounds__(TPB,2) /* 64 registers with 128,8 - 72 regs with 128,7 */
-void x11_shavite512_gpu_hash_64_alexis(const uint32_t threads, uint64_t *g_hash)
+void x11_shavite512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash)
 {
 	__shared__ uint32_t sharedMemory[4][256];
 
@@ -425,11 +425,11 @@ void x11_shavite512_gpu_hash_64_alexis(const uint32_t threads, uint64_t *g_hash)
 }
 
 __host__
-void x11_shavite512_cpu_hash_64_alexis(int thr_id, uint32_t threads, uint32_t *d_hash)
+void x11_shavite512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
 	dim3 grid((threads + TPB-1)/TPB);
 	dim3 block(TPB);
 
 	// note: 128 threads minimum are required to init the shared memory array
-	x11_shavite512_gpu_hash_64_alexis<<<grid, block>>>(threads, (uint64_t*)d_hash);
+	x11_shavite512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash);
 }

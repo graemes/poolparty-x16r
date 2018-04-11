@@ -271,25 +271,25 @@ static const uint32_t mixtab0[] = {
 	SMIX(S24, S25, S26, S27); \
 }
 
-#undef ROL8
-#ifdef __CUDA_ARCH__
-__device__ __forceinline__
-uint32_t ROL8(const uint32_t a) {
-	return __byte_perm(a, 0, 0x2103);
-}
-__device__ __forceinline__
-uint32_t ROR8(const uint32_t a) {
-	return __byte_perm(a, 0, 0x0321);
-}
-__device__ __forceinline__
-uint32_t ROL16(const uint32_t a) {
-	return __byte_perm(a, 0, 0x1032);
-}
-#else
-#define ROL8(u)  ROTL32(u, 8)
-#define ROR8(u)  ROTR32(u, 8)
-#define ROL16(u) ROTL32(u,16)
-#endif
+//#undef ROL8
+//#ifdef __CUDA_ARCH__
+//__device__ __forceinline__
+//uint32_t ROL8(const uint32_t a) {
+//	return __byte_perm(a, 0, 0x2103);
+//}
+//__device__ __forceinline__
+//uint32_t ROR8(const uint32_t a) {
+//	return __byte_perm(a, 0, 0x0321);
+//}
+//__device__ __forceinline__
+//uint32_t ROL16(const uint32_t a) {
+//	return __byte_perm(a, 0, 0x1032);
+//}
+//#else
+//#define ROL8(u)  ROTL32(u, 8)
+//#define ROR8(u)  ROTR32(u, 8)
+//#define ROL16(u) ROTL32(u,16)
+//#endif
 
 //#define AS_UINT4(addr) *((uint4*)(addr))
 

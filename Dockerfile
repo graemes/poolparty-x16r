@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y \
     libgmp-dev \
     libcurl4-openssl-dev \
     libjansson-dev \
-    automake \
+    automake \ 
   && rm -rf /var/lib/apt/lists/*
 
 COPY . /app/

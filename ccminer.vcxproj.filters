@@ -389,7 +389,7 @@
     <ClInclude Include="x16r\cuda_x16r.h">
       <Filter>Header Files\CUDA</Filter>
     </ClInclude>
-    <ClInclude Include="x11\cuda_x11_aes_alexis.cuh" />
+    <ClInclude Include="x11\cuda_x11_aes.cuh" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda.cpp">
@@ -413,7 +413,7 @@
     <CudaCompile Include="quark\cuda_bmw512.cu">
       <Filter>Source Files\CUDA\quark</Filter>
     </CudaCompile>
-    <CudaCompile Include="quark\cuda_quark_keccak512_alexis.cu">
+    <CudaCompile Include="quark\cuda_quark_keccak512.cu">
       <Filter>Source Files\CUDA\quark</Filter>
     </CudaCompile>
     <CudaCompile Include="quark\cuda_quark_keccak512_80.cu">
@@ -422,7 +422,7 @@
     <ClInclude Include="x11\cuda_x11_aes.cuh">
       <Filter>Source Files\CUDA\x11</Filter>
     </ClInclude>
-    <CudaCompile Include="x11\cuda_x11_cubehash512_alexis.cu">
+    <CudaCompile Include="x11\cuda_x11_cubehash512.cu">
       <Filter>Source Files\CUDA\x11</Filter>
     </CudaCompile>
     <CudaCompile Include="x11\cuda_x11_cubehash512_80.cu">
@@ -443,7 +443,7 @@
     <CudaCompile Include="x13\cuda_x13_fugue512.cu">
       <Filter>Source Files\CUDA\x13</Filter>
     </CudaCompile>
-    <CudaCompile Include="x13\cuda_x13_hamsi512_alexis.cu">
+    <CudaCompile Include="x13\cuda_x13_hamsi512.cu">
       <Filter>Source Files\CUDA\x13</Filter>
     </CudaCompile>
     <CudaCompile Include="x13\cuda_x13_hamsi512_80.cu">
@@ -452,13 +452,13 @@
     <CudaCompile Include="cuda_checkhash.cu">
       <Filter>Source Files\CUDA</Filter>
     </CudaCompile>
-    <CudaCompile Include="x17\cuda_x17_sha512_alexis.cu">
+    <CudaCompile Include="x17\cuda_x17_sha512.cu">
       <Filter>Source Files\CUDA\x17</Filter>
     </CudaCompile>
     <CudaCompile Include="x15\cuda_x15_whirlpool_sm3.cu">
       <Filter>Source Files\CUDA\x15</Filter>
     </CudaCompile>
-    <CudaCompile Include="x15\cuda_x15_whirlpool_alexis.cu">
+    <CudaCompile Include="x15\cuda_x15_whirlpool.cu">
       <Filter>Source Files\CUDA\x15</Filter>
     </CudaCompile>
     <CudaCompile Include="x16r\cuda_x16_echo512.cu">
@@ -476,11 +476,11 @@
     <CudaCompile Include="x16r\x16r.cu">
       <Filter>Source Files\CUDA\x16r</Filter>
     </CudaCompile>
-    <CudaCompile Include="qubit\qubit_luffa512_alexis.cu" />
-    <CudaCompile Include="x11\cuda_x11_echo_alexis.cu" />
-    <CudaCompile Include="x11\cuda_x11_shavite512_alexis.cu" />
-    <CudaCompile Include="x13\cuda_x13_fugue512_alexis.cu" />
-    <CudaCompile Include="x15\cuda_x14_shabal512_alexis.cu" />
+    <CudaCompile Include="qubit\qubit_luffa512.cu" />
+    <CudaCompile Include="x11\cuda_x11_echo.cu" />
+    <CudaCompile Include="x11\cuda_x11_shavite512.cu" />
+    <CudaCompile Include="x13\cuda_x13_fugue512.cu" />
+    <CudaCompile Include="x15\cuda_x14_shabal512.cu" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\ccminer.ico">

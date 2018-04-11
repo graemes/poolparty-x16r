@@ -30,22 +30,21 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
 			  sph/ripemd.c sph/sph_sha2.c \
 			  quark/cuda_quark_blake512.cu \
-			  quark/cuda_bmw512.cu \
-			  quark/cuda_quark_groestl512.cu \
-			  quark/cuda_quark_groestl512_alexis.cu \
-			  quark/cuda_jh512.cu \
-			  quark/cuda_quark_keccak512_alexis.cu quark/cuda_quark_keccak512_80.cu JHA/cuda_jha_keccak512.cu \
-			  quark/cuda_skein512.cu \
-			  qubit/qubit_luffa512_alexis.cu x11/cuda_x11_luffa512.cu \
-                          x11/cuda_x11_cubehash512_alexis.cu x11/cuda_x11_cubehash512_80.cu \
-			  x11/cuda_x11_shavite512_alexis.cu x11/cuda_x11_shavite512_80.cu \
+			  quark/cuda_bmw512.cu quark/cuda_bmw512_80.cu \
+			  quark/cuda_quark_groestl512.cu quark/cuda_quark_groestl512_80.cu \
+			  quark/cuda_quark_jh512.cu quark/cuda_jh512_80.cu \
+			  quark/cuda_quark_keccak512.cu quark/cuda_quark_keccak512_80.cu \
+			  quark/cuda_quark_skein512.cu quark/cuda_skein512_80.cu \
+			  qubit/qubit_luffa512.cu \
+                          x11/cuda_x11_cubehash512.cu x11/cuda_x11_cubehash512_80.cu \
+			  x11/cuda_x11_shavite512.cu x11/cuda_x11_shavite512_80.cu \
                           x11/cuda_x11_simd512.cu x16r/cuda_x16_simd512_80.cu \
-                          x11/cuda_x11_echo_alexis.cu x16r/cuda_x16_echo512.cu \
-			  x13/cuda_x13_hamsi512_alexis.cu x13/cuda_x13_hamsi512_80.cu \
-                          x13/cuda_x13_fugue512_alexis.cu x16r/cuda_x16_fugue512.cu \
-			  x15/cuda_x14_shabal512_alexis.cu x16r/cuda_x16_shabal512.cu \
-                          x15/cuda_x15_whirlpool_alexis.cu x15/cuda_x15_whirlpool_sm3.cu \
-			  x17/cuda_x17_sha512_alexis.cu \
+                          x11/cuda_x11_echo.cu x16r/cuda_x16_echo512_80.cu \
+			  x13/cuda_x13_hamsi512.cu x13/cuda_x13_hamsi512_80.cu \
+                          x13/cuda_x13_fugue512.cu x16r/cuda_x16_fugue512_80.cu \
+			  x15/cuda_x14_shabal512.cu x16r/cuda_x16_shabal512_80.cu \
+                          x15/cuda_x15_whirlpool.cu x15/cuda_x15_whirlpool_80.cu \
+			  x17/cuda_x17_sha512.cu \
 			  x16r/x16r.cu
 
 if HAVE_NVML
@@ -106,22 +105,22 @@ quark/cuda_jh512.o: quark/cuda_jh512.cu
 quark/cuda_quark_keccak512.o: quark/cuda_quark_keccak512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=88 -o $@ -c $<
 
-x11/cuda_x11_luffa512_alexis.o: x11/cuda_x11_luffa512_alexis.cu
+x11/cuda_x11_luffa512.o: x11/cuda_x11_luffa512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
 
 x11/cuda_x11_simd512.o: x11/cuda_x11_simd512.cu
 	$(NVCC) $(nvcc_FLAGS) -Xcompiler -Wno-unused-variable -o $@ -c $<
 
-x13/cuda_x13_hamsi512_alexis.o: x13/cuda_x13_hamsi512_alexis.cu
+x13/cuda_x13_hamsi512.o: x13/cuda_x13_hamsi512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
 
 x13/cuda_x13_hamsi512_80.o: x13/cuda_x13_hamsi512_80.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
 
-x15/cuda_x15_fugue_alexis.o: x15/cuda_x15_fugue_alexis.cu
+x15/cuda_x15_fugue.o: x15/cuda_x15_fugue.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
 
-x15/cuda_x15_whirlpool_alexis.o: x15/cuda_x15_whirlpool_alexis.cu
+x15/cuda_x15_whirlpool.o: x15/cuda_x15_whirlpool.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
 
 x17/cuda_x17_sha512.o: x17/cuda_x17_sha512.cu
