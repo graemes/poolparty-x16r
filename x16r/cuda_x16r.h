@@ -29,7 +29,7 @@ extern void x11_cubehash512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *
 extern void x11_shavite512_cpu_init(int thr_id, uint32_t threads);
 extern void x11_shavite512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 
-extern int  x11_simd512_cpu_init(int thr_id, uint32_t threads);
+extern void  x11_simd512_cpu_init(int thr_id, uint32_t threads);
 extern void x11_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash);
 extern void x11_simd512_cpu_free(int thr_id);
 
