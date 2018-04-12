@@ -536,11 +536,43 @@ extern "C" void free_x16r(int thr_id)
 
 	cudaFree(d_hash[thr_id]);
 
-	//quark_blake512_cpu_free(thr_id);
-	quark_groestl512_cpu_free(thr_id);
+	// 64 algorithm free
+	// A number could be noops but as this out of the mainline.......
+	quark_blake512_cpu_free_64(thr_id);
+	quark_bmw512_cpu_free_64(thr_id);
+	quark_groestl512_cpu_free_64(thr_id);
+	quark_jh512_cpu_free_64(thr_id); 
+	quark_keccak512_cpu_free_64(thr_id);
+	quark_skein512_cpu_free_64(thr_id);
+	quark_luffa512_cpu_free_64(thr_id);
+	x11_cubehash512_cpu_free_64(thr_id);
+	x11_shavite512_cpu_free_64(thr_id);
+	x11_simd512_cpu_free_64(thr_id);
+	x16_echo512_cuda_free_64(thr_id);
+        x13_hamsi512_cpu_free_64(thr_id);
+	x13_fugue512_cpu_free_64(thr_id);
+	x14_shabal512_cpu_free_64(thr_id);
+	x15_whirlpool512_cpu_free_64(thr_id);
+	x17_sha512_cpu_free_64(thr_id);
+
+	// 80 algorithm free
+	// A number could be noops but as this out of the mainline.......
+	quark_blake512_cpu_free_80(thr_id);
+	quark_bmw512_cpu_free_80(thr_id);
+	quark_groestl512_cpu_free_80(thr_id);
+	quark_jh512_cpu_free_80(thr_id); 
+	quark_keccak512_cpu_free_80(thr_id);
+	quark_skein512_cpu_free_80(thr_id);
+	qubit_luffa512_cpu_free_80(thr_id);
+	x11_cubehash512_cpu_free_80(thr_id);
+	x11_shavite512_cpu_free_80(thr_id);
 	x11_simd512_cpu_free(thr_id);
-	x16_fugue512_cpu_free(thr_id);
-	x15_whirlpool_cpu_free(thr_id);
+	x16_echo512_cuda_free_80(thr_id);
+        x13_hamsi512_cpu_free_80(thr_id);
+	x16_fugue512_cpu_free_80(thr_id);
+	x14_shabal512_cpu_free_80(thr_id);
+	x16_whirlpool512_cpu_free_80(thr_id);
+	x17_sha512_cpu_free_80(thr_id);
 
 	cuda_check_cpu_free(thr_id);
 
@@ -598,24 +630,43 @@ static uint32_t init_x16r(int thr_id)
 	}
 	gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
 
-	//quark_blake512_cpu_init(thr_id, throughput);
-	quark_bmw512_cpu_init(thr_id, throughput);
-	quark_groestl512_cpu_init(thr_id, throughput);
-	//quark_skein512_cpu_init(thr_id, throughput);
-	quark_jh512_cpu_init(thr_id, throughput); 
+	// 64 algorithm initalisation
+	// A number could be noops but as this out of the mainline.......
+	quark_blake512_cpu_init_64(thr_id, throughput);
+	quark_bmw512_cpu_init_64(thr_id, throughput);
+	quark_groestl512_cpu_init_64(thr_id, throughput);
+	quark_jh512_cpu_init_64(thr_id, throughput); 
+	quark_keccak512_cpu_init_64(thr_id, throughput);
+	quark_skein512_cpu_initi_64(thr_id, throughput);
+	quark_luffa512_cpu_initi_64(thr_id, throughput);
+	x11_cubehash512_cpu_init_64(thr_id, throughput);
+	x11_shavite512_cpu_init_64(thr_id, throughput);
+	x11_simd512_cpu_init_64(thr_id, throughput);
+	x16_echo512_cuda_init_64(thr_id, throughput);
+        x13_hamsi512_cpu_init_64(thr_id, throughput);
+	x13_fugue512_cpu_init_64(thr_id, throughput);
+	x14_shabal512_cpu_init_64(thr_id, throughput);
+	x15_whirlpool512_cpu_init_64(thr_id, throughput);
+	x17_sha512_cpu_init_64(thr_id, throughput);
+
+	// 80 algorithm initalisation
+	// A number could be noops but as this out of the mainline.......
+	quark_blake512_cpu_init_80(thr_id, throughput);
+	quark_bmw512_cpu_init_80(thr_id, throughput);
+	quark_groestl512_cpu_init_80(thr_id, throughput);
+	quark_jh512_cpu_init_80(thr_id, throughput); 
 	quark_keccak512_cpu_init_80(thr_id, throughput);
-	//qubit_luffa512_cpu_init(thr_id, throughput);
-	//x11_luffa512_cpu_init(thr_id, throughput); // 64
-	x11_shavite512_cpu_init(thr_id, throughput); //80
+	quark_skein512_cpu_init_80(thr_id, throughput);
+	qubit_luffa512_cpu_init_80(thr_id, throughput);
+	x11_cubehash512_cpu_init_80(thr_id, throughput);
+	x11_shavite512_cpu_init_80(thr_id, throughput);
 	x11_simd512_cpu_init(thr_id, throughput);
-	x16_echo512_cuda_init(thr_id, throughput);
-        x13_hamsi512_cpu_init(thr_id, throughput);
-	//x13_fugue512_cpu_init(thr_id, throughput);
-	x16_fugue512_cpu_init(thr_id, throughput); //80
-	//x14_shabal512_cpu_init(thr_id, throughput);
-	x15_whirlpool_cpu_init(thr_id, throughput, 0);
-	x16_whirlpool512_init(thr_id, throughput);
-	//x17_sha512_cpu_init(thr_id, throughput);
+	x16_echo512_cuda_init_80(thr_id, throughput);
+        x13_hamsi512_cpu_init_80(thr_id, throughput);
+	x16_fugue512_cpu_init_80(thr_id, throughput);
+	x14_shabal512_cpu_init_80(thr_id, throughput);
+	x16_whirlpool512_cpu_init_80(thr_id, throughput);
+	x17_sha512_cpu_init_80(thr_id, throughput);
 
 	CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);
 
