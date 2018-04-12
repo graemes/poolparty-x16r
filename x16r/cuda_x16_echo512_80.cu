@@ -212,3 +212,9 @@ void x16_echo512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t
 
 	x16_echo512_gpu_hash_80<<<grid, block>>>(threads, startNonce, (uint64_t*)d_hash);
 }
+
+__host__
+void x16_echo512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void x16_echo512_cpu_free_80(int thr_id) {}

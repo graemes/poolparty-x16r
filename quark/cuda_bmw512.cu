@@ -410,12 +410,6 @@ void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_h
 	}
 }
 
-__host__
-void quark_bmw512_cpu_init(int thr_id, uint32_t threads)
-{
-
-}
-
 //__host__ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash)
 __host__ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
@@ -427,3 +421,9 @@ __host__ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d
 
     quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash, NULL);
 }
+
+__host__
+void quark_bmw512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_bmw512_cpu_free_64(int thr_id) {}

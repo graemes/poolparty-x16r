@@ -293,3 +293,9 @@ void quark_jh512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 
 	quark_jh512_gpu_hash_64<<<grid, block>>>(threads, d_hash, NULL);
 }
+
+__host__
+void quark_jh512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_jh512_cpu_free_64(int thr_id) {}

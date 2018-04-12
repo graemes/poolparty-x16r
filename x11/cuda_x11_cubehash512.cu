@@ -239,3 +239,9 @@ void x11_cubehash512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 
 }
 #endif
+
+__host__
+void x11_cubehash512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void x11_cubehash512_cpu_free_64(int thr_id) {}

@@ -125,3 +125,9 @@ void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash
 	//quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, d_nonceVector);
 	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, NULL);
 }
+
+__host__
+void quark_groestl512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_groestl512_cpu_free_64(int thr_id) {}

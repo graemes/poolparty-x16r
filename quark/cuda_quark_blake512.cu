@@ -653,3 +653,15 @@ void quark_blake512_cpu_setBlock_80(int thr_id, uint32_t *endiandata){
 
 	CUDA_SAFE_CALL(cudaMemcpyToSymbol(c_x,xors, i*sizeof(uint2), 0, cudaMemcpyHostToDevice));
 }
+
+__host__
+void quark_blake512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_blake512_cpu_free_64(int thr_id) {}
+
+__host__
+void quark_blake512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_blake512_cpu_free_80(int thr_id) {}

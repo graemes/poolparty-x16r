@@ -388,12 +388,6 @@ void quark_keccak512_gpu_hash_64_final(uint32_t threads, uint2* g_hash, uint32_t
 }
 
 __host__
-void quark_keccak512_cpu_init(int thr_id, uint32_t threads)
-{
-}
-
-__host__
-//void quark_keccak512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_nonceVector, uint32_t *d_hash)
 void quark_keccak512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
 	uint32_t tpb = TPB52;
@@ -417,3 +411,9 @@ void quark_keccak512_cpu_hash_64_final(int thr_id, uint32_t threads, uint32_t *d
 
 	quark_keccak512_gpu_hash_64_final<<<grid, block>>>(threads, (uint2*)d_hash, d_nonceVector, d_resNonce, target);
 }
+
+__host__
+void quark_keccak512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_keccak512_cpu_free_64(int thr_id) {}

@@ -269,22 +269,22 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			quark_bmw512_cpu_setBlock_80(endiandata);
 			break;
 		case GROESTL:
-			groestl512_setBlock_80(thr_id, endiandata);
+			quark_groestl512_setBlock_80(thr_id, endiandata);
 			break;
 		case JH:
-			jh512_setBlock_80(thr_id, endiandata);
+			quark_jh512_setBlock_80(thr_id, endiandata);
 			break;
 		case KECCAK:
-			keccak512_setBlock_80(thr_id, endiandata);
+			quark_keccak512_setBlock_80(thr_id, endiandata);
 			break;
 		case SKEIN:
-			skein512_cpu_setBlock_80((void*)endiandata);
+			quark_skein512_cpu_setBlock_80((void*)endiandata);
 			break;
 		case LUFFA:
 			qubit_luffa512_cpu_setBlock_80((void*)endiandata);
 			break;
 		case CUBEHASH:
-			cubehash512_setBlock_80(thr_id, endiandata);
+			x11_cubehash512_setBlock_80(thr_id, endiandata);
 			break;
 		case SHAVITE:
 			x11_shavite512_setBlock_80((void*)endiandata);
@@ -296,7 +296,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			x16_echo512_setBlock_80((void*)endiandata);
 			break;
 		case HAMSI:
-			x16_hamsi512_setBlock_80((void*)endiandata);
+			x13_hamsi512_setBlock_80((void*)endiandata);
 			break;
 		case FUGUE:
 			x16_fugue512_setBlock_80((void*)pdata);
@@ -305,10 +305,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			x16_shabal512_setBlock_80((void*)endiandata);
 			break;
 		case WHIRLPOOL:
-			x16_whirlpool512_setBlock_80((void*)endiandata);
+			x15_whirlpool512_setBlock_80((void*)endiandata);
 			break;
 		case SHA512:
-			x16_sha512_setBlock_80(endiandata);
+			x17_sha512_setBlock_80(endiandata);
 			break;
 		default: {
 			if (!thr_id)
@@ -335,19 +335,19 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("bmw80  :");
 				break;
 			case GROESTL:
-				groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
 				TRACE("grstl80:");
 				break;
 			case JH:
-				jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				quark_jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
 				TRACE("jh51280:");
 				break;
 			case KECCAK:
-				keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				quark_keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
 				TRACE("kecck80:");
 				break;
 			case SKEIN:
-				skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0); //order++;
+				quark_skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0); //order++;
 				TRACE("skein80:");
 				break;
 			case LUFFA:
@@ -355,7 +355,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("luffa80:");
 				break;
 			case CUBEHASH:
-				cubehash512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x11_cubehash512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
 				TRACE("cube 80:");
 				break;
 			case SHAVITE:
@@ -371,7 +371,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("echo   :");
 				break;
 			case HAMSI:
-				x16_hamsi512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x13_hamsi512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
 				TRACE("hamsi  :");
 				break;
 			case FUGUE:
@@ -383,11 +383,11 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("shabal :");
 				break;
 			case WHIRLPOOL:
-				x16_whirlpool512_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x15_whirlpool512_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
 				TRACE("whirl  :");
 				break;
 			case SHA512:
-				x16_sha512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x17_sha512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
 				TRACE("sha512 :");
 				break;
 		}
@@ -423,7 +423,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("skein    :");
 				break;
 			case LUFFA:
-				x11_luffa512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				qubit_luffa512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
 				TRACE("luffa    :");
 				break;
 			case CUBEHASH:
@@ -451,11 +451,11 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("fugue    :");
 				break;
 			case SHABAL:
-		                x14_shabal512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x14_shabal512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
 				TRACE("shabal   :");
 				break;
 			case WHIRLPOOL:
-				x15_whirlpool_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x15_whirlpool512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
 				TRACE("whirlpool:");
 				break;
 			case SHA512:
@@ -536,7 +536,7 @@ extern "C" void free_x16r(int thr_id)
 
 	cudaFree(d_hash[thr_id]);
 
-	// 64 algorithm free
+	// 64 byte kernels free
 	// A number could be noops but as this out of the mainline.......
 	quark_blake512_cpu_free_64(thr_id);
 	quark_bmw512_cpu_free_64(thr_id);
@@ -544,18 +544,18 @@ extern "C" void free_x16r(int thr_id)
 	quark_jh512_cpu_free_64(thr_id); 
 	quark_keccak512_cpu_free_64(thr_id);
 	quark_skein512_cpu_free_64(thr_id);
-	quark_luffa512_cpu_free_64(thr_id);
+	qubit_luffa512_cpu_free_64(thr_id);
 	x11_cubehash512_cpu_free_64(thr_id);
 	x11_shavite512_cpu_free_64(thr_id);
 	x11_simd512_cpu_free_64(thr_id);
-	x16_echo512_cuda_free_64(thr_id);
-        x13_hamsi512_cpu_free_64(thr_id);
+	x11_echo512_cpu_free_64(thr_id);
+	x13_hamsi512_cpu_free_64(thr_id);
 	x13_fugue512_cpu_free_64(thr_id);
 	x14_shabal512_cpu_free_64(thr_id);
 	x15_whirlpool512_cpu_free_64(thr_id);
 	x17_sha512_cpu_free_64(thr_id);
 
-	// 80 algorithm free
+	// 80 byte kernels free
 	// A number could be noops but as this out of the mainline.......
 	quark_blake512_cpu_free_80(thr_id);
 	quark_bmw512_cpu_free_80(thr_id);
@@ -566,12 +566,12 @@ extern "C" void free_x16r(int thr_id)
 	qubit_luffa512_cpu_free_80(thr_id);
 	x11_cubehash512_cpu_free_80(thr_id);
 	x11_shavite512_cpu_free_80(thr_id);
-	x11_simd512_cpu_free(thr_id);
-	x16_echo512_cuda_free_80(thr_id);
-        x13_hamsi512_cpu_free_80(thr_id);
+	x16_simd512_cpu_free_80(thr_id);
+	x16_echo512_cpu_free_80(thr_id);
+	x13_hamsi512_cpu_free_80(thr_id);
 	x16_fugue512_cpu_free_80(thr_id);
-	x14_shabal512_cpu_free_80(thr_id);
-	x16_whirlpool512_cpu_free_80(thr_id);
+	x16_shabal512_cpu_free_80(thr_id);
+	x15_whirlpool512_cpu_free_80(thr_id);
 	x17_sha512_cpu_free_80(thr_id);
 
 	cuda_check_cpu_free(thr_id);
@@ -630,26 +630,28 @@ static uint32_t init_x16r(int thr_id)
 	}
 	gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
 
-	// 64 algorithm initalisation
+	cuda_get_arch(thr_id);
+
+	// 64 byte kernels initialisation
 	// A number could be noops but as this out of the mainline.......
 	quark_blake512_cpu_init_64(thr_id, throughput);
 	quark_bmw512_cpu_init_64(thr_id, throughput);
 	quark_groestl512_cpu_init_64(thr_id, throughput);
 	quark_jh512_cpu_init_64(thr_id, throughput); 
 	quark_keccak512_cpu_init_64(thr_id, throughput);
-	quark_skein512_cpu_initi_64(thr_id, throughput);
-	quark_luffa512_cpu_initi_64(thr_id, throughput);
+	quark_skein512_cpu_init_64(thr_id, throughput);
+	qubit_luffa512_cpu_init_64(thr_id, throughput);
 	x11_cubehash512_cpu_init_64(thr_id, throughput);
 	x11_shavite512_cpu_init_64(thr_id, throughput);
 	x11_simd512_cpu_init_64(thr_id, throughput);
-	x16_echo512_cuda_init_64(thr_id, throughput);
-        x13_hamsi512_cpu_init_64(thr_id, throughput);
+	x11_echo512_cpu_init_64(thr_id, throughput);
+	x13_hamsi512_cpu_init_64(thr_id, throughput);
 	x13_fugue512_cpu_init_64(thr_id, throughput);
 	x14_shabal512_cpu_init_64(thr_id, throughput);
 	x15_whirlpool512_cpu_init_64(thr_id, throughput);
 	x17_sha512_cpu_init_64(thr_id, throughput);
 
-	// 80 algorithm initalisation
+	// 80 byte kernels initialisation
 	// A number could be noops but as this out of the mainline.......
 	quark_blake512_cpu_init_80(thr_id, throughput);
 	quark_bmw512_cpu_init_80(thr_id, throughput);
@@ -660,12 +662,12 @@ static uint32_t init_x16r(int thr_id)
 	qubit_luffa512_cpu_init_80(thr_id, throughput);
 	x11_cubehash512_cpu_init_80(thr_id, throughput);
 	x11_shavite512_cpu_init_80(thr_id, throughput);
-	x11_simd512_cpu_init(thr_id, throughput);
-	x16_echo512_cuda_init_80(thr_id, throughput);
-        x13_hamsi512_cpu_init_80(thr_id, throughput);
+	x16_simd512_cpu_init_80(thr_id, throughput);
+	x16_echo512_cpu_init_80(thr_id, throughput);
+	x13_hamsi512_cpu_init_80(thr_id, throughput);
 	x16_fugue512_cpu_init_80(thr_id, throughput);
-	x14_shabal512_cpu_init_80(thr_id, throughput);
-	x16_whirlpool512_cpu_init_80(thr_id, throughput);
+	x16_shabal512_cpu_init_80(thr_id, throughput);
+	x15_whirlpool512_cpu_init_80(thr_id, throughput);
 	x17_sha512_cpu_init_80(thr_id, throughput);
 
 	CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);

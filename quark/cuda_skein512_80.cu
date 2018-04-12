@@ -465,7 +465,7 @@ __launch_bounds__(TPB52, 3)
 #else
 __launch_bounds__(TPB50, 5)
 #endif
-void skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *output64)
+void quark_skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *output64)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -627,7 +627,7 @@ void skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *outp
 }
 
 __host__
-void skein512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, int swap)
+void quark_skein512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, int swap)
 {
 	uint32_t tpb = TPB52;
 	int dev_id = device_map[thr_id];
@@ -637,11 +637,11 @@ void skein512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, ui
 	const dim3 block(tpb);
 
 	// hash function is cut in 2 parts to reduce kernel size
-	skein512_gpu_hash_80 <<< grid, block >>> (threads, startNounce, (uint64_t*)d_hash);
+	quark_skein512_gpu_hash_80 <<< grid, block >>> (threads, startNounce, (uint64_t*)d_hash);
 }
 
 __host__
-void skein512_cpu_setBlock_80(void *pdata)
+void quark_skein512_cpu_setBlock_80(void *pdata)
 {
 	uint64_t message[20];
 	memcpy(&message[0], pdata, 80);
@@ -784,8 +784,7 @@ void skein512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void quark_skein512_cpu_init(int thr_id, uint32_t threads)
-{
-	cuda_get_arch(thr_id);
-}
+void quark_skein512_cpu_init_80(int thr_id, uint32_t threads) {}
 
+__host__
+void quark_skein512_cpu_free_80(int thr_id) {}

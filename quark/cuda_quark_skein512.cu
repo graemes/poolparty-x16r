@@ -258,5 +258,10 @@ void quark_skein512_cpu_hash_64(int thr_id,uint32_t threads, uint32_t *d_hash)
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 	quark_skein512_gpu_hash_64 << <grid, block >> >(threads, (uint64_t*)d_hash, NULL);
-
 }
+
+__host__
+void quark_skein512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_skein512_cpu_free_64(int thr_id) {}

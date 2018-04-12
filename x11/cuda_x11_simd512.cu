@@ -81,16 +81,6 @@ static void x11_simd512_gpu_compress_64_maxwell(uint32_t threads, uint32_t *g_ha
 }
 
 __host__
-void x11_simd512_cpu_init(int thr_id, uint32_t threads){
-	cudaMalloc(&d_temp4[thr_id], 64*sizeof(uint4)*threads);
-}
-
-__host__
-void x11_simd512_cpu_free(int thr_id){
-	cudaFree(d_temp4[thr_id]);
-}
-
-__host__
 void x11_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
 
 	int dev_id = device_map[thr_id];
@@ -107,4 +97,14 @@ void x11_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
 	
 	x11_simd512_gpu_expand_64 <<<grid1, block1>>> (threads, d_hash, d_temp4[thr_id]);
 	x11_simd512_gpu_compress_64_maxwell <<< grid2, block2 >>> (threads, d_hash, d_temp4[thr_id]);
+}
+
+__host__
+void x11_simd512_cpu_init_64(int thr_id, uint32_t threads){
+	cudaMalloc(&d_temp4[thr_id], 64*sizeof(uint4)*threads);
+}
+
+__host__
+void x11_simd512_cpu_free_64(int thr_id){
+	cudaFree(d_temp4[thr_id]);
 }

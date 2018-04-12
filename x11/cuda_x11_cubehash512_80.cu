@@ -212,15 +212,11 @@ static void Final(uint32_t x[2][2][2][2][2], uint32_t *hashval)
 
 /***************************************************/
 
-
-#define WANT_CUBEHASH80
-#ifdef WANT_CUBEHASH80
-
 __constant__
 static uint32_t c_PaddedMessage80[20];
 
 __host__
-void cubehash512_setBlock_80(int thr_id, uint32_t* endiandata)
+void x11_cubehash512_setBlock_80(int thr_id, uint32_t* endiandata)
 {
 	cudaMemcpyToSymbol(c_PaddedMessage80, endiandata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
@@ -262,7 +258,7 @@ void cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce,
 }
 
 __host__
-void cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
+void x11_cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
 {
 	const uint32_t threadsperblock = 256;
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
@@ -271,4 +267,8 @@ void cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const ui
 	cubehash512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*) d_hash);
 }
 
-#endif
+__host__
+void x11_cubehash512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void x11_cubehash512_cpu_free_80(int thr_id) {}

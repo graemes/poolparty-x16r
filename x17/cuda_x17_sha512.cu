@@ -154,7 +154,7 @@ static uint64_t c_PaddedMessage80[10];
 
 __global__
 /*__launch_bounds__(256, 4)*/
-void x16_sha512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
+void x17_sha512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -210,19 +210,33 @@ void x16_sha512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, u
 }
 
 __host__
-void x16_sha512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
+void x17_sha512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
 {
 	const uint32_t threadsperblock = 256;
 
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
 
-	x16_sha512_gpu_hash_80 <<<grid, block >>> (threads, startNounce, (uint64_t*)d_hash);
+	x17_sha512_gpu_hash_80 <<<grid, block >>> (threads, startNounce, (uint64_t*)d_hash);
 }
 
 __host__
-void x16_sha512_setBlock_80(void *pdata)
+void x17_sha512_setBlock_80(void *pdata)
 {
 	cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
+
+__host__
+void x17_sha512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void x17_sha512_cpu_free_64(int thr_id) {}
+
+__host__
+void x17_sha512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void x17_sha512_cpu_free_80(int thr_id) {}
+
+
 

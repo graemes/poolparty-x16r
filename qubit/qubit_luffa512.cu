@@ -684,7 +684,7 @@ void qubit_luffa512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNoun
 
 __global__
 __launch_bounds__(384,2)
-void x11_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
+void qubit_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint32_t statebuffer[8];
@@ -829,7 +829,7 @@ void qubit_luffa512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void x11_luffa512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_hash)
+void qubit_luffa512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_hash)
 {
     const uint32_t threadsperblock = 384;
 
@@ -837,5 +837,17 @@ void x11_luffa512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_hash)
     dim3 grid((threads + threadsperblock-1)/threadsperblock);
     dim3 block(threadsperblock);
 
-    x11_luffa512_gpu_hash_64<<<grid, block>>>(threads,d_hash);
+    qubit_luffa512_gpu_hash_64<<<grid, block>>>(threads,d_hash);
 }
+
+__host__
+void qubit_luffa512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void qubit_luffa512_cpu_free_64(int thr_id) {}
+
+__host__
+void qubit_luffa512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void qubit_luffa512_cpu_free_80(int thr_id) {}

@@ -348,3 +348,9 @@ void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32
 
 	x16_shabal512_gpu_hash_80 <<<grid, block >>>(threads, startNonce, d_hash);
 }
+
+__host__
+void x16_shabal512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void x16_shabal512_cpu_free_80(int thr_id) {}

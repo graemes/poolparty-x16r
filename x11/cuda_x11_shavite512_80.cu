@@ -1396,7 +1396,7 @@ void x11_shavite512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNoun
 }
 
 __host__
-void x11_shavite512_cpu_init(int thr_id, uint32_t threads)
+void x11_shavite512_cpu_init_80(int thr_id, uint32_t threads)
 {
 	aes_cpu_init(thr_id);
 }
@@ -1412,3 +1412,6 @@ void x11_shavite512_setBlock_80(void *pdata)
 
 	cudaMemcpyToSymbol(c_PaddedMessage80, PaddedMessage, 32*sizeof(uint32_t), 0, cudaMemcpyHostToDevice);
 }
+
+__host__
+void x11_shavite512_cpu_free_80(int thr_id) {}

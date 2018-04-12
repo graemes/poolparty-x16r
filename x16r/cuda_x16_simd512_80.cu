@@ -1834,3 +1834,9 @@ void x16_simd512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t
 	const dim3 block(tpb);
 	x16_simd512_gpu_80 <<<grid, block>>> (threads, startNonce, (uint64_t*) d_hash);
 }
+
+__host__
+void x16_simd512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void x16_simd512_cpu_free_80(int thr_id) {}

@@ -176,3 +176,9 @@ __host__ void x14_shabal512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *
 
 	x14_shabal512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
 }
+
+__host__
+void x14_shabal512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void x14_shabal512_cpu_free_64(int thr_id) {}

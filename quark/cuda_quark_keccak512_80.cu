@@ -431,7 +431,7 @@ keccak_block_80(uint64_t *s, const uint32_t *in, const uint64_t *keccak_round_co
 }
 
 __global__
-void keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
+void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -488,7 +488,7 @@ void quark_keccak512_cpu_init_80(int thr_id, uint32_t threads)
 
 // inlen kann 72...143 betragen
 __host__
-void keccak512_setBlock_80(int thr_id, uint32_t *endiandata)
+void quark_keccak512_setBlock_80(int thr_id, uint32_t *endiandata)
 {
 	size_t BLOCKSIZE = 80;
 
@@ -520,7 +520,7 @@ void keccak512_setBlock_80(int thr_id, uint32_t *endiandata)
 }
 
 __host__
-void keccak512_cuda_hash_80(const int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash)
+void quark_keccak512_cuda_hash_80(const int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash)
 {
 	const uint32_t threadsperblock = 256;
 
@@ -529,7 +529,10 @@ void keccak512_cuda_hash_80(const int thr_id, uint32_t threads, uint32_t startNo
 
 	size_t shared_size = 0;
 
-	keccak512_gpu_hash_80<<<grid, block, shared_size>>>(threads, startNounce, (uint64_t*)d_hash);
+	quark_keccak512_gpu_hash_80<<<grid, block, shared_size>>>(threads, startNounce, (uint64_t*)d_hash);
 	//MyStreamSynchronize(NULL, order, thr_id);
 }
+
+__host__
+void quark_keccak512_cpu_free_80(int thr_id) {}
 

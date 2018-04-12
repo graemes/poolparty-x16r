@@ -295,5 +295,10 @@ void x13_hamsi512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 	dim3 block(threadsperblock);
 
 	x13_hamsi512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
-
 }
+
+__host__
+void x13_hamsi512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void x13_hamsi512_cpu_free_64(int thr_id) {}

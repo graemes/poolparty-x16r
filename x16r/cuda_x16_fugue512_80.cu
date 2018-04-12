@@ -444,13 +444,13 @@ void x16_fugue512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 }
 
 __host__
-void x16_fugue512_cpu_init(int thr_id, uint32_t threads)
+void x16_fugue512_cpu_init_80(int thr_id, uint32_t threads)
 {
 	texDef(0, mixTab0Tex, mixTab0m, mixtab0, sizeof(uint32_t)*256);
 }
 
 __host__
-void x16_fugue512_cpu_free(int thr_id)
+void x16_fugue512_cpu_free_80(int thr_id)
 {
 	cudaFree(d_textures[thr_id][0]);
 }

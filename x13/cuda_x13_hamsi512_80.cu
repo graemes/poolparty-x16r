@@ -314,24 +314,16 @@ static const uint32_t T512[64][16] = {
   0x95bb0000, 0x81450000, 0x3b240000, 0x48db0140, 0x0a8a6c53, 0x56f56eec, 0x62c91877, 0xe7e00a94 }
 };
 
-__host__
-void x13_hamsi512_cpu_init(int thr_id, uint32_t threads)
-{       
-        cudaMemcpyToSymbol(d_alpha_n, alpha_n, sizeof(uint32_t)*32, 0, cudaMemcpyHostToDevice);
-        cudaMemcpyToSymbol(d_alpha_f, alpha_f, sizeof(uint32_t)*32, 0, cudaMemcpyHostToDevice);
-        CUDA_SAFE_CALL(cudaMemcpyToSymbol(d_T512, T512, sizeof(uint32_t)*64*16, 0, cudaMemcpyHostToDevice));
-}
-
 __constant__ static uint64_t c_PaddedMessage80[10];
 
 __host__
-void x16_hamsi512_setBlock_80(void *pdata)
+void x13_hamsi512_setBlock_80(void *pdata)
 {
 	cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
 
 __global__
-void x16_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
+void x13_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -436,12 +428,23 @@ void x16_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 }
 
 __host__
-void x16_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
+void x13_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
 {
 	const uint32_t threadsperblock = 128;
 
 	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
 	dim3 block(threadsperblock);
 
-	x16_hamsi512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*)d_hash);
+	x13_hamsi512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*)d_hash);
 }
+
+__host__
+void x13_hamsi512_cpu_init_80(int thr_id, uint32_t threads)
+{
+        cudaMemcpyToSymbol(d_alpha_n, alpha_n, sizeof(uint32_t)*32, 0, cudaMemcpyHostToDevice);
+        cudaMemcpyToSymbol(d_alpha_f, alpha_f, sizeof(uint32_t)*32, 0, cudaMemcpyHostToDevice);
+        CUDA_SAFE_CALL(cudaMemcpyToSymbol(d_T512, T512, sizeof(uint32_t)*64*16, 0, cudaMemcpyHostToDevice));
+}
+
+__host__
+void x13_hamsi512_cpu_free_80(int thr_id) {}
