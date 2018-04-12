@@ -87,6 +87,7 @@ bool opt_protocol = false;
 bool opt_benchmark = false;
 bool opt_showdiff = true;
 bool opt_hwmonitor = true;
+bool opt_api_bound = false;
 
 // todo: limit use of these flags,
 // prefer the pools[] attributes
@@ -213,7 +214,8 @@ double opt_resume_temp = 0.;
 double opt_resume_diff = 0.;
 double opt_resume_rate = -1.;
 
-int opt_statsavg = 60;
+int opt_statsavg = 30;
+bool opt_simple_hashrate = true;
 
 #define API_MCAST_CODE "FTW"
 #define API_MCAST_ADDR "224.0.0.75"
@@ -221,7 +223,7 @@ int opt_statsavg = 60;
 // strdup on char* to allow a common free() if used
 static char* opt_syslog_pfx = strdup(PROGRAM_NAME);
 char *opt_api_bind = strdup("127.0.0.1"); /* 0.0.0.0 for all ips */
-int opt_api_port = 4068; /* 0 to disable */
+int opt_api_port = 0; /* 0 to disable */
 char *opt_api_allow = NULL;
 char *opt_api_groups = NULL;
 bool opt_api_mcast = false;
@@ -266,7 +268,8 @@ Options:\n\
                           long polling is unavailable, in seconds (default: 10)\n\
       --submit-stale    ignore stale jobs checks, may create more rejected shares\n\
   -n, --ndevs           list cuda devices\n\
-  -N, --statsavg        number of samples used to compute hashrate (default: 30)\n\
+  -N, --statsavg        number of samples used to calculate hash rate if simple-hash disabled (default: 30)\n\
+      --no-simple-hr    use N samples to calculate the hashrate\n\
       --no-gbt          disable getblocktemplate support (height check in solo)\n\
       --no-longpoll     disable X-Long-Polling support\n\
       --no-stratum      disable X-Stratum support\n\
@@ -277,7 +280,7 @@ Options:\n\
   -P, --protocol-dump   verbose dump of protocol-level activities\n\
       --cpu-affinity    set process affinity to cpu core(s), mask 0x3 for cores 0 and 1\n\
       --cpu-priority    set process priority (default: 3) 0 idle, 2 normal to 5 highest\n\
-  -b, --api-bind=port   IP:port for the miner API (default: 127.0.0.1:4068), 0 disabled\n\
+  -b, --api-bind=port   IP:port for the miner API (for example 127.0.0.1:4068), disabled by default\n\
       --api-remote      Allow remote control, like pool switching, imply --api-allow=0/0\n\
       --api-allow=...   IP/mask of the allowed api client(s), 0/0 for all\n\
       --max-temp=N      Only mine if gpu temp is less than specified value\n\
@@ -310,7 +313,7 @@ Options:\n\
   -B, --background      run the miner in the background\n\
       --benchmark       run in offline benchmark mode\n\
       --cputest         debug hashes from cpu algorithms\n\
-      --donate          percentage of time to donate to dev (set to 0 to disable)\n\
+      --donate          percentage of time to donate to developer (0 to disable ; 0.5 minimum)\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
   -V, --version         display version information and exit\n\
   -h, --help            display this help text and exit\n\
@@ -348,6 +351,7 @@ struct option options[] = {
 	{ "ndevs", 0, NULL, 'n' },
 	{ "no-color", 0, NULL, 1002 },
 	{ "no-extranonce", 0, NULL, 1012 },
+	{ "no-simple-hr", 0, NULL, 1090 },
 	{ "no-gbt", 0, NULL, 1011 },
 	{ "no-longpoll", 0, NULL, 1003 },
 	{ "no-stratum", 0, NULL, 1007 },
@@ -2326,6 +2330,7 @@ void parse_arg(int key, char *arg)
 			/* port or 0 to disable */
 			opt_api_port = atoi(arg);
 		}
+		if (opt_api_port > 0) opt_api_bound = true;
 		break;
 	case 1030: /* --api-remote */
 		if (opt_api_allow) free(opt_api_allow);
@@ -2840,6 +2845,10 @@ void parse_arg(int key, char *arg)
 			dev_donate_percent = d;
 		break;
 
+	case 1090: // enable simple hash
+		opt_simple_hashrate = false;
+		break;
+
 	/* PER POOL CONFIG OPTIONS */
 
 	case 1100: /* pool name */
@@ -3100,10 +3109,11 @@ int main(int argc, char *argv[])
 		printf("No dev donation set. Please consider making a one-time donation to the following addresses:\n");
 		printf("BTC donation address: 1AJdfCpLWPNoAMDfHF1wD5y8VgKSSTHxPo (tpruvot)\n");
 		printf("RVN donation address: RWoyvvT5exmbs937QfRavf4fxB5mvijG6R (penfold)\n");
-		printf("RVN donation address: RYKaoWqR5uahFioNvxabQtEBjNkBmRoRdg (alexis78)\n");
 		printf("RVN donation address: RWoSZX6j6WU6SVTVq5hKmdgPmmrYE9be5R (brianmct)\n");
+		printf("RVN donation address: RYKaoWqR5uahFioNvxabQtEBjNkBmRoRdg (alexis78)\n");
 		printf("-------------------------------------------------------------------\n");
-		printf("RVN donation address: RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU (graemes)\n\n");
+		printf("RVN donation address: RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU (graemes)\n");
+		printf("-------------------------------------------------------------------\n\n");
 	}
 	else {
 		// Set dev pool credentials.
