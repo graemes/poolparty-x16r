@@ -3,31 +3,25 @@
 If you find this version useful please consider a donation to: RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU (graemes)
 
 Things to watch out for:
-- the arch in configure.sh has been set to haswell rather than native ;
-- only builds for compute_52 & compute_61 - change Makefile.am if you want to include other nvidia architectures ;
+- only builds for compute_50, compute_52 & compute_61 - change Makefile.am if you want to include other nvidia architectures ;
 - only tested against cuda 9.1
 
 This version is based primarily on:
-- the Nevermore miner (https://github.com/brian112358/nevermore-miner) ;
-- the work of Penfold in stripping down the original ccminer (https://github.com/todd1251/ccminer-x16r/tree/x16r-only) ;
+- the Nevermore miner (https://github.com/brian112358/nevermore-miner - RWoSZX6j6WU6SVTVq5hKmdgPmmrYE9be5R) ;
+- the work of Penfold in stripping down the original ccminer (https://github.com/todd1251/ccminer-x16r/tree/x16r-only - RWoyvvT5exmbs937QfRavf4fxB5mvijG6R) ;
+- alexis78 kernel optimisations (https://github.com/alexis78/ccminer - RYKaoWqR5uahFioNvxabQtEBjNkBmRoRdg) 
 - along with changes hand-picked from other tree's ;
 
 Standing on the shoulders of giants.
 
 Based on Christian Buchner's &amp; Christian H.'s CUDA project, no more active on github since 2014.
 
-Check the [README.txt](README.txt) for the additions
-
 BTC donation address: 1AJdfCpLWPNoAMDfHF1wD5y8VgKSSTHxPo (tpruvot)
 
 A part of the recent algos were originally written by [djm34](https://github.com/djm34) and [alexis78](https://github.com/alexis78)
 
-This variant was tested and built on Linux (ubuntu server 14.04, 16.04, Fedora 22 to 25)
+This variant was tested and built on Linux (ubuntu server 16.04, Fedora 27)
 It is also built for Windows 7 to 10 with VStudio 2013, to stay compatible with Windows 7 and Vista.
-
-Note that the x86 releases are generally faster than x64 ones on Windows, but that tend to change with the recent drivers.
-
-The recommended CUDA Toolkit version was the [6.5.19](http://developer.download.nvidia.com/compute/cuda/6_5/rel/installers/cuda_6.5.19_windows_general_64.exe), but some light algos could be faster with the version 7.5 and 8.0 (like lbry, decred and skein).
 
 About source code dependencies
 ------------------------------
