@@ -89,6 +89,7 @@ double stats_get_speed(int thr_id, double def_speed)
 		} else {
 			speed = thr_hashrate[thr_id] / thr_samples[thr_id];
 		}
+		//applog(LOG_BLUE, "%d %.1f", thr_id, speed);
 	} else {
 		int records = 0;
 		std::map<uint64_t, stats_data>::reverse_iterator i =

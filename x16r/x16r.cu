@@ -571,15 +571,20 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 static uint32_t init_x16r(int thr_id)
 {
 	uint32_t throughput = 0;
-
 	int dev_id = device_map[thr_id];
+	int intensity = 18;
 
-	int intensity = 19;
 	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
-	if (strstr(device_name[dev_id], "GTX 1080 Ti")) intensity = 20;
-	if (strstr(device_name[dev_id], "GTX 1060 3GB")) intensity = 19;
-	//if (strstr(device_name[dev_id], "GTX 1060 3GB")) throughput = 294912;
-	if (strstr(device_name[dev_id], "GTX 970")) intensity = 18;
+
+	// Simple heuristic for setting default intensity
+	int gpu_model;
+	char gpu_family1[10], gpu_family2[10];
+	sscanf(device_name[dev_id], "%s %s %d", gpu_family1, gpu_family2,
+			&gpu_model);  // More robust way to extract model number?
+	if (gpu_model > 1070)
+		intensity = 20;
+	else if (gpu_model > 1000)
+		intensity = 19;
 
 	if (throughput == 0) {
 		throughput = cuda_default_throughput(thr_id, 1U << intensity);
