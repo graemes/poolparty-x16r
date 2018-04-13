@@ -50,10 +50,6 @@ __device__ static uint64_t b0[256];
 __device__ static uint64_t b7[256];
 
 __constant__ static uint2 precomputed_round_key_64[72];
-//__constant__ static uint2 precomputed_round_key_80[80];
-
-//__device__ static uint2 c_PaddedMessage80[16];
-
 
 /**
  * Round constants.
@@ -169,7 +165,6 @@ static void ROUND_KSCHED(const uint64_t *in,uint64_t *out,const uint64_t c){
 //--------END OF WHIRLPOOL HOST MACROS-------------------------------------------------------------------------------
 
 __host__
-//extern void x15_whirlpool_cpu_init(int thr_id, uint32_t threads, int mode){
 extern void x15_whirlpool512_cpu_init_64(int thr_id, uint32_t threads){
 
 	int mode = 0;
