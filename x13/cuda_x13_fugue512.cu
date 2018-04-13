@@ -41,6 +41,8 @@
  * @author   Provos Alexis (Applied partial shared Mem utilization under CUDA 7.5 for compute5.0/5.2 / 2016)
  */
 
+#define TPB 256
+
 static __constant__ const uint32_t c_S[16] = {
 		0x8807a57e, 0xe616af75, 0xc5d3e4db, 0xac9ab027,
 		0xd915f117, 0xb6eecc54, 0x06e8020b, 0x4a92efd1,
@@ -231,19 +233,18 @@ static void SMIX_LDG(const uint32_t shared[4][256], uint32_t &x0,uint32_t &x1,ui
 
 /***************************************************/
 // Die Hash-Funktion
-__global__ __launch_bounds__(256,3)
+__global__ __launch_bounds__(TPB,3)
 void x13_fugue512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 {
 	__shared__ uint32_t shared[4][256];
 
-//	if(threadIdx.x<256){
-		const uint32_t tmp = mixtab0[threadIdx.x];
-		shared[0][threadIdx.x] = tmp;
-		shared[1][threadIdx.x] = ROR8(tmp);
-		shared[2][threadIdx.x] = ROL16(tmp);
-		shared[3][threadIdx.x] = ROL8(tmp);
-//	}
+	const uint32_t tmp = mixtab0[threadIdx.x];
+	shared[0][threadIdx.x] = tmp;
+	shared[1][threadIdx.x] = ROR8(tmp);
+	shared[2][threadIdx.x] = ROL16(tmp);
+	shared[3][threadIdx.x] = ROL8(tmp);
 	__syncthreads();
+
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
 	{
@@ -312,11 +313,11 @@ void x13_fugue512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 __host__
 void x13_fugue512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
 
-	const uint32_t threadsperblock = 256;
+	//const uint32_t threadsperblock = 256;
 
 	// berechne wie viele Thread Blocks wir brauchen
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + TPB - 1)/TPB);
+	dim3 block(TPB);
 
 	x13_fugue512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash);
 }
@@ -326,4 +327,3 @@ void x13_fugue512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void x13_fugue512_cpu_free_64(int thr_id) {}
-

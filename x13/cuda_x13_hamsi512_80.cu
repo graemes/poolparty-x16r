@@ -9,6 +9,8 @@
 
 #include "cuda_helper.h"
 
+#define TPB 128
+
 typedef unsigned char BitSequence;
 
 static __constant__ uint32_t d_alpha_n[32];
@@ -316,12 +318,6 @@ static const uint32_t T512[64][16] = {
 
 __constant__ static uint64_t c_PaddedMessage80[10];
 
-__host__
-void x13_hamsi512_setBlock_80(void *pdata)
-{
-	cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
-}
-
 __global__
 void x13_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
 {
@@ -430,12 +426,18 @@ void x13_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 __host__
 void x13_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
 {
-	const uint32_t threadsperblock = 128;
+	//const uint32_t threadsperblock = 128;
 
-	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + TPB - 1) / TPB);
+	dim3 block(TPB);
 
 	x13_hamsi512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*)d_hash);
+}
+
+__host__
+void x13_hamsi512_setBlock_80(void *pdata)
+{
+	cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
 
 __host__

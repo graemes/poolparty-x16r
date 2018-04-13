@@ -33,8 +33,7 @@
 
 
 // Change with caution, used by shared mem fetch
-#define TPB80 384
-#define TPB64 384
+#define TPB 384
 
 extern "C"
 {
@@ -211,7 +210,7 @@ extern void x15_whirlpool_cpu_free(int thr_id){
 	cudaFree(b7);
 }
 
-__global__ __launch_bounds__(TPB64,2)
+__global__ __launch_bounds__(TPB,2)
 void x15_whirlpool512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 {
 	__shared__ uint2 sharedMemory[7][256];
@@ -322,8 +321,8 @@ void x15_whirlpool512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 __host__
 extern void x15_whirlpool512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
 {
-	dim3 grid((threads + TPB64-1) / TPB64);
-	dim3 block(TPB64);
+	dim3 grid((threads + TPB - 1) / TPB);
+	dim3 block(TPB);
 
 	x15_whirlpool512_gpu_hash_64 <<<grid, block>>> (threads, (uint64_t*)d_hash);
 }

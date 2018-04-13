@@ -34,7 +34,7 @@
 #include "sph/sph_whirlpool.h"
 
 // don't change, used by shared mem fetch!
-#define threadsperblock 256
+#define TPB 256
 
 #include <cuda_helper.h>
 #include <miner.h>
@@ -1151,8 +1151,8 @@ void x15_whirlpool512_setBlock_80(void *pdata)
 __host__
 void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_outputHash)
 {
-	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + TPB - 1) / TPB);
+	dim3 block(TPB);
 
 	if (threads < 256)
 		applog(LOG_WARNING, "whirlpool requires a minimum of 256 threads to fetch constant tables!");
