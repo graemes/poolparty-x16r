@@ -1059,14 +1059,13 @@ void oldwhirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounce
 		uint32_t nonce = startNounce + thread;
 		nonce = swab ? cuda_swab32(nonce) : nonce;
 
-//#if HOST_MIDSTATE
+#if HOST_MIDSTATE
 		uint64_t state[8];
 		#pragma unroll 8
 		for (int i=0; i < 8; i++) {
 			//state[i] = c_PaddedMessage80[i];
 			AS_UINT2(&state[i]) = AS_UINT2(&c_PaddedMessage80[i]);
 		}
-/*
 #else
 		#pragma unroll 8
 		for (int i=0; i<8; i++) {
@@ -1087,7 +1086,6 @@ void oldwhirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounce
 			state[i] = xor1(n[i],c_PaddedMessage80[i]);
 		}
 #endif
-*/
 
 		/// round 2 ///////
 		//////////////////////////////////
@@ -1137,7 +1135,6 @@ void x15_whirlpool512_cpu_init_80(int thr_id, uint32_t threads)
 {
 	cudaMemcpyToSymbol(InitVector_RC, plain_RC, sizeof(plain_RC), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob0Tox, plain_T0, sizeof(plain_T0), 0, cudaMemcpyHostToDevice);
-//#if USE_ALL_TABLES
 	cudaMemcpyToSymbol(mixTob1Tox, plain_T1, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob2Tox, plain_T2, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob3Tox, plain_T3, (256 * 8), 0, cudaMemcpyHostToDevice);
@@ -1145,7 +1142,6 @@ void x15_whirlpool512_cpu_init_80(int thr_id, uint32_t threads)
 	cudaMemcpyToSymbol(mixTob5Tox, plain_T5, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob6Tox, plain_T6, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob7Tox, plain_T7, (256 * 8), 0, cudaMemcpyHostToDevice);
-//#endif
 }
 
 void whirlpool_midstate(void *state, const void *input)
@@ -1167,12 +1163,12 @@ void x15_whirlpool512_setBlock_80(void *pdata)
 	memset(PaddedMessage + 80, 0, 48);
 	PaddedMessage[80] = 0x80; /* ending */
 
-//#if HOST_MIDSTATE
+#if HOST_MIDSTATE
 	// compute constant first block
 	unsigned char midstate[64] = { 0 };
 	whirlpool_midstate(midstate, pdata);
 	memcpy(PaddedMessage, midstate, 64);
-//#endif
+#endif
 
 	cudaMemcpyToSymbol(c_PaddedMessage80, PaddedMessage, 128, 0, cudaMemcpyHostToDevice);
 }
