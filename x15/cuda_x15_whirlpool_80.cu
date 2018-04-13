@@ -44,7 +44,11 @@ extern __device__ __device_builtin__ void __threadfence_block(void);
 
 __device__ static uint64_t c_PaddedMessage80[16];
 
+#define HOST_MIDSTATE 1
+#define USE_ALL_TABLES 1
+
 __constant__ static uint64_t mixTob0Tox[256];
+#if USE_ALL_TABLES
 __constant__ static uint64_t mixTob1Tox[256];
 __constant__ static uint64_t mixTob2Tox[256];
 __constant__ static uint64_t mixTob3Tox[256];
@@ -52,7 +56,9 @@ __constant__ static uint64_t mixTob4Tox[256];
 __constant__ static uint64_t mixTob5Tox[256];
 __constant__ static uint64_t mixTob6Tox[256];
 __constant__ static uint64_t mixTob7Tox[256];
+#endif
 
+#if USE_ALL_TABLES
 static const uint64_t plain_T1[256] = {
 	SPH_C64(0x3078C018601818D8), SPH_C64(0x46AF05238C232326),
 	SPH_C64(0x91F97EC63FC6C6B8), SPH_C64(0xCD6F13E887E8E8FB),
@@ -969,6 +975,8 @@ static const uint64_t plain_T7[256] = {
 	SPH_C64(0x287550885D28A028), SPH_C64(0x5C86B831DA5C6D5C),
 	SPH_C64(0xF86BED3F93F8C7F8), SPH_C64(0x86C211A444862286)
 };
+#endif /* USE_ALL_TABLES */
+
 
 /**
  * Round constants.
@@ -989,6 +997,43 @@ __device__ uint64_t InitVector_RC[10];
 	dst[7] = src ## 7; \
 }
 
+#if !USE_ALL_TABLES
+#define BYTE(x, n) ((unsigned)((x) >> (8 * (n))) & 0xFF)
+
+/* method disabled to reduce code size */
+__device__ __forceinline__
+static uint64_t table_skew(uint64_t val, int num) {
+	return ROTL64(val, 8 * num);
+}
+
+__device__ __forceinline__
+static uint64_t ROUND_ELT(const uint64_t* sharedMemory, uint64_t* __restrict__ in,
+	int i0,int i1,int i2,int i3,int i4,int i5,int i6,int i7)
+{
+	uint32_t idx0, idx1, idx2, idx3, idx4, idx5, idx6, idx7;
+	idx0 = BYTE(in[i0], 0);
+	idx1 = BYTE(in[i1], 1);
+	idx2 = BYTE(in[i2], 2);
+	idx3 = BYTE(in[i3], 3);
+	idx4 = BYTE(in[i4], 4);
+	idx5 = BYTE(in[i5], 5);
+	idx6 = BYTE(in[i6], 6);
+	idx7 = BYTE(in[i7], 7);
+
+	return xor8(
+		sharedMemory[idx0],
+		table_skew(sharedMemory[idx1], 1),
+		table_skew(sharedMemory[idx2], 2),
+		table_skew(sharedMemory[idx3], 3),
+		table_skew(sharedMemory[idx4], 4),
+		table_skew(sharedMemory[idx5], 5),
+		table_skew(sharedMemory[idx6], 6),
+		table_skew(sharedMemory[idx7], 7)
+	);
+}
+
+#else
+
 __device__ __forceinline__
 static uint64_t ROUND_ELT(const uint64_t* sharedMemory, uint64_t* __restrict__ in,
 const int i0, const int i1, const int i2, const int i3, const int i4, const int i5, const int i6, const int i7)
@@ -999,6 +1044,7 @@ const int i0, const int i1, const int i2, const int i3, const int i4, const int 
 		sharedMemory[__byte_perm(in32[(i4 << 1) + 1], 0, 0x4440) + 1024] ^ sharedMemory[__byte_perm(in32[(i5 << 1) + 1], 0, 0x4441) + 1280] ^
 		sharedMemory[__byte_perm(in32[(i6 << 1) + 1], 0, 0x4442) + 1536] ^ sharedMemory[__byte_perm(in32[(i7 << 1) + 1], 0, 0x4443) + 1792]);
 }
+#endif /* USE_ALL_TABLES */
 
 #define ROUND(table, in, out, c0, c1, c2, c3, c4, c5, c6, c7) { \
 	out ## 0 = xor1(ROUND_ELT(table, in, 0, 7, 6, 5, 4, 3, 2, 1), c0); \
@@ -1032,7 +1078,7 @@ const int i0, const int i1, const int i2, const int i3, const int i4, const int 
 
 
 __global__
-void x15_whirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *outputHash, int swab)
+void oldwhirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *outputHash, int swab)
 {
 	__shared__ uint64_t sharedMemory[2048];
 
@@ -1059,14 +1105,33 @@ void x15_whirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounc
 		uint32_t nonce = startNounce + thread;
 		nonce = swab ? cuda_swab32(nonce) : nonce;
 
-		//HOST_MIDSTATE
+#if HOST_MIDSTATE
 		uint64_t state[8];
 		#pragma unroll 8
 		for (int i=0; i < 8; i++) {
 			//state[i] = c_PaddedMessage80[i];
 			AS_UINT2(&state[i]) = AS_UINT2(&c_PaddedMessage80[i]);
 		}
-		//
+#else
+		#pragma unroll 8
+		for (int i=0; i<8; i++) {
+			n[i] = c_PaddedMessage80[i];  // read data
+			h[i] = 0;                     // read state
+		}
+
+		#pragma unroll 1
+		for (unsigned r=0; r < 10; r++) {
+			uint64_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
+			ROUND_KSCHED(sharedMemory, h, tmp, InitVector_RC[r]);
+			ROUND_WENC(sharedMemory, n, h, tmp);
+		}
+
+		uint64_t state[8];
+		#pragma unroll 8
+		for (int i=0; i < 8; i++) {
+			state[i] = xor1(n[i],c_PaddedMessage80[i]);
+		}
+#endif
 
 		/// round 2 ///////
 		//////////////////////////////////
@@ -1112,10 +1177,11 @@ void x15_whirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounc
 // ------------------------------------------------------------------------------------------------
 
 __host__
-void x15_whirlpool512_init_80(int thr_id, uint32_t threads)
+void x15_whirlpool512_cpu_init_80(int thr_id, uint32_t threads)
 {
 	cudaMemcpyToSymbol(InitVector_RC, plain_RC, sizeof(plain_RC), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob0Tox, plain_T0, sizeof(plain_T0), 0, cudaMemcpyHostToDevice);
+#if USE_ALL_TABLES
 	cudaMemcpyToSymbol(mixTob1Tox, plain_T1, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob2Tox, plain_T2, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob3Tox, plain_T3, (256 * 8), 0, cudaMemcpyHostToDevice);
@@ -1123,6 +1189,7 @@ void x15_whirlpool512_init_80(int thr_id, uint32_t threads)
 	cudaMemcpyToSymbol(mixTob5Tox, plain_T5, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob6Tox, plain_T6, (256 * 8), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob7Tox, plain_T7, (256 * 8), 0, cudaMemcpyHostToDevice);
+#endif
 }
 
 void whirlpool_midstate(void *state, const void *input)
@@ -1144,12 +1211,12 @@ void x15_whirlpool512_setBlock_80(void *pdata)
 	memset(PaddedMessage + 80, 0, 48);
 	PaddedMessage[80] = 0x80; /* ending */
 
-	// HOST_MIDSTATE
+#if HOST_MIDSTATE
 	// compute constant first block
 	unsigned char midstate[64] = { 0 };
 	whirlpool_midstate(midstate, pdata);
 	memcpy(PaddedMessage, midstate, 64);
-	//
+#endif
 
 	cudaMemcpyToSymbol(c_PaddedMessage80, PaddedMessage, 128, 0, cudaMemcpyHostToDevice);
 }
@@ -1163,11 +1230,8 @@ void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t
 	if (threads < 256)
 		applog(LOG_WARNING, "whirlpool requires a minimum of 256 threads to fetch constant tables!");
 
-	x15_whirlpool_gpu_hash_80 <<<grid, block>>> (threads, startNonce, d_outputHash, 1);
+	oldwhirlpool_gpu_hash_80 <<<grid, block>>> (threads, startNonce, d_outputHash, 1);
 }
-
-__host__
-void x15_whirlpool512_cpu_init_80(int thr_id, uint32_t threads) {}
 
 __host__
 void x15_whirlpool512_cpu_free_80(int thr_id) {}

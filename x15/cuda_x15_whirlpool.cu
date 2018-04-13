@@ -169,24 +169,34 @@ static void ROUND_KSCHED(const uint64_t *in,uint64_t *out,const uint64_t c){
 //--------END OF WHIRLPOOL HOST MACROS-------------------------------------------------------------------------------
 
 __host__
+//extern void x15_whirlpool_cpu_init(int thr_id, uint32_t threads, int mode){
 extern void x15_whirlpool512_cpu_init_64(int thr_id, uint32_t threads){
+
+	int mode = 0;
 
 	uint64_t* table0 = NULL;
 
-	table0 = (uint64_t*) old1_T0;
-	cudaMemcpyToSymbol(InitVector_RC, old1_RC, 10 * sizeof(uint64_t), 0,
-			cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(precomputed_round_key_64, old1_precomputed_round_key_64,
-			72 * sizeof(uint64_t), 0, cudaMemcpyHostToDevice);
-
-	cudaMemcpyToSymbol(b0, table0, 256 * sizeof(uint64_t), 0,
-			cudaMemcpyHostToDevice);
-	uint64_t table7[256];
-	for (int i = 0; i < 256; i++) {
-		table7[i] = ROTR64(table0[i], 8);
+	switch (mode) {
+	case 0: /* x15 with rotated T1-T7 (based on T0) */
+		table0 = (uint64_t*)plain_T0;
+		cudaMemcpyToSymbol(InitVector_RC, plain_RC, 10*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
+		cudaMemcpyToSymbol(precomputed_round_key_64, plain_precomputed_round_key_64, 72*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
+		break;
+	case 1: /* old whirlpool */
+		table0 = (uint64_t*)old1_T0;
+		cudaMemcpyToSymbol(InitVector_RC, old1_RC, 10*sizeof(uint64_t),0,cudaMemcpyHostToDevice);
+		cudaMemcpyToSymbol(precomputed_round_key_64, old1_precomputed_round_key_64, 72*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
+		break;
+	default:
+		applog(LOG_ERR,"Bad whirlpool mode");
+		exit(0);
 	}
-	cudaMemcpyToSymbol(b7, table7, 256 * sizeof(uint64_t), 0,
-			cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(b0, table0, 256*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
+	uint64_t table7[256];
+	for(int i=0;i<256;i++){
+		table7[i] = ROTR64(table0[i],8);
+	}
+	cudaMemcpyToSymbol(b7, table7, 256*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
 }
 
 void whirl_midstate(void *state, const void *input)
@@ -200,7 +210,7 @@ void whirl_midstate(void *state, const void *input)
 }
 
 __host__
-extern void x15_whirlpool512_cpu_free_64(int thr_id){
+extern void x15_whirlpool_cpu_free(int thr_id){
 	cudaFree(InitVector_RC);
 	cudaFree(b0);
 	cudaFree(b7);
@@ -322,3 +332,6 @@ extern void x15_whirlpool512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t 
 
 	x15_whirlpool512_gpu_hash_64 <<<grid, block>>> (threads, (uint64_t*)d_hash);
 }
+
+__host__
+void x15_whirlpool512_cpu_free_64(int thr_id) {}

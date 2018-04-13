@@ -219,7 +219,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	static uint32_t throughput = 0;
 	
-	// Only init (and calculate throughput when necessary)
+	// Only initialise (and calculate throughput) when necessary
 	if (!init[thr_id])
 	{
 		throughput = init_x16r(thr_id);
@@ -227,8 +227,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-//		((uint32_t*)pdata)[1] = 0xEFCDAB89;
-//		((uint32_t*)pdata)[2] = 0x67452301;
+		((uint32_t*)pdata)[1] = 0xEFCDAB89;
+		((uint32_t*)pdata)[2] = 0x67452301;
 //		((uint32_t*)pdata)[1] = 0x00000000;
 //		((uint32_t*)pdata)[2] = 0x00000000;
 //		((uint32_t*)pdata)[1] = 0x11111111;
@@ -259,10 +259,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 //		((uint32_t*)pdata)[2] = 0xDDDDDDDD;
 //		((uint32_t*)pdata)[1] = 0xEEEEEEEE;
 //		((uint32_t*)pdata)[2] = 0xEEEEEEEE;
-//		((uint32_t*)pdata)[1] = 0x00000000;
-//		((uint32_t*)pdata)[2] = 0x000000E0;
-		((uint32_t*)pdata)[1] = 0xEEEEEEEE;
-		((uint32_t*)pdata)[2] = 0xEEEEEE0E;
 //		((uint32_t*)pdata)[1] = 0xFFFFFFFF;
 //		((uint32_t*)pdata)[2] = 0xFFFFFFFF;
 		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
