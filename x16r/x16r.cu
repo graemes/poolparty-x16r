@@ -289,7 +289,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	char elem = hashOrder[0];
 	const uint8_t algo80 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
-	//const uint8_t algo80 = (*(uint64_t*)&endiandata[1] >> 60) & 0x0f;
 
 	switch (algo80) {
 		case BLAKE:
