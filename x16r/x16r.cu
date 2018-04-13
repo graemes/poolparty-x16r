@@ -229,12 +229,12 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		((uint32_t*)ptarget)[7] = 0x003f;
 //		((uint32_t*)pdata)[1] = 0xEFCDAB89;
 //		((uint32_t*)pdata)[2] = 0x67452301;
-		((uint32_t*)pdata)[1] = 0x00000000;
-		((uint32_t*)pdata)[2] = 0x00000000;
+//		((uint32_t*)pdata)[1] = 0x00000000;
+//		((uint32_t*)pdata)[2] = 0x00000000;
 //		((uint32_t*)pdata)[1] = 0x11111111;
 //		((uint32_t*)pdata)[2] = 0x11111111;
-//		((uint32_t*)pdata)[1] = 0x22222222;
-//		((uint32_t*)pdata)[2] = 0x22222222;
+		((uint32_t*)pdata)[1] = 0x22222222;
+		((uint32_t*)pdata)[2] = 0x22222222;
 //		((uint32_t*)pdata)[1] = 0x33333333;
 //		((uint32_t*)pdata)[2] = 0x33333333;
 //		((uint32_t*)pdata)[1] = 0x44444444;

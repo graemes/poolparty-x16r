@@ -8,9 +8,8 @@
 #include "cuda_vectors.h"
 #include "cuda_helper.h"
 
-#define TPB52 512
-#define TPB50 512
-#define THF 4
+#define TPB 512
+#define THF 4U
 
 #include "quark/groestl_functions_quad.cuh"
 #include "quark/groestl_transf_quad.cuh"
@@ -20,11 +19,7 @@ __constant__ const uint32_t msg[2][4] = {
 						{0,0,0,0x01000000}
 					};
 
-#if __CUDA_ARCH__ > 500
-__global__ __launch_bounds__(TPB52, 2)
-#else
-__global__ __launch_bounds__(TPB50, 2)
-#endif
+__global__ __launch_bounds__(TPB, 2)
 void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint32_t* g_nonceVector){
 	uint32_t msgBitsliced[8];
 	uint32_t state[8];
@@ -48,9 +43,7 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 		};
 
 		to_bitslice_quad(message, msgBitsliced);
-
-	        groestl512_progressMessage_quad(state, msgBitsliced,thr);
-
+		groestl512_progressMessage_quad(state, msgBitsliced,thr);
 		from_bitslice_quad52(state, output);
 
 #if __CUDA_ARCH__ <= 500
@@ -114,15 +107,13 @@ __host__
 //void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash){
 void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
 
-	const int dev_id = device_map[thr_id];
 	// Compute 3.0 benutzt die registeroptimierte Quad Variante mit Warp Shuffle
 	// mit den Quad Funktionen brauchen wir jetzt 4 threads pro Hash, daher Faktor 4 bei der Blockzahl
 	// berechne wie viele Thread Blocks wir brauchen
-	uint32_t tpb = (device_sm[dev_id] <= 500) ? TPB50 : TPB52;
+	uint32_t tpb = TPB
 
 	dim3 grid((THF*threads + tpb-1)/tpb);
 	dim3 block(tpb);
-	//quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, d_nonceVector);
 	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, NULL);
 }
 

@@ -80,25 +80,14 @@ void quark_groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t st
 __host__
 void quark_groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
 {
-	//int dev_id = device_map[thr_id];
+	const uint32_t threadsperblock = TPB;
+	const uint32_t factor = THF;
 
-	//if (device_sm[dev_id] >= 300 && cuda_arch[dev_id] >= 300) {
-		const uint32_t threadsperblock = TPB;
-		const uint32_t factor = THF;
+	dim3 grid(factor * ((threads + threadsperblock - 1) / threadsperblock));
+	dim3 block(threadsperblock);
 
-		dim3 grid(factor*((threads + threadsperblock-1)/threadsperblock));
-		dim3 block(threadsperblock);
-
-		quark_groestl512_gpu_hash_80_quad <<<grid, block>>> (threads, startNounce, d_hash);
-
-	//} else {
-
-	//	const uint32_t threadsperblock = 256;
-	//	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	//	dim3 block(threadsperblock);
-
-	//	groestl512_gpu_hash_80_sm2 <<<grid, block>>> (threads, startNounce, d_hash);
-	//}
+	quark_groestl512_gpu_hash_80_quad<<<grid, block>>>(threads, startNounce,
+			d_hash);
 }
 
 __host__
