@@ -2,7 +2,7 @@
 
 #include "cuda_helper.h"
 
-extern __device__ __device_builtin__ void __threadfence_block(void);
+//extern __device__ __device_builtin__ void __threadfence_block(void);
 
 #define TPB 128
 
@@ -1387,10 +1387,8 @@ void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *ou
 __host__
 void x11_shavite512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, int order)
 {
-	const uint32_t threadsperblock = TPB;
-
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + TPB-1)/TPB);
+	dim3 block(TPB);
 
 	x11_shavite512_gpu_hash_80<<<grid, block>>>(threads, startNounce, d_outputHash);
 }

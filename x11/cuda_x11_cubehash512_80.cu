@@ -1,6 +1,8 @@
 #include <cuda_helper.h>
 #include <cuda_vectors.h>
 
+#define TPB 256
+
 #define CUBEHASH_ROUNDS 16 /* this is r for CubeHashr/b */
 #define CUBEHASH_BLOCKBYTES 32 /* this is b for CubeHashr/b */
 
@@ -260,9 +262,8 @@ void cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce,
 __host__
 void x11_cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
 {
-	const uint32_t threadsperblock = 256;
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + TPB-1)/TPB);
+	dim3 block(TPB);
 
 	cubehash512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*) d_hash);
 }

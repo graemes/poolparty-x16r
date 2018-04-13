@@ -239,8 +239,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 //		((uint32_t*)pdata)[2] = 0x33333333;
 //		((uint32_t*)pdata)[1] = 0x44444444;
 //		((uint32_t*)pdata)[2] = 0x44444444;
-		((uint32_t*)pdata)[1] = 0x55555555;
-		((uint32_t*)pdata)[2] = 0x55555555;
+//		((uint32_t*)pdata)[1] = 0x55555555;
+//		((uint32_t*)pdata)[2] = 0x55555555;
 //		((uint32_t*)pdata)[1] = 0x66666666;
 //		((uint32_t*)pdata)[2] = 0x66666666;
 //		((uint32_t*)pdata)[1] = 0x77777777;
@@ -249,8 +249,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 //		((uint32_t*)pdata)[2] = 0x88888888;
 //		((uint32_t*)pdata)[1] = 0x99999999;
 //		((uint32_t*)pdata)[2] = 0x99999999;
-//		((uint32_t*)pdata)[1] = 0xAAAAAAAA;
-//		((uint32_t*)pdata)[2] = 0xAAAAAAAA;
+		((uint32_t*)pdata)[1] = 0xAAAAAAAA;
+		((uint32_t*)pdata)[2] = 0xAAAAAAAA;
 //		((uint32_t*)pdata)[1] = 0xBBBBBBBB;
 //		((uint32_t*)pdata)[2] = 0xBBBBBBBB;
 //		((uint32_t*)pdata)[1] = 0xCCCCCCCC;

@@ -11,6 +11,8 @@
 #define __CUDA_ARCH__ 500
 #endif
 
+#define TPB 128
+
 #define TPB50_1 128
 #define TPB50_2 128
 #define TPB52_1 128
@@ -21,9 +23,9 @@ static uint4 *d_temp4[MAX_GPUS];
 
 __global__ 
 #if __CUDA_ARCH__ > 500
-__launch_bounds__(TPB52_2,1)
+__launch_bounds__(TPB,1)
 #else
-__launch_bounds__(TPB50_2,4)
+__launch_bounds__(TPB,4)
 #endif
 static void x11_simd512_gpu_compress_64_maxwell(uint32_t threads, uint32_t *g_hash,const uint4 *const __restrict__ g_fft4)
 {
@@ -83,17 +85,11 @@ static void x11_simd512_gpu_compress_64_maxwell(uint32_t threads, uint32_t *g_ha
 __host__
 void x11_simd512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
 
-	int dev_id = device_map[thr_id];
+	const dim3 grid1((8*threads + TPB - 1) / TPB);
+	const dim3 block1(TPB);
 
-	uint32_t tpb = TPB52_1;
-	if (device_sm[dev_id] <= 500) tpb = TPB50_1;
-	const dim3 grid1((8*threads + tpb - 1) / tpb);
-	const dim3 block1(tpb);
-
-	tpb = TPB52_2;
-	if (device_sm[dev_id] <= 500) tpb = TPB50_2;
-	const dim3 grid2((threads + tpb - 1) / tpb);
-	const dim3 block2(tpb);
+	const dim3 grid2((threads + TPB - 1) / TPB);
+	const dim3 block2(TPB);
 	
 	x11_simd512_gpu_expand_64 <<<grid1, block1>>> (threads, d_hash, d_temp4[thr_id]);
 	x11_simd512_gpu_compress_64_maxwell <<< grid2, block2 >>> (threads, d_hash, d_temp4[thr_id]);

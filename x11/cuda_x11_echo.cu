@@ -9,6 +9,8 @@
 #define INTENSIVE_GMF
 #include "cuda_x11_aes_alexis.cuh"
 
+#define TPB 128
+
 __device__
 static void echo_round(const uint32_t sharedMemory[4][256], uint32_t *W, uint32_t &k0){
 	// Big Sub Words
@@ -234,10 +236,8 @@ static void x11_echo512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
 __host__
 void x11_echo512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
 
-	const uint32_t threadsperblock = 128;
-
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + TPB - 1)/ TPB);
+	dim3 block(TPB);
 
 	x11_echo512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
 }

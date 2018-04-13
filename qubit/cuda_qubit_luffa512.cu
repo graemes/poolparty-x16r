@@ -6,7 +6,6 @@
 #include "cuda_helper.h"
 #include "cuda_vectors.h"
 
-static unsigned char PaddedMessage[128];
 __constant__ uint64_t c_PaddedMessage80[10]; // padded message (80 bytes + padding)
 __constant__ uint32_t _ALIGN(8) statebufferpre[8];
 __constant__ uint32_t _ALIGN(8) statechainvpre[40];
@@ -239,15 +238,6 @@ __constant__ const uint32_t c_CNS[80] = {
 		0xf0d2e9e3,0x5090d577,0xac11d7fa,0x2d1925ab, 0x1bcb66f2,0xb46496ac,0x6f2d9bc9,0xd1925ab0, 0x78602649,0x29131ab6,0x8edae952,0x0fc053c3, 0x3b6ba548,0x3f014f0c,0xedae9520,0xfc053c31
 	};
 
-static uint32_t h_CNS[80] = {
-		0x303994a6,0xe0337818,0xc0e65299,0x441ba90d, 0x6cc33a12,0x7f34d442,0xdc56983e,0x9389217f, 0x1e00108f,0xe5a8bce6,0x7800423d,0x5274baf4, 0x8f5b7882,0x26889ba7,0x96e1db12,0x9a226e9d,
-		0xb6de10ed,0x01685f3d,0x70f47aae,0x05a17cf4, 0x0707a3d4,0xbd09caca,0x1c1e8f51,0xf4272b28, 0x707a3d45,0x144ae5cc,0xaeb28562,0xfaa7ae2b, 0xbaca1589,0x2e48f1c1,0x40a46f3e,0xb923c704,
-		0xfc20d9d2,0xe25e72c1,0x34552e25,0xe623bb72, 0x7ad8818f,0x5c58a4a4,0x8438764a,0x1e38e2e7, 0xbb6de032,0x78e38b9d,0xedb780c8,0x27586719, 0xd9847356,0x36eda57f,0xa2c78434,0x703aace7,
-		0xb213afa5,0xe028c9bf,0xc84ebe95,0x44756f91, 0x4e608a22,0x7e8fce32,0x56d858fe,0x956548be, 0x343b138f,0xfe191be2,0xd0ec4e3d,0x3cb226e5, 0x2ceb4882,0x5944a28e,0xb3ad2208,0xa1c4c355,
-		0xf0d2e9e3,0x5090d577,0xac11d7fa,0x2d1925ab, 0x1bcb66f2,0xb46496ac,0x6f2d9bc9,0xd1925ab0, 0x78602649,0x29131ab6,0x8edae952,0x0fc053c3, 0x3b6ba548,0x3f014f0c,0xedae9520,0xfc053c31
-	};
-
-
 __device__
 static void rnd512(uint32_t *const __restrict__ statebuffer, uint32_t *const __restrict__ statechainv){
 	uint32_t t[40];
@@ -352,187 +342,6 @@ static void rnd512_first(uint32_t *const __restrict__ state, uint32_t *const __r
 	}
 }
 
-__device__
-static void qubit_rnd512_first(uint32_t *const __restrict__ statebuffer, uint32_t *const __restrict__ statechainv){
-
-	*(uint4*)&statechainv[ 0] ^= *(uint4*)&statebuffer[ 0];
-	statechainv[ 4] ^= statebuffer[4];
-
-	*(uint4*)&statechainv[ 9] ^= *(uint4*)&statebuffer[ 0];
-	statechainv[13] ^= statebuffer[4];
-
-	*(uint4*)&statechainv[18] ^= *(uint4*)&statebuffer[ 0];
-	statechainv[22] ^= statebuffer[4];
-
-	*(uint4*)&statechainv[27] ^= *(uint4*)&statebuffer[ 0];
-	statechainv[31] ^= statebuffer[4];
-
-	statechainv[0 + 8 * 4] ^= statebuffer[4];
-	statechainv[1 + 8 * 4] ^= statebuffer[4];
-	statechainv[3 + 8 * 4] ^= statebuffer[4];
-	statechainv[4 + 8 * 4] ^= statebuffer[4];
-	*(uint4*)&statechainv[4 + 8*4] ^= *(uint4*)&statebuffer[ 0];
-
-	TWEAK(statechainv[12], statechainv[13], statechainv[14], statechainv[15], 1);
-	TWEAK(statechainv[20], statechainv[21], statechainv[22], statechainv[23], 2);
-	TWEAK(statechainv[28], statechainv[29], statechainv[30], statechainv[31], 3);
-	TWEAK(statechainv[36], statechainv[37], statechainv[38], statechainv[39], 4);
-
-	#pragma unroll 8
-	for (uint32_t i = 0; i<8; i++){
-		STEP2(&statechainv[ 0],*(uint2*)&c_CNS[(2 * i) +  0],*(uint2*)&c_CNS[(2 * i) + 16]);
-		STEP2(&statechainv[16],*(uint2*)&c_CNS[(2 * i) + 32],*(uint2*)&c_CNS[(2 * i) + 48]);
-		STEP1(&statechainv[32],*(uint2*)&c_CNS[(2 * i) + 64]);
-	}
-}
-
-
-void rnd512cpu(uint32_t *statebuffer, uint32_t *statechainv)
-{
-	int i, j;
-	uint32_t t[40];
-	uint32_t chainv[8];
-	uint32_t tmp;
-
-	for (i = 0; i<8; i++)
-	{
-		t[i] = statechainv[i];
-		for (j = 1; j<5; j++)
-		{
-			t[i] ^= statechainv[i + 8 * j];
-		}
-	}
-
-	MULT2(t, 0);
-
-	for (j = 0; j<5; j++)
-	{
-		for (i = 0; i<8; i++)
-		{
-			statechainv[i + 8 * j] ^= t[i];
-		}
-	}
-
-	for (j = 0; j<5; j++)
-	{
-		for (i = 0; i<8; i++)
-		{
-			t[i + 8 * j] = statechainv[i + 8 * j];
-		}
-	}
-
-	for (j = 0; j<5; j++)
-	{
-		MULT2(statechainv, j);
-	}
-
-	for (j = 0; j<5; j++)
-	{
-		for (i = 0; i<8; i++)
-		{
-			statechainv[8 * j + i] ^= t[8 * ((j + 1) % 5) + i];
-		}
-	}
-
-	for (j = 0; j<5; j++)
-	{
-		for (i = 0; i<8; i++)
-		{
-			t[i + 8 * j] = statechainv[i + 8 * j];
-		}
-	}
-
-	for (j = 0; j<5; j++)
-	{
-		MULT2(statechainv, j);
-	}
-
-	for (j = 0; j<5; j++)
-	{
-		for (i = 0; i<8; i++)
-		{
-			statechainv[8 * j + i] ^= t[8 * ((j + 4) % 5) + i];
-		}
-	}
-
-	for (j = 0; j<5; j++)
-	{
-		for (i = 0; i<8; i++)
-		{
-			statechainv[i + 8 * j] ^= statebuffer[i];
-		}
-		MULT2(statebuffer, 0);
-	}
-
-	for (i = 0; i<8; i++)
-	{
-		chainv[i] = statechainv[i];
-	}
-
-	for (i = 0; i<8; i++)
-	{
-		STEP(h_CNS[(2 * i)], h_CNS[(2 * i) + 1]);
-	}
-
-	for (i = 0; i<8; i++)
-	{
-		statechainv[i] = chainv[i];
-		chainv[i] = statechainv[i + 8];
-	}
-
-	TWEAK(chainv[4], chainv[5], chainv[6], chainv[7], 1);
-
-
-	for (i = 0; i<8; i++)
-	{
-		STEP(h_CNS[(2 * i) + 16], h_CNS[(2 * i) + 16 + 1]);
-	}
-
-	for (i = 0; i<8; i++)
-	{
-		statechainv[i + 8] = chainv[i];
-		chainv[i] = statechainv[i + 16];
-	}
-
-	TWEAK(chainv[4], chainv[5], chainv[6], chainv[7], 2);
-
-	for (i = 0; i<8; i++)
-	{
-		STEP(h_CNS[(2 * i) + 32], h_CNS[(2 * i) + 32 + 1]);
-	}
-
-	for (i = 0; i<8; i++)
-	{
-		statechainv[i + 16] = chainv[i];
-		chainv[i] = statechainv[i + 24];
-	}
-
-	TWEAK(chainv[4], chainv[5], chainv[6], chainv[7], 3);
-
-	for (i = 0; i<8; i++)
-	{
-		STEP(h_CNS[(2 * i) + 48], h_CNS[(2 * i) + 48 + 1]);
-	}
-
-	for (i = 0; i<8; i++)
-	{
-		statechainv[i + 24] = chainv[i];
-		chainv[i] = statechainv[i + 32];
-	}
-
-	TWEAK(chainv[4], chainv[5], chainv[6], chainv[7], 4);
-
-	for (i = 0; i<8; i++)
-	{
-		STEP(h_CNS[(2 * i) + 64], h_CNS[(2 * i) + 64 + 1]);
-	}
-
-	for (i = 0; i<8; i++)
-	{
-		statechainv[i + 32] = chainv[i];
-	}
-}
-
 /***************************************************/
 __device__ __forceinline__
 static void rnd512_nullhash(uint32_t *const __restrict__ state){
@@ -614,70 +423,6 @@ static void rnd512_nullhash(uint32_t *const __restrict__ state){
 
 
 /***************************************************/
-// Die Hash-Funktion
-//#if __CUDA_ARCH__ == 500
-//__launch_bounds__(256, 4)
-//#endif
-
-
-__global__ __launch_bounds__(256, 4)
-void qubit_luffa512_gpu_hash_80(const uint32_t threads,const uint32_t startNounce, uint32_t *outputHash)
-{
-	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-	if (thread < threads)
-	{
-		const uint32_t nounce = startNounce + thread;
-		uint64_t buff[16] = {0};
-
-		buff[ 8] = c_PaddedMessage80[8];
-		buff[ 9] = c_PaddedMessage80[9];
-		buff[10] = 0x80;
-		buff[11] = 0x0100;
-		buff[15] = 0x8002000000000000;
-
-		// die Nounce durch die thread-spezifische ersetzen
-		buff[9] = REPLACE_HIDWORD(buff[9], cuda_swab32(nounce));
-
-		uint32_t statebuffer[8];
-		uint32_t statechainv[40];
-
-		#pragma unroll 4
-		for (int i = 0; i<4; i++)
-			statebuffer[i] = cuda_swab32(((uint32_t*)buff)[i + 16]);
-
-		*(uint4*)&statebuffer[ 4] = *(uint4*)&statebufferpre[ 4];
-
-		#pragma unroll 40
-		for (int i = 0; i<40; i++)
-			statechainv[i] = statechainvpre[i];
-
-		statebuffer[4] = 0x80000000;
-
-		qubit_rnd512_first(statebuffer, statechainv);
-
-		uint32_t *outHash = outputHash + (thread<<4);
-
-		rnd512_nullhash(statechainv);
-		*(uint2x4*)&outHash[ 0] = swapvec(*(uint2x4*)&statechainv[ 0] ^ *(uint2x4*)&statechainv[ 8] ^ *(uint2x4*)&statechainv[16] ^ *(uint2x4*)&statechainv[24] ^ *(uint2x4*)&statechainv[32]);
-			
-		rnd512_nullhash(statechainv);
-		*(uint2x4*)&outHash[ 8] = swapvec(*(uint2x4*)&statechainv[ 0] ^ *(uint2x4*)&statechainv[ 8] ^ *(uint2x4*)&statechainv[16] ^ *(uint2x4*)&statechainv[24] ^ *(uint2x4*)&statechainv[32]);
-
-
-	}
-}
-
-__host__
-void qubit_luffa512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash){
-
-	const uint32_t threadsperblock = 256;
-
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
-
-	qubit_luffa512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, d_outputHash);
-}
-
 //#if __CUDA_ARCH__ == 500
 //	#define __ldg(x) (*x)
 //#endif
@@ -744,90 +489,6 @@ void qubit_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 	}
 }
 
-__host__ void qubit_cpu_precalc()
-{
-	uint32_t tmp,i,j;
-	uint32_t statebuffer[8];
-	uint32_t t[40];
-	uint32_t statechainv[40] =
-	{
-		0x6d251e69, 0x44b051e0, 0x4eaa6fb4, 0xdbf78465,	0x6e292011, 0x90152df4, 0xee058139, 0xdef610bb,
-		0xc3b44b95, 0xd9d2f256, 0x70eee9a0, 0xde099fa3,	0x5d9b0557, 0x8fc944b3, 0xcf1ccf0e, 0x746cd581,
-		0xf7efc89d, 0x5dba5781, 0x04016ce5, 0xad659c05,	0x0306194f, 0x666d1836, 0x24aa230a, 0x8b264ae7,
-		0x858075d5, 0x36d79cce, 0xe571f7d7, 0x204b1f67,	0x35870c6a, 0x57e9e923, 0x14bcb808, 0x7cde72ce,
-		0x6c68e9be, 0x5ec41e22, 0xc825b7c7, 0xaffb4363,	0xf5df3999, 0x0fc688f1, 0xb07224cc, 0x03e86cea
-	};
-
-	for (int i = 0; i<8; i++)
-		statebuffer[i] = cuda_swab32(*(((uint32_t*)PaddedMessage) + i));
-	rnd512cpu(statebuffer, statechainv);
-
-	for (int i = 0; i<8; i++)
-		statebuffer[i] = cuda_swab32(*(((uint32_t*)PaddedMessage) + i + 8));
-
-	rnd512cpu(statebuffer, statechainv);
-
-
-	for (int i = 0; i<8; i++)
-	{
-		t[i] = statechainv[i];
-		for (int j = 1; j<5; j++)
-		{
-			t[i] ^= statechainv[i + 8 * j];
-		}
-	}
-
-	MULT2(t, 0);
-
-	for (int j = 0; j<5; j++) {
-		for (int i = 0; i<8; i++) {
-			statechainv[i + 8 * j] ^= t[i];
-		}
-	}
-	for (j = 0; j<5; j++) {
-		for (i = 0; i<8; i++) {
-			t[i + 8 * j] = statechainv[i + 8 * j];
-		}
-	}
-
-	for (j = 0; j<5; j++) {
-		MULT2(statechainv, j);
-	}
-
-	for (j = 0; j<5; j++) {
-		for (i = 0; i<8; i++) {
-			statechainv[8 * j + i] ^= t[8 * ((j + 1) % 5) + i];
-		}
-	}
-
-	for (j = 0; j<5; j++) {
-		for (i = 0; i<8; i++) {
-			t[i + 8 * j] = statechainv[i + 8 * j];
-		}
-	}
-
-	for (j = 0; j<5; j++) {
-		MULT2(statechainv, j);
-	}
-
-	for (j = 0; j<5; j++) {
-		for (i = 0; i<8; i++) {
-			statechainv[8 * j + i] ^= t[8 * ((j + 4) % 5) + i];
-		}
-	}
-	cudaMemcpyToSymbol(statebufferpre, statebuffer, 8 * sizeof(uint32_t), 0, cudaMemcpyHostToDevice);
-	cudaMemcpyToSymbol(statechainvpre, statechainv, 40 * sizeof(uint32_t), 0, cudaMemcpyHostToDevice);
-}
-
-__host__
-void qubit_luffa512_cpu_setBlock_80(void *pdata)
-{
-	memcpy(PaddedMessage, pdata, 80);
-
-	CUDA_SAFE_CALL(cudaMemcpyToSymbol( c_PaddedMessage80, PaddedMessage, 10*sizeof(uint64_t), 0, cudaMemcpyHostToDevice));
-	qubit_cpu_precalc();
-}
-
 __host__
 void qubit_luffa512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_hash)
 {
@@ -845,9 +506,3 @@ void qubit_luffa512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void qubit_luffa512_cpu_free_64(int thr_id) {}
-
-__host__
-void qubit_luffa512_cpu_init_80(int thr_id, uint32_t threads) {}
-
-__host__
-void qubit_luffa512_cpu_free_80(int thr_id) {}
