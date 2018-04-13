@@ -40,11 +40,7 @@
 #include <miner.h>
 #include "cuda_whirlpool_tables.cuh"
 
-extern __device__ __device_builtin__ void __threadfence_block(void);
-
 __device__ static uint64_t c_PaddedMessage80[16];
-
-#define HOST_MIDSTATE 1
 
 __constant__ static uint64_t mixTob0Tox[256];
 __constant__ static uint64_t mixTob1Tox[256];
@@ -1034,21 +1030,20 @@ const int i0, const int i1, const int i2, const int i3, const int i4, const int 
 
 
 __global__
-void oldwhirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *outputHash, int swab)
+void x15_whirlpool512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *outputHash, int swab)
 {
 	__shared__ uint64_t sharedMemory[2048];
 
 	if (threadIdx.x < 256) {
 		sharedMemory[threadIdx.x] = mixTob0Tox[threadIdx.x];
-			sharedMemory[threadIdx.x+256]  = mixTob1Tox[threadIdx.x];
-			sharedMemory[threadIdx.x+512]  = mixTob2Tox[threadIdx.x];
-			sharedMemory[threadIdx.x+768]  = mixTob3Tox[threadIdx.x];
-			sharedMemory[threadIdx.x+1024] = mixTob4Tox[threadIdx.x];
-			sharedMemory[threadIdx.x+1280] = mixTob5Tox[threadIdx.x];
-			sharedMemory[threadIdx.x+1536] = mixTob6Tox[threadIdx.x];
-			sharedMemory[threadIdx.x+1792] = mixTob7Tox[threadIdx.x];
+		sharedMemory[threadIdx.x + 256] = mixTob1Tox[threadIdx.x];
+		sharedMemory[threadIdx.x + 512] = mixTob2Tox[threadIdx.x];
+		sharedMemory[threadIdx.x + 768] = mixTob3Tox[threadIdx.x];
+		sharedMemory[threadIdx.x + 1024] = mixTob4Tox[threadIdx.x];
+		sharedMemory[threadIdx.x + 1280] = mixTob5Tox[threadIdx.x];
+		sharedMemory[threadIdx.x + 1536] = mixTob6Tox[threadIdx.x];
+		sharedMemory[threadIdx.x + 1792] = mixTob7Tox[threadIdx.x];
 	}
-	//__threadfence_block(); // ensure shared mem is ready
 	__syncthreads();
 
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -1059,33 +1054,12 @@ void oldwhirlpool_gpu_hash_80(const uint32_t threads, const uint32_t startNounce
 		uint32_t nonce = startNounce + thread;
 		nonce = swab ? cuda_swab32(nonce) : nonce;
 
-#if HOST_MIDSTATE
 		uint64_t state[8];
 		#pragma unroll 8
 		for (int i=0; i < 8; i++) {
 			//state[i] = c_PaddedMessage80[i];
 			AS_UINT2(&state[i]) = AS_UINT2(&c_PaddedMessage80[i]);
 		}
-#else
-		#pragma unroll 8
-		for (int i=0; i<8; i++) {
-			n[i] = c_PaddedMessage80[i];  // read data
-			h[i] = 0;                     // read state
-		}
-
-		#pragma unroll 1
-		for (unsigned r=0; r < 10; r++) {
-			uint64_t tmp0, tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, tmp7;
-			ROUND_KSCHED(sharedMemory, h, tmp, InitVector_RC[r]);
-			ROUND_WENC(sharedMemory, n, h, tmp);
-		}
-
-		uint64_t state[8];
-		#pragma unroll 8
-		for (int i=0; i < 8; i++) {
-			state[i] = xor1(n[i],c_PaddedMessage80[i]);
-		}
-#endif
 
 		/// round 2 ///////
 		//////////////////////////////////
@@ -1144,7 +1118,7 @@ void x15_whirlpool512_cpu_init_80(int thr_id, uint32_t threads)
 	cudaMemcpyToSymbol(mixTob7Tox, plain_T7, (256 * 8), 0, cudaMemcpyHostToDevice);
 }
 
-void whirlpool_midstate(void *state, const void *input)
+static void whirlpool_midstate(void *state, const void *input)
 {
         sph_whirlpool_context ctx;
 
@@ -1163,12 +1137,13 @@ void x15_whirlpool512_setBlock_80(void *pdata)
 	memset(PaddedMessage + 80, 0, 48);
 	PaddedMessage[80] = 0x80; /* ending */
 
-#if HOST_MIDSTATE
 	// compute constant first block
 	unsigned char midstate[64] = { 0 };
+
+	// create midstate
 	whirlpool_midstate(midstate, pdata);
+
 	memcpy(PaddedMessage, midstate, 64);
-#endif
 
 	cudaMemcpyToSymbol(c_PaddedMessage80, PaddedMessage, 128, 0, cudaMemcpyHostToDevice);
 }
@@ -1182,7 +1157,7 @@ void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t
 	if (threads < 256)
 		applog(LOG_WARNING, "whirlpool requires a minimum of 256 threads to fetch constant tables!");
 
-	oldwhirlpool_gpu_hash_80 <<<grid, block>>> (threads, startNonce, d_outputHash, 1);
+	x15_whirlpool512_gpu_hash_80 <<<grid, block>>> (threads, startNonce, d_outputHash, 1);
 }
 
 __host__
