@@ -110,7 +110,7 @@ void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash
 	// Compute 3.0 benutzt die registeroptimierte Quad Variante mit Warp Shuffle
 	// mit den Quad Funktionen brauchen wir jetzt 4 threads pro Hash, daher Faktor 4 bei der Blockzahl
 	// berechne wie viele Thread Blocks wir brauchen
-	uint32_t tpb = TPB
+	uint32_t tpb = TPB;
 
 	dim3 grid((THF*threads + tpb-1)/tpb);
 	dim3 block(tpb);

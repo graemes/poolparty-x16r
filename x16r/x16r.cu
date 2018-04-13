@@ -233,14 +233,14 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 //		((uint32_t*)pdata)[2] = 0x00000000;
 //		((uint32_t*)pdata)[1] = 0x11111111;
 //		((uint32_t*)pdata)[2] = 0x11111111;
-		((uint32_t*)pdata)[1] = 0x22222222;
-		((uint32_t*)pdata)[2] = 0x22222222;
+//		((uint32_t*)pdata)[1] = 0x22222222;
+//		((uint32_t*)pdata)[2] = 0x22222222;
 //		((uint32_t*)pdata)[1] = 0x33333333;
 //		((uint32_t*)pdata)[2] = 0x33333333;
 //		((uint32_t*)pdata)[1] = 0x44444444;
 //		((uint32_t*)pdata)[2] = 0x44444444;
-//		((uint32_t*)pdata)[1] = 0x55555555;
-//		((uint32_t*)pdata)[2] = 0x55555555;
+		((uint32_t*)pdata)[1] = 0x55555555;
+		((uint32_t*)pdata)[2] = 0x55555555;
 //		((uint32_t*)pdata)[1] = 0x66666666;
 //		((uint32_t*)pdata)[2] = 0x66666666;
 //		((uint32_t*)pdata)[1] = 0x77777777;
@@ -304,7 +304,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			quark_jh512_setBlock_80(thr_id, endiandata);
 			break;
 		case KECCAK:
-			quark_keccak512_setBlock_80(thr_id, endiandata);
+			quark_keccak512_setBlock_80(thr_id, (void*)endiandata);
 			break;
 		case SKEIN:
 			quark_skein512_cpu_setBlock_80((void*)endiandata);
@@ -373,7 +373,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				break;
 			case KECCAK:
 				quark_keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
-				TRACE("kecck80:");
+				TRACE("keccak80:");
 				break;
 			case SKEIN:
 				quark_skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0); //order++;
@@ -637,6 +637,8 @@ static uint32_t init_x16r(int thr_id)
 
 	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
 
+	cuda_get_arch(thr_id);
+
 	// Simple heuristic for setting default intensity
 	int gpu_model;
 	char gpu_family1[10], gpu_family2[10];
@@ -658,8 +660,6 @@ static uint32_t init_x16r(int thr_id)
 		cudaSetDeviceFlags(cudaDeviceScheduleBlockingSync);
 	}
 	gpulog(LOG_INFO, thr_id, "Intensity set to %g, %u cuda threads", throughput2intensity(throughput), throughput);
-
-	cuda_get_arch(thr_id);
 
 	// 64 byte kernels initialisation
 	// A number could be noops but as this out of the mainline.......

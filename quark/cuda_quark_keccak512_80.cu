@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <memory.h>
-#include <sys/types.h> // off_t
+//#include <sys/types.h> // off_t
 
 #include "cuda_helper.h"
 
@@ -31,7 +31,6 @@ static const uint64_t host_keccak_round_constants[24] = {
 };
 
 __constant__ uint64_t c_keccak_round_constants[24];
-__constant__ uint64_t d_keccak_round_constants[24];
 
 #define cKeccakB    1600
 #define cKeccakR    576
@@ -476,23 +475,17 @@ void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_
 __host__
 void quark_keccak512_cpu_init_80(int thr_id, uint32_t threads)
 {
-	// required for the 64 bytes one
-	cudaMemcpyToSymbol(d_keccak_round_constants, host_keccak_round_constants,
-			sizeof(host_keccak_round_constants), 0, cudaMemcpyHostToDevice);
-
 	// Kopiere die Hash-Tabellen in den GPU-Speicher
 	cudaMemcpyToSymbol(c_keccak_round_constants, host_keccak_round_constants,
 			sizeof(host_keccak_round_constants), 0, cudaMemcpyHostToDevice);
 }
 
-
 // inlen kann 72...143 betragen
 __host__
-void quark_keccak512_setBlock_80(int thr_id, uint32_t *endiandata)
+void quark_keccak512_setBlock_80(int thr_id, void *pdata)
 {
 	size_t BLOCKSIZE = 80;
 
-	void *pdata = (void*)endiandata;
 	const unsigned char *in = (const unsigned char*)pdata;
 
 	tKeccakLane state[5 * 5];

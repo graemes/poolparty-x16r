@@ -30,11 +30,11 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
 			  sph/ripemd.c sph/sph_sha2.c \
 			  quark/cuda_quark_blake512.cu quark/cuda_quark_blake512_80.cu \
-			  quark/cuda_bmw512.cu quark/cuda_bmw512_80.cu \
+			  quark/cuda_quark_bmw512.cu quark/cuda_bmw512_80.cu \
 			  quark/cuda_quark_groestl512.cu quark/cuda_quark_groestl512_80.cu \
-			  quark/cuda_quark_jh512.cu quark/cuda_jh512_80.cu \
+			  quark/cuda_quark_jh512.cu quark/cuda_quark_jh512_80.cu \
 			  quark/cuda_quark_keccak512.cu quark/cuda_quark_keccak512_80.cu \
-			  quark/cuda_quark_skein512.cu quark/cuda_skein512_80.cu \
+			  quark/cuda_quark_skein512.cu quark/cuda_quark_skein512_80.cu \
 			  qubit/qubit_luffa512.cu \
                           x11/cuda_x11_cubehash512.cu x11/cuda_x11_cubehash512_80.cu \
 			  x11/cuda_x11_shavite512.cu x11/cuda_x11_shavite512_80.cu \

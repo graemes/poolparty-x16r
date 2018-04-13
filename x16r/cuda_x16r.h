@@ -97,7 +97,7 @@ extern void quark_jh512_cuda_hash_80(const int thr_id, const uint32_t threads, c
 extern void quark_jh512_cpu_free_80(int thr_id);
 
 extern void quark_keccak512_cpu_init_80(int thr_id, uint32_t threads);
-extern void quark_keccak512_setBlock_80(int thr_id, uint32_t *endiandata);
+extern void quark_keccak512_setBlock_80(int thr_id, void *pdata);
 extern void quark_keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash);
 extern void quark_keccak512_cpu_free_80(int thr_id);
 

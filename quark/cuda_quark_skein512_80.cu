@@ -1,4 +1,4 @@
-/* SKEIN 64 and 80 based on Alexis Provos version */
+/* SKEIN 80 based on Alexis Provos version */
 
 #define TPB52 512
 #define TPB50 256

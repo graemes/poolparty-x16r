@@ -25,17 +25,6 @@ __constant__ _ALIGN(16) uint2 z[16] =
 	{0xf12c7f99,0xba7c9045},{0xb3916cf7,0x24a19947},{0x858efc16,0x0801f2e2},{0x71574e69,0x636920d8}
 };
 
-__constant__ const uint2 h[8] = {
-		{ 0xf3bcc908UL, 0x6a09e667UL },
-		{ 0x84caa73bUL, 0xbb67ae85UL },
-		{ 0xfe94f82bUL, 0x3c6ef372UL },
-		{ 0x5f1d36f1UL, 0xa54ff53aUL },
-		{ 0xade682d1UL, 0x510e527fUL },
-		{ 0x2b3e6c1fUL, 0x9b05688cUL },
-		{ 0xfb41bd6bUL, 0x1f83d9abUL },
-		{ 0x137e2179UL, 0x5be0cd19UL }
-	};
-
 #define G4(x, a,b,c,d,a1,b1,c1,d1,a2,b2,c2,d2,a3,b3,c3,d3) { \
 	v[a] += (m[c_sigma[i][x]] ^ z[c_sigma[i][x+1]]) + v[b]; \
 	v[a1] += (m[c_sigma[i][x+2]] ^ z[c_sigma[i][x+3]]) + v[b1]; \
