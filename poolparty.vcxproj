@@ -349,7 +349,7 @@
     <CudaCompile Include="quark\cuda_quark_jh512.cu">
       <MaxRegCount>80</MaxRegCount>
     </CudaCompile>
-    <CudaCompile Include="quark\cuda_jh512_80.cu">
+    <CudaCompile Include="quark\cuda_quark_jh512_80.cu">
       <MaxRegCount>80</MaxRegCount>
     </CudaCompile>
     <CudaCompile Include="quark\cuda_quark_keccak512.cu">

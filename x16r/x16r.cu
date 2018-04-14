@@ -5,7 +5,7 @@
  */
 
 #include <stdio.h>
-#include <memory.h>
+//#include <memory.h>
 #include <unistd.h>
 
 extern "C" {
@@ -31,6 +31,7 @@ extern "C" {
 
 #include "miner.h"
 #include "cuda_helper.h"
+#include "cuda_vectors.h"
 #include "cuda_x16r.h"
 
 //#define _DEBUG
@@ -84,7 +85,7 @@ static const char* algo_strings[] = {
 };
 
 static __thread uint32_t s_ntime = UINT32_MAX;
-static __thread bool s_implemented = false;
+//static __thread bool s_implemented = false;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 static bool init[MAX_GPUS] = { 0 };
 
@@ -276,14 +277,15 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	if (s_ntime != ntime) {
 		getAlgoString(&endiandata[1], hashOrder);
 		s_ntime = ntime;
-		s_implemented = true;
+		//s_implemented = true;
 		if (!thr_id && !opt_quiet) applog(LOG_INFO, "hash order %s (%08x)", hashOrder, ntime);
 	}
 
-	if (!s_implemented) {
-		sleep(1);
-		return -1;
-	}
+	// Redundant?
+	// if (!s_implemented) {
+	//	sleep(1);
+	//	return -1;
+	//}
 
 	cuda_check_cpu_setTarget(ptarget);
 
@@ -342,7 +344,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		default: {
 			if (!thr_id)
 				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo_strings[algo80], elem, hashOrder);
-			s_implemented = false;
+			//s_implemented = false;
 			sleep(5);
 			return -1;
 		}
@@ -350,13 +352,15 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	int warn = 0;
 	do {
-		// int order = 0;
-
 		// Hash with CUDA
 
 		switch (algo80) {
 			case BLAKE:
-				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); // order++;
+				//quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+				dim3 grid((throughput + 512-1)/512);
+				dim3 block(512);
+				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], grid, block);
+				//quark_blake512_gpu_hash_80<<<grid, block>>>(throughput, pdata[19], (uint2x4*)d_hash[thr_id]);
 				TRACE("blake80:");
 				break;
 			case BMW:
@@ -364,27 +368,27 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("bmw80  :");
 				break;
 			case GROESTL:
-				quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("grstl80:");
 				break;
 			case JH:
-				quark_jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				quark_jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("jh51280:");
 				break;
 			case KECCAK:
-				quark_keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				quark_keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("keccak80:");
 				break;
 			case SKEIN:
-				quark_skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0); //order++;
+				quark_skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0);
 				TRACE("skein80:");
 				break;
 			case LUFFA:
-				qubit_luffa512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				qubit_luffa512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("luffa80:");
 				break;
 			case CUBEHASH:
-				x11_cubehash512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x11_cubehash512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("cube 80:");
 				break;
 			case SHAVITE:
@@ -392,31 +396,31 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("shavite:");
 				break;
 			case SIMD:
-				x16_simd512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x16_simd512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("simd512:");
 				break;
 			case ECHO:
-				x16_echo512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x16_echo512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("echo   :");
 				break;
 			case HAMSI:
-				x13_hamsi512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x13_hamsi512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("hamsi  :");
 				break;
 			case FUGUE:
-				x16_fugue512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x16_fugue512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("fugue  :");
 				break;
 			case SHABAL:
-				x16_shabal512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x16_shabal512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("shabal :");
 				break;
 			case WHIRLPOOL:
-				x15_whirlpool512_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x15_whirlpool512_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("whirl  :");
 				break;
 			case SHA512:
-				x17_sha512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]); //order++;
+				x17_sha512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("sha512 :");
 				break;
 		}
@@ -436,7 +440,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("bmw      :");
 				break;
 			case GROESTL:
-				quark_groestl512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				quark_groestl512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("groestl  :");
 				break;
 			case JH:
@@ -444,7 +448,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("jh512    :");
 				break;
 			case KECCAK:
-				quark_keccak512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				quark_keccak512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("keccak   :");
 				break;
 			case SKEIN:
@@ -452,15 +456,15 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("skein    :");
 				break;
 			case LUFFA:
-				qubit_luffa512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				qubit_luffa512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("luffa    :");
 				break;
 			case CUBEHASH:
-				x11_cubehash512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x11_cubehash512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("cube     :");
 				break;
 			case SHAVITE:
-				x11_shavite512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x11_shavite512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("shavite  :");
 				break;
 			case SIMD:
@@ -468,27 +472,27 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("simd     :");
 				break;
 			case ECHO:
-				x11_echo512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x11_echo512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("echo     :");
 				break;
 			case HAMSI:
-				x13_hamsi512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x13_hamsi512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("hamsi    :");
 				break;
 			case FUGUE:
-				x13_fugue512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x13_fugue512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("fugue    :");
 				break;
 			case SHABAL:
-				x14_shabal512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x14_shabal512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("shabal   :");
 				break;
 			case WHIRLPOOL:
-				x15_whirlpool512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x15_whirlpool512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("whirlpool:");
 				break;
 			case SHA512:
-				x17_sha512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]); //order++;
+				x17_sha512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
 				TRACE("sha512   :");
 				break;
 			}

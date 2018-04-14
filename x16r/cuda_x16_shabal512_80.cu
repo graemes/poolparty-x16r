@@ -5,7 +5,6 @@
 
 #include <cuda_helper.h>
 #include <cuda_vectors.h>
-//#include <cuda_vector_uint2x4.h>
 
 typedef uint32_t sph_u32;
 
