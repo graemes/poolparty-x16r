@@ -13,7 +13,7 @@ EXTRA_DIST		= autogen.sh README.md README.txt LICENSE.txt \
 
 SUBDIRS = compat
 
-bin_PROGRAMS = ccminer
+bin_PROGRAMS = ccminer 
 
 ccminer_SOURCES	= elist.h miner.h compat.h \
 			  compat/inttypes.h compat/stdbool.h compat/unistd.h \

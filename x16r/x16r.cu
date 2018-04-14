@@ -356,11 +356,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 		switch (algo80) {
 			case BLAKE:
-				//quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
-				dim3 grid((throughput + 512-1)/512);
-				dim3 block(512);
-				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], grid, block);
-				//quark_blake512_gpu_hash_80<<<grid, block>>>(throughput, pdata[19], (uint2x4*)d_hash[thr_id]);
+				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				TRACE("blake80:");
 				break;
 			case BMW:
