@@ -41,8 +41,7 @@ extern "C" {
 // Internal functions
 static void getAlgoString(const uint32_t* prevblock, char *output);
 static uint32_t init_x16r(int thr_id);
-
-static uint32_t *d_hash[MAX_GPUS];
+static void setBenchHash();
 
 enum Algo {
 	BLAKE = 0,
@@ -84,10 +83,12 @@ static const char* algo_strings[] = {
 	NULL
 };
 
+static uint32_t *d_hash[MAX_GPUS];
 static __thread uint32_t s_ntime = UINT32_MAX;
-//static __thread bool s_implemented = false;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 static bool init[MAX_GPUS] = { 0 };
+static uint64_t bench_hash = 0x67452301EFCDAB89;
+extern char* opt_bench_hash;
 
 // X16R CPU Hash (Validation)
 extern "C" void x16r_hash(void *output, const void *input)
@@ -228,45 +229,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
-		((uint32_t*)pdata)[1] = 0xEFCDAB89;
-		((uint32_t*)pdata)[2] = 0x67452301;
-//		((uint32_t*)pdata)[1] = 0x00000000;
-//		((uint32_t*)pdata)[2] = 0x00000000;
-//		((uint32_t*)pdata)[1] = 0x11111111;
-//		((uint32_t*)pdata)[2] = 0x11111111;
-//		((uint32_t*)pdata)[1] = 0x22222222;
-//		((uint32_t*)pdata)[2] = 0x22222222;
-//		((uint32_t*)pdata)[1] = 0x33333333;
-//		((uint32_t*)pdata)[2] = 0x33333333;
-//		((uint32_t*)pdata)[1] = 0x44444444;
-//		((uint32_t*)pdata)[2] = 0x44444444;
-//		((uint32_t*)pdata)[1] = 0x55555555;
-//		((uint32_t*)pdata)[2] = 0x55555555;
-//		((uint32_t*)pdata)[1] = 0x66666666;
-//		((uint32_t*)pdata)[2] = 0x66666666;
-//		((uint32_t*)pdata)[1] = 0x77777777;
-//		((uint32_t*)pdata)[2] = 0x77777777;
-//		((uint32_t*)pdata)[1] = 0x88888888;
-//		((uint32_t*)pdata)[2] = 0x88888888;
-//		((uint32_t*)pdata)[1] = 0x99999999;
-//		((uint32_t*)pdata)[2] = 0x99999999;
-//		((uint32_t*)pdata)[1] = 0xAAAAAAAA;
-//		((uint32_t*)pdata)[2] = 0xAAAAAAAA;
-//		((uint32_t*)pdata)[1] = 0xBBBBBBBB;
-//		((uint32_t*)pdata)[2] = 0xBBBBBBBB;
-//		((uint32_t*)pdata)[1] = 0xCCCCCCCC;
-//		((uint32_t*)pdata)[2] = 0xCCCCCCCC;
-//		((uint32_t*)pdata)[1] = 0xDDDDDDDD;
-//		((uint32_t*)pdata)[2] = 0xDDDDDDDD;
-//		((uint32_t*)pdata)[1] = 0xEEEEEEEE;
-//		((uint32_t*)pdata)[2] = 0xEEEEEEEE;
-//		((uint32_t*)pdata)[1] = 0xFFFFFFFF;
-//		((uint32_t*)pdata)[2] = 0xFFFFFFFF;
-		//((uint8_t*)pdata)[8] = 0x90; // hashOrder[0] = '9'; for simd 80 + blake512 64
-		//((uint8_t*)pdata)[8] = 0xA0; // hashOrder[0] = 'A'; for echo 80 + blake512 64
-		//((uint8_t*)pdata)[8] = 0xB0; // hashOrder[0] = 'B'; for hamsi 80 + blake512 64
-		//((uint8_t*)pdata)[8] = 0xC0; // hashOrder[0] = 'C'; for fugue 80 + blake512 64
-		//((uint8_t*)pdata)[8] = 0xE0; // hashOrder[0] = 'E'; for whirlpool 80 + blake512 64
+		*((uint64_t*)&pdata[1]) = bench_hash;
 	}
 	uint32_t _ALIGN(64) endiandata[20];
 
@@ -277,15 +240,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	if (s_ntime != ntime) {
 		getAlgoString(&endiandata[1], hashOrder);
 		s_ntime = ntime;
-		//s_implemented = true;
 		if (!thr_id && !opt_quiet) applog(LOG_INFO, "hash order %s (%08x)", hashOrder, ntime);
 	}
-
-	// Redundant?
-	// if (!s_implemented) {
-	//	sleep(1);
-	//	return -1;
-	//}
 
 	cuda_check_cpu_setTarget(ptarget);
 
@@ -344,7 +300,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		default: {
 			if (!thr_id)
 				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo_strings[algo80], elem, hashOrder);
-			//s_implemented = false;
 			sleep(5);
 			return -1;
 		}
@@ -353,7 +308,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	int warn = 0;
 	do {
 		// Hash with CUDA
-
 		switch (algo80) {
 			case BLAKE:
 				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
@@ -535,8 +489,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 					pdata[19] = work->nonces[0] + 1;
 					continue;
 				} else {
-					if (!opt_quiet)	gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
-						work->nonces[0], algo_strings[algo80], hashOrder);
+//					if (!opt_quiet)	gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
+//						work->nonces[0], algo_strings[algo80], hashOrder);
+					gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
+							work->nonces[0], algo_strings[algo80], hashOrder);
 					warn = 0;
 				}
 			}
@@ -653,6 +609,10 @@ static uint32_t init_x16r(int thr_id)
 		throughput = cuda_default_throughput(thr_id, 1U << intensity);
 	}
 
+	if (opt_benchmark) {
+		setBenchHash();
+	}
+
 	cudaSetDevice(device_map[thr_id]);
 	if (opt_cudaschedule == -1 && gpu_threads == 1) {
 		cudaDeviceReset();
@@ -706,4 +666,72 @@ static uint32_t init_x16r(int thr_id)
 	init[thr_id] = true;
 
 	return throughput;
+}
+
+static void setBenchHash() {
+	// I'm sure a1i3nj03 would write this more elegantly :)
+	if (opt_bench_hash[0]) {
+		applog(LOG_INFO, "Benchmark hashing algorithm %s", opt_bench_hash);
+		uint8_t bench_algo = 0;
+		for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
+			if (strcmp(algo_strings[j], opt_bench_hash) != 0) {
+				bench_algo++;
+			} else
+				break;
+		}
+
+		switch (bench_algo) {
+		case BLAKE:
+			bench_hash = 0x0000000000000000;
+			break;
+		case BMW:
+			bench_hash = 0x1111111111111111;
+			break;
+		case GROESTL:
+			bench_hash = 0x2222222222222222;
+			break;
+		case JH:
+			bench_hash = 0x3333333333333333;
+			break;
+		case KECCAK:
+			bench_hash = 0x4444444444444444;
+			break;
+		case SKEIN:
+			bench_hash = 0x5555555555555555;
+			break;
+		case LUFFA:
+			bench_hash = 0x6666666666666666;
+			break;
+		case CUBEHASH:
+			bench_hash = 0x7777777777777777;
+			break;
+		case SHAVITE:
+			bench_hash = 0x8888888888888888;
+			break;
+		case SIMD:
+			bench_hash = 0x9999999999999999;
+			break;
+		case ECHO:
+			bench_hash = 0xAAAAAAAAAAAAAAAA;
+			break;
+		case HAMSI:
+			bench_hash = 0xBBBBBBBBBBBBBBBB;
+			break;
+		case FUGUE:
+			bench_hash = 0xCCCCCCCCCCCCCCCC;
+			break;
+		case SHABAL:
+			bench_hash = 0xDDDDDDDDDDDDDDDD;
+			break;
+		case WHIRLPOOL:
+			bench_hash = 0xEEEEEEEEEEEEEEEE;
+			break;
+		case SHA512:
+			bench_hash = 0xFFFFFFFFFFFFFFFF;
+			break;
+		default:
+			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found", opt_bench_hash);
+			break;
+		}
+	}
 }

@@ -394,10 +394,10 @@
     </CudaCompile>
   </ItemGroup>
   <ItemGroup>
-    <Image Include="res\ccminer.ico" />
+    <Image Include="res\raven.ico" />
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="res\ccminer.rc" />
+    <ResourceCompile Include="res\poolparty.rc" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="README.txt" />
