@@ -5,6 +5,7 @@
  *
  * Copyright (c) 2014 djm34
  *               2016 tpruvot
+ *               2018 graemes
  *
  * Permission is hereby granted, free of charge, to any person obtaining
  * a copy of this software and associated documentation files (the
@@ -85,93 +86,103 @@ uint64_t Tone(const uint64_t* K, uint64_t* r, uint64_t* W, const uint8_t a, cons
 	r[(a+7) & 7] = T1 + (BSG5_0(r[a]) + MAJ(r[a], r[(a+1) & 7], r[(a+2) & 7])); \
 }
 
-__global__ __launch_bounds__(TPB,TPF)
-void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
+__constant__ static uint64_t c_PaddedMessage80[10];
 
+__global__ //__launch_bounds__(TPB,TPF)
+void x17_sha512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
+{
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-	const uint64_t IV512[8] = {
-		0x6A09E667F3BCC908, 0xBB67AE8584CAA73B, 0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
-		0x510E527FADE682D1, 0x9B05688C2B3E6C1F, 0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179
-	};
-	uint64_t r[8];
-	uint64_t W[80];
-	if (thread < threads){
-
-		uint64_t *pHash = &g_hash[thread<<3];
-
-		*(uint2x4*)&W[ 0] = *(uint2x4*)&pHash[ 0];
-		*(uint2x4*)&W[ 4] = *(uint2x4*)&pHash[ 4];
-
+	if (thread < threads)
+	{
+		uint64_t W[80];
 		#pragma unroll
-		for (int i = 0; i < 8; i ++) {
-			W[i] = cuda_swab64(W[i]);
+		for (int i = 0; i < 9; i ++) {
+			W[i] = SWAP64(c_PaddedMessage80[i]);
 		}
-		W[8] = 0x8000000000000000;
+		const uint32_t nonce = startNonce + thread;
+		//((uint32_t*)W)[19] = cuda_swab32(nonce);
+		W[9] = REPLACE_HIDWORD(c_PaddedMessage80[9], cuda_swab32(nonce));
+		W[9] = cuda_swab64(W[9]);
+		W[10] = 0x8000000000000000;
 
 		#pragma unroll
-		for (int i = 9; i<15; i++) {
+		for (int i = 11; i<15; i++) {
 			W[i] = 0U;
 		}
-		W[15] = 0x0000000000000200;
+		W[15] = 0x0000000000000280;
 
 		#pragma unroll 64
-		for (int i = 16; i < 80; i++) {
-			W[i] = W[i-7] + W[i-16] + SSG5_0(W[i-15]) + SSG5_1(W[i-2]);
+		for (int i = 16; i < 80; i ++) {
+			W[i] = SSG5_1(W[i-2]) + W[i-7];
+			W[i] += SSG5_0(W[i-15]) + W[i-16];
 		}
 
-		*(uint2x4*)&r[ 0] = *(uint2x4*)&IV512[0];
-		*(uint2x4*)&r[ 4] = *(uint2x4*)&IV512[4];
+		const uint64_t IV512[8] = {
+			0x6A09E667F3BCC908, 0xBB67AE8584CAA73B,
+			0x3C6EF372FE94F82B, 0xA54FF53A5F1D36F1,
+			0x510E527FADE682D1, 0x9B05688C2B3E6C1F,
+			0x1F83D9ABFB41BD6B, 0x5BE0CD19137E2179
+		};
 
-		#pragma unroll 80
-		for (int i = 0; i < 80; i ++){
+		uint64_t r[8];
+		#pragma unroll
+		for (int i = 0; i < 8; i++) {
+			r[i] = IV512[i];
+		}
+
+		#pragma unroll
+		for (int i = 0; i < 80; i++) {
 			SHA3_STEP(c_WB, r, W, i&7, i);
 		}
-		
+
+		const uint64_t hashPosition = thread;
+		uint64_t *pHash = &g_hash[hashPosition << 3];
 		#pragma unroll
 		for (int u = 0; u < 8; u ++) {
-			r[u] = cuda_swab64(r[u] + IV512[u]);
+			pHash[u] = SWAP64(r[u] + IV512[u]);
 		}
-
-		*(uint2x4*)&pHash[ 0] = *(uint2x4*)&r[ 0];
-		*(uint2x4*)&pHash[ 4] = *(uint2x4*)&r[ 4];
-
 	}
 }
 
 __host__
-void x17_sha512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+void x17_sha512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 grid((threads+tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	x17_sha512_gpu_hash_64 <<<grid, block>>> (threads, (uint64_t*)d_hash);
-
+	x17_sha512_gpu_hash_80 <<<grid, block >>> (threads, startNounce, (uint64_t*)d_hash);
 }
 
 __host__
-void x17_sha512_cpu_init_64(int thr_id, uint32_t threads) {}
+void x17_sha512_setBlock_80(void *pdata)
+{
+	cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
+}
 
 __host__
-void x17_sha512_cpu_free_64(int thr_id) {}
+void x17_sha512_cpu_init_80(int thr_id, uint32_t threads) {}
 
 __host__
-int x17_sha512_calc_tpb_64(int thr_id) {
+void x17_sha512_cpu_free_80(int thr_id) {}
+
+__host__
+int x17_sha512_calc_tpb_80(int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;
 	int maxActiveBlocks, device;
 	cudaDeviceProp props;
 
-	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x17_sha512_gpu_hash_64, 0, 0);
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x17_sha512_gpu_hash_80, 0,	0);
 
 	// calculate theoretical occupancy
-	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x17_sha512_gpu_hash_64, blockSize, 0);
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x17_sha512_gpu_hash_80, blockSize, 0);
 	cudaGetDevice(&device);
 	cudaGetDeviceProperties(&props, device);
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
 			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
 
-	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "sha512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "sha512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
 
 	return (uint32_t)blockSize;
 }

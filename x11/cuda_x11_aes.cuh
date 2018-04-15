@@ -2,7 +2,7 @@
 /* AES Helper for inline-usage from SPH */
 #define AESx(x) (x ##UL) /* SPH_C32(x) */
 
-//#define DEVICE_DIRECT_CONSTANTS
+#define DEVICE_DIRECT_CONSTANTS
 
 #ifdef DEVICE_DIRECT_CONSTANTS
 __constant__ __align__(64) uint32_t d_AES0[256] = {

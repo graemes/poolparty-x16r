@@ -19,30 +19,13 @@
 __constant__ static uint32_t c_Message80[20];
 
 __host__
-void quark_groestl512_cpu_init(int thr_id, uint32_t threads)
-{
-//	int dev_id = device_map[thr_id];
-//	cuda_get_arch(thr_id);
-//	if (device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300)
-//		quark_groestl512_sm20_init(thr_id, threads);
-}
-
-__host__
-void quark_groestl512_cpu_free(int thr_id)
-{
-//	int dev_id = device_map[thr_id];
-//	if (device_sm[dev_id] < 300 || cuda_arch[dev_id] < 300)
-//		quark_groestl512_sm20_free(thr_id);
-}
-
-__host__
-void groestl512_setBlock_80(int thr_id, uint32_t *endiandata)
+void quark_groestl512_setBlock_80(int thr_id, uint32_t *endiandata)
 {
 	cudaMemcpyToSymbol(c_Message80, endiandata, sizeof(c_Message80), 0, cudaMemcpyHostToDevice);
 }
 
 __global__ __launch_bounds__(TPB, THF)
-void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
+void quark_groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
 {
 	// BEWARE : 4-WAY CODE (one hash need 4 threads)
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
@@ -95,26 +78,44 @@ void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNou
 }
 
 __host__
-void groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
+void quark_groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	//int dev_id = device_map[thr_id];
+	//tbp = TPB;
+	const uint32_t factor = THF;
 
-	//if (device_sm[dev_id] >= 300 && cuda_arch[dev_id] >= 300) {
-		const uint32_t threadsperblock = TPB;
-		const uint32_t factor = THF;
+	const dim3 grid(factor*((tpb+tpb-1)/tpb));
+	const dim3 block(tpb);
 
-		dim3 grid(factor*((threads + threadsperblock-1)/threadsperblock));
-		dim3 block(threadsperblock);
-
-		groestl512_gpu_hash_80_quad <<<grid, block>>> (threads, startNounce, d_hash);
-
-	//} else {
-
-	//	const uint32_t threadsperblock = 256;
-	//	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	//	dim3 block(threadsperblock);
-
-	//	groestl512_gpu_hash_80_sm2 <<<grid, block>>> (threads, startNounce, d_hash);
-	//}
+	quark_groestl512_gpu_hash_80_quad<<<grid, block>>>(threads, startNounce, d_hash);
 }
 
+__host__
+void quark_groestl512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_groestl512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int quark_groestl512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_groestl512_gpu_hash_80_quad, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_groestl512_gpu_hash_80_quad, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "groestl512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

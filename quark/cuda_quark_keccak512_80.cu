@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <memory.h>
-#include <sys/types.h> // off_t
+//#include <sys/types.h> // off_t
 
 #include "cuda_helper.h"
+
+#define TPB 256
+#define TPF 1
 
 __constant__ uint32_t d_OriginalData[20];
 
@@ -31,7 +34,6 @@ static const uint64_t host_keccak_round_constants[24] = {
 };
 
 __constant__ uint64_t c_keccak_round_constants[24];
-__constant__ uint64_t d_keccak_round_constants[24];
 
 #define cKeccakB    1600
 #define cKeccakR    576
@@ -430,8 +432,8 @@ keccak_block_80(uint64_t *s, const uint32_t *in, const uint64_t *keccak_round_co
 	}
 }
 
-__global__
-void keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
+__global__ __launch_bounds__(TPB,TPF)
+void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -476,23 +478,17 @@ void keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_h
 __host__
 void quark_keccak512_cpu_init_80(int thr_id, uint32_t threads)
 {
-	// required for the 64 bytes one
-	cudaMemcpyToSymbol(d_keccak_round_constants, host_keccak_round_constants,
-			sizeof(host_keccak_round_constants), 0, cudaMemcpyHostToDevice);
-
 	// Kopiere die Hash-Tabellen in den GPU-Speicher
 	cudaMemcpyToSymbol(c_keccak_round_constants, host_keccak_round_constants,
 			sizeof(host_keccak_round_constants), 0, cudaMemcpyHostToDevice);
 }
 
-
 // inlen kann 72...143 betragen
 __host__
-void keccak512_setBlock_80(int thr_id, uint32_t *endiandata)
+void quark_keccak512_setBlock_80(int thr_id, void *pdata)
 {
 	size_t BLOCKSIZE = 80;
 
-	void *pdata = (void*)endiandata;
 	const unsigned char *in = (const unsigned char*)pdata;
 
 	tKeccakLane state[5 * 5];
@@ -520,16 +516,40 @@ void keccak512_setBlock_80(int thr_id, uint32_t *endiandata)
 }
 
 __host__
-void keccak512_cuda_hash_80(const int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash)
+void quark_keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	const uint32_t threadsperblock = 256;
+	//const uint32_t threadsperblock = 256;
 
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 block(tpb);
 
 	size_t shared_size = 0;
 
-	keccak512_gpu_hash_80<<<grid, block, shared_size>>>(threads, startNounce, (uint64_t*)d_hash);
+	quark_keccak512_gpu_hash_80<<<grid, block, shared_size>>>(threads, startNounce, (uint64_t*)d_hash);
 	//MyStreamSynchronize(NULL, order, thr_id);
 }
 
+__host__
+void quark_keccak512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int quark_keccak512_calc_tpb_80(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_keccak512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_keccak512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "keccak512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

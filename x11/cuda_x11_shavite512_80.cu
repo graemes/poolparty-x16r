@@ -2,9 +2,10 @@
 
 #include "cuda_helper.h"
 
-extern __device__ __device_builtin__ void __threadfence_block(void);
+//extern __device__ __device_builtin__ void __threadfence_block(void);
 
 #define TPB 128
+#define TPF 7
 
 __constant__ uint32_t c_PaddedMessage80[32]; // padded message (80 bytes + padding)
 
@@ -1341,7 +1342,7 @@ void shavite_gpu_init(uint32_t *sharedMemory)
 	}
 }
 
-__global__ __launch_bounds__(TPB, 7)
+__global__ __launch_bounds__(TPB,TPF)
 void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *outputHash)
 {
 	__shared__ uint32_t sharedMemory[1024];
@@ -1385,23 +1386,6 @@ void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *ou
 }
 
 __host__
-void x11_shavite512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, int order)
-{
-	const uint32_t threadsperblock = TPB;
-
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
-
-	x11_shavite512_gpu_hash_80<<<grid, block>>>(threads, startNounce, d_outputHash);
-}
-
-__host__
-void x11_shavite512_cpu_init(int thr_id, uint32_t threads)
-{
-	aes_cpu_init(thr_id);
-}
-
-__host__
 void x11_shavite512_setBlock_80(void *pdata)
 {
 	// Message with Padding
@@ -1411,4 +1395,46 @@ void x11_shavite512_setBlock_80(void *pdata)
 	memset(PaddedMessage+80, 0, 48);
 
 	cudaMemcpyToSymbol(c_PaddedMessage80, PaddedMessage, 32*sizeof(uint32_t), 0, cudaMemcpyHostToDevice);
+}
+
+__host__
+void x11_shavite512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, const uint32_t tpb)
+{
+	const dim3 grid((threads+tpb-1)/tpb);
+	const dim3 block(tpb);
+
+	x11_shavite512_gpu_hash_80<<<grid, block>>>(threads, startNounce, d_outputHash);
+}
+
+__host__
+void x11_shavite512_cpu_init_80(int thr_id, uint32_t threads)
+{
+	aes_cpu_init(thr_id);
+}
+
+__host__
+void x11_shavite512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int x11_shavite512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x11_shavite512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x11_shavite512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "shavite512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
 }

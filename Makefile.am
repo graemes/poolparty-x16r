@@ -13,7 +13,7 @@ EXTRA_DIST		= autogen.sh README.md README.txt LICENSE.txt \
 
 SUBDIRS = compat
 
-bin_PROGRAMS = ccminer
+bin_PROGRAMS = ccminer 
 
 ccminer_SOURCES	= elist.h miner.h compat.h \
 			  compat/inttypes.h compat/stdbool.h compat/unistd.h \
@@ -29,22 +29,22 @@ ccminer_SOURCES	= elist.h miner.h compat.h \
 			  sph/hamsi.c sph/hamsi_helper.c sph/streebog.c \
 			  sph/shabal.c sph/whirlpool.c sph/sha2big.c sph/haval.c \
 			  sph/ripemd.c sph/sph_sha2.c \
-			  quark/cuda_quark_blake512.cu \
-			  quark/cuda_bmw512.cu quark/cuda_bmw512_80.cu \
+			  quark/cuda_quark_blake512.cu quark/cuda_quark_blake512_80.cu \
+			  quark/cuda_quark_bmw512.cu quark/cuda_quark_bmw512_80.cu \
 			  quark/cuda_quark_groestl512.cu quark/cuda_quark_groestl512_80.cu \
-			  quark/cuda_quark_jh512.cu quark/cuda_jh512_80.cu \
+			  quark/cuda_quark_jh512.cu quark/cuda_quark_jh512_80.cu \
 			  quark/cuda_quark_keccak512.cu quark/cuda_quark_keccak512_80.cu \
-			  quark/cuda_quark_skein512.cu quark/cuda_skein512_80.cu \
-			  qubit/qubit_luffa512.cu \
-                          x11/cuda_x11_cubehash512.cu x11/cuda_x11_cubehash512_80.cu \
+			  quark/cuda_quark_skein512.cu quark/cuda_quark_skein512_80.cu \
+			  qubit/cuda_qubit_luffa512.cu qubit/cuda_qubit_luffa512_80.cu \
+			  x11/cuda_x11_cubehash512.cu x11/cuda_x11_cubehash512_80.cu \
 			  x11/cuda_x11_shavite512.cu x11/cuda_x11_shavite512_80.cu \
-                          x11/cuda_x11_simd512.cu x16r/cuda_x16_simd512_80.cu \
-                          x11/cuda_x11_echo.cu x16r/cuda_x16_echo512_80.cu \
+			  x11/cuda_x11_simd512.cu x16r/cuda_x16_simd512_80.cu \
+			  x11/cuda_x11_echo512.cu x16r/cuda_x16_echo512_80.cu \
 			  x13/cuda_x13_hamsi512.cu x13/cuda_x13_hamsi512_80.cu \
-                          x13/cuda_x13_fugue512.cu x16r/cuda_x16_fugue512_80.cu \
+			  x13/cuda_x13_fugue512.cu x16r/cuda_x16_fugue512_80.cu \
 			  x15/cuda_x14_shabal512.cu x16r/cuda_x16_shabal512_80.cu \
-                          x15/cuda_x15_whirlpool.cu x15/cuda_x15_whirlpool_80.cu \
-			  x17/cuda_x17_sha512.cu \
+			  x15/cuda_x15_whirlpool.cu x15/cuda_x15_whirlpool_80.cu \
+			  x17/cuda_x17_sha512.cu x17/cuda_x17_sha512_80.cu \
 			  x16r/x16r.cu
 
 if HAVE_NVML

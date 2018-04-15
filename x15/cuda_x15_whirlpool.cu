@@ -33,8 +33,8 @@
 
 
 // Change with caution, used by shared mem fetch
-#define TPB80 384
-#define TPB64 384
+#define TPB 384
+#define TPF 2
 
 extern "C"
 {
@@ -50,10 +50,6 @@ __device__ static uint64_t b0[256];
 __device__ static uint64_t b7[256];
 
 __constant__ static uint2 precomputed_round_key_64[72];
-//__constant__ static uint2 precomputed_round_key_80[80];
-
-//__device__ static uint2 c_PaddedMessage80[16];
-
 
 /**
  * Round constants.
@@ -169,7 +165,9 @@ static void ROUND_KSCHED(const uint64_t *in,uint64_t *out,const uint64_t c){
 //--------END OF WHIRLPOOL HOST MACROS-------------------------------------------------------------------------------
 
 __host__
-extern void x15_whirlpool_cpu_init(int thr_id, uint32_t threads, int mode){
+extern void x15_whirlpool512_cpu_init_64(int thr_id, uint32_t threads){
+
+	int mode = 0;
 
 	uint64_t* table0 = NULL;
 
@@ -213,8 +211,8 @@ extern void x15_whirlpool_cpu_free(int thr_id){
 	cudaFree(b7);
 }
 
-__global__ __launch_bounds__(TPB64,2)
-void x15_whirlpool_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
+__global__ __launch_bounds__(TPB,TPF)
+void x15_whirlpool512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 {
 	__shared__ uint2 sharedMemory[7][256];
 
@@ -322,10 +320,35 @@ void x15_whirlpool_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 }
 
 __host__
-extern void x15_whirlpool_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
+extern void x15_whirlpool512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	dim3 grid((threads + TPB64-1) / TPB64);
-	dim3 block(TPB64);
+	const dim3 grid((threads + tpb - 1) / tpb);
+	const dim3 block(tpb);
 
-	x15_whirlpool_gpu_hash_64 <<<grid, block>>> (threads, (uint64_t*)d_hash);
+	x15_whirlpool512_gpu_hash_64 <<<grid, block>>> (threads, (uint64_t*)d_hash);
+}
+
+__host__
+void x15_whirlpool512_cpu_free_64(int thr_id) {}
+
+__host__
+int x15_whirlpool512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x15_whirlpool512_gpu_hash_64, 0, 0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x15_whirlpool512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "whirlpool512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
 }

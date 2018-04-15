@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <memory.h>
 
-#define WANT_BMW512_80
-
 #include "cuda_helper.h"
+
+#define TPB 128
+#define TPF 2
 
 __constant__ uint64_t c_PaddedMessage80[16]; // padded message (80 bytes + padding)
 
@@ -313,7 +314,7 @@ void Compression512(uint2 *msg, uint2 *hash)
 	hash[15] = ROL(hash[3],16) + (XH64 ^ q[31] ^ msg[15]) + (SHR(XL64, 2) ^ q[22] ^ q[15]);
 }
 
-__global__ __launch_bounds__(256, 2)
+__global__ __launch_bounds__(TPB, TPF)
 void quark_bmw512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -382,11 +383,43 @@ void quark_bmw512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, int order)
+void quark_bmw512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	const uint32_t threadsperblock = 128;
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	//const uint32_t threadsperblock = 128;
+	//dim3 grid((threads + threadsperblock-1)/threadsperblock);
+	//dim3 block(threadsperblock);
+
+	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 block(tpb);
+
 
 	quark_bmw512_gpu_hash_80<<<grid, block>>>(threads, startNounce, (uint64_t*)d_hash);
+}
+
+__host__
+void quark_bmw512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_bmw512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int quark_bmw512_calc_tpb_80(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_bmw512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_bmw512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "bmw512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
 }

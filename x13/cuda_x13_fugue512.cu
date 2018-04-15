@@ -41,6 +41,9 @@
  * @author   Provos Alexis (Applied partial shared Mem utilization under CUDA 7.5 for compute5.0/5.2 / 2016)
  */
 
+#define TPB 256
+#define TPF 3
+
 static __constant__ const uint32_t c_S[16] = {
 		0x8807a57e, 0xe616af75, 0xc5d3e4db, 0xac9ab027,
 		0xd915f117, 0xb6eecc54, 0x06e8020b, 0x4a92efd1,
@@ -231,19 +234,18 @@ static void SMIX_LDG(const uint32_t shared[4][256], uint32_t &x0,uint32_t &x1,ui
 
 /***************************************************/
 // Die Hash-Funktion
-__global__ __launch_bounds__(256,3)
+__global__ __launch_bounds__(TPB,TPF)
 void x13_fugue512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 {
 	__shared__ uint32_t shared[4][256];
 
-//	if(threadIdx.x<256){
-		const uint32_t tmp = mixtab0[threadIdx.x];
-		shared[0][threadIdx.x] = tmp;
-		shared[1][threadIdx.x] = ROR8(tmp);
-		shared[2][threadIdx.x] = ROL16(tmp);
-		shared[3][threadIdx.x] = ROL8(tmp);
-//	}
+	const uint32_t tmp = mixtab0[threadIdx.x];
+	shared[0][threadIdx.x] = tmp;
+	shared[1][threadIdx.x] = ROR8(tmp);
+	shared[2][threadIdx.x] = ROL16(tmp);
+	shared[3][threadIdx.x] = ROL8(tmp);
 	__syncthreads();
+
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
 	{
@@ -310,13 +312,38 @@ void x13_fugue512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 }
 
 __host__
-void x13_fugue512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
-
-	const uint32_t threadsperblock = 256;
-
-	// berechne wie viele Thread Blocks wir brauchen
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+void x13_fugue512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+{
+	const dim3 grid((threads + tpb - 1)/tpb);
+	const dim3 block(tpb);
 
 	x13_fugue512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash);
+}
+
+__host__
+void x13_fugue512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void x13_fugue512_cpu_free_64(int thr_id) {}
+
+__host__
+int x13_fugue512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x13_fugue512_gpu_hash_64, 0, 0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x13_fugue512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "fugue512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
 }

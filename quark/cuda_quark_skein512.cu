@@ -1,14 +1,15 @@
 /* Based on SP's work
  * 
  * Provos Alexis - 2016
+ * graemes 2018
  */
 
 #include "miner.h"
 #include "cuda_vectors.h"
 #include "skein_header.h"
 
-#define TPB52 512
-#define TPB50 512
+#define TPB 512
+#define TPF 3
 
 /* ************************ */
 __constant__ const uint2 buffer[152] = {
@@ -34,11 +35,7 @@ __constant__ const uint2 buffer[152] = {
 };
 
 __global__
-#if __CUDA_ARCH__ > 500
-__launch_bounds__(TPB52, 3)
-#else
-__launch_bounds__(TPB50, 3)
-#endif
+__launch_bounds__(TPB, TPF)
 void quark_skein512_gpu_hash_64(const uint32_t threads,uint64_t* g_hash, const uint32_t* g_nonceVector){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -248,15 +245,38 @@ void quark_skein512_gpu_hash_64(const uint32_t threads,uint64_t* g_hash, const u
 }
 
 __host__
-//void quark_skein512_cpu_hash_64(int thr_id,uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash)
-void quark_skein512_cpu_hash_64(int thr_id,uint32_t threads, uint32_t *d_hash)
+void quark_skein512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	uint32_t tpb = TPB52;
-	int dev_id = device_map[thr_id];
-	
-	if (device_sm[dev_id] <= 500) tpb = TPB50;
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
-	quark_skein512_gpu_hash_64 << <grid, block >> >(threads, (uint64_t*)d_hash, NULL);
 
+	quark_skein512_gpu_hash_64 << <grid, block >> >(threads, (uint64_t*)d_hash, NULL);
+}
+
+__host__
+void quark_skein512_cpu_init_64(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_skein512_cpu_free_64(int thr_id) {}
+
+__host__
+int quark_skein512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_skein512_gpu_hash_64, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_skein512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "skein512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
 }

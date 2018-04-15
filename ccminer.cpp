@@ -116,7 +116,7 @@ time_t dev_timestamp;
 int opt_timeout = 300; // curl
 int opt_scantime = 10;
 static json_t *opt_config;
-static const bool opt_time = true;
+//static const bool opt_time = true;
 volatile enum sha_algos opt_algo = ALGO_X16R;
 int opt_n_threads = 0;
 int gpu_threads = 1;
@@ -158,7 +158,7 @@ int device_bfactor[MAX_GPUS] = { 0 }; // cryptonight
 int device_lookup_gap[MAX_GPUS] = { 0 };
 int device_interactive[MAX_GPUS] = { 0 };
 int opt_nfactor = 0;
-bool opt_autotune = true;
+bool opt_autotune = false;
 char *jane_params = NULL;
 
 // pools (failover/getwork infos)
@@ -216,6 +216,7 @@ double opt_resume_rate = -1.;
 
 int opt_statsavg = 30;
 bool opt_simple_hashrate = true;
+char *opt_bench_hash = strdup("");
 
 #define API_MCAST_CODE "FTW"
 #define API_MCAST_ADDR "224.0.0.75"
@@ -312,6 +313,8 @@ Options:\n\
       --hide-diff       hide submitted block and net difficulty (old mode)\n\
   -B, --background      run the miner in the background\n\
       --benchmark       run in offline benchmark mode\n\
+      --benchmark-hash  benchmark a specific hashing algorithm (for example hamsi)\n\
+      --autotune        automatically tune internal parameters to match hardware (ALPHA - here be dragons)\n\
       --cputest         debug hashes from cpu algorithms\n\
       --donate          percentage of time to donate to developer (0 to disable ; 0.5 minimum)\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
@@ -336,8 +339,10 @@ struct option options[] = {
 	{ "api-mcast-code", 1, NULL, 1035 },
 	{ "api-mcast-port", 1, NULL, 1036 },
 	{ "api-mcast-des", 1, NULL, 1037 },
+	{ "autotune", 0, NULL, 1004 },
 	{ "background", 0, NULL, 'B' },
 	{ "benchmark", 0, NULL, 1005 },
+	{ "benchmark-hash", 1, NULL, 1091 },
 	{ "cert", 1, NULL, 1001 },
 	{ "config", 1, NULL, 'c' },
 	{ "cputest", 0, NULL, 1006 },
@@ -531,6 +536,7 @@ void proper_exit(int reason)
 	free(opt_api_bind);
 	if (opt_api_allow) free(opt_api_allow);
 	if (opt_api_groups) free(opt_api_groups);
+	if (opt_bench_hash) free(opt_bench_hash);
 	free(opt_api_mcast_addr);
 	free(opt_api_mcast_code);
 	free(opt_api_mcast_des);
@@ -2581,7 +2587,7 @@ void parse_arg(int key, char *arg)
 		use_colors = false;
 		break;
 	case 1004:
-		opt_autotune = false;
+		opt_autotune = true;
 		break;
 	case 'l': /* --launch-config */
 		{
@@ -2829,7 +2835,6 @@ void parse_arg(int key, char *arg)
 			show_usage_and_exit(1);
 		opt_difficulty = 1.0/d;
 		break;
-
 	case 1081: /* dev donate percent */
 		d = atof(arg);
 		if (d < 0.)
@@ -2844,11 +2849,15 @@ void parse_arg(int key, char *arg)
 		else
 			dev_donate_percent = d;
 		break;
-
 	case 1090: // enable simple hash
 		opt_simple_hashrate = false;
 		break;
-
+	case 1091: /* --benchmark-hash */
+		opt_benchmark = true ;
+		free(opt_bench_hash);
+		applog(LOG_INFO, "Benchmark hashing algorithm %s", arg);
+		opt_bench_hash = strdup(arg);
+		break;
 	/* PER POOL CONFIG OPTIONS */
 
 	case 1100: /* pool name */

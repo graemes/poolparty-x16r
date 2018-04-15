@@ -1,10 +1,17 @@
-/* SKEIN 64 and 80 based on Alexis Provos version */
-
-#define TPB52 512
-#define TPB50 256
+/* SKEIN 80 based on Alexis Provos version
+ *
+ * tpruvot - ????
+ * graemes - 2018
+*/
 
 #include <stdio.h>
 #include <cuda_vectors.h>
+
+#define TPB50 256
+#define TPB52 512
+#define TPF50 5
+#define TPF52 3
+
 
 /* ************************ */
 
@@ -461,11 +468,11 @@ static __constant__ uint2 c_buffer[120]; // padded message (80 bytes + 72*8 byte
 
 __global__
 #if __CUDA_ARCH__ > 500
-__launch_bounds__(TPB52, 3)
+__launch_bounds__(TPB52, TPF52)
 #else
-__launch_bounds__(TPB50, 5)
+__launch_bounds__(TPB50, TPF50)
 #endif
-void skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *output64)
+void quark_skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *output64)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -627,21 +634,7 @@ void skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *outp
 }
 
 __host__
-void skein512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, int swap)
-{
-	uint32_t tpb = TPB52;
-	int dev_id = device_map[thr_id];
-	if (device_sm[dev_id] <= 500) tpb = TPB50;
-
-	const dim3 grid((threads + tpb-1)/tpb);
-	const dim3 block(tpb);
-
-	// hash function is cut in 2 parts to reduce kernel size
-	skein512_gpu_hash_80 <<< grid, block >>> (threads, startNounce, (uint64_t*)d_hash);
-}
-
-__host__
-void skein512_cpu_setBlock_80(void *pdata)
+void quark_skein512_cpu_setBlock_80(void *pdata)
 {
 	uint64_t message[20];
 	memcpy(&message[0], pdata, 80);
@@ -784,8 +777,41 @@ void skein512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void quark_skein512_cpu_init(int thr_id, uint32_t threads)
+void quark_skein512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	cuda_get_arch(thr_id);
+	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 block(tpb);
+
+	// hash function is cut in 2 parts to reduce kernel size
+	quark_skein512_gpu_hash_80 <<< grid, block >>> (threads, startNounce, (uint64_t*)d_hash);
 }
 
+__host__
+void quark_skein512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void quark_skein512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int quark_skein512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_skein512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_skein512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "skein512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

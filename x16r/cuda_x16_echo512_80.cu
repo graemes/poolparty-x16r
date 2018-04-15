@@ -2,6 +2,7 @@
  * echo512-80 cuda kernel for X16R algorithm
  *
  * tpruvot 2018 - GPL code
+ * graemes - 2018
  */
 
 #include <stdio.h>
@@ -12,6 +13,9 @@
 extern __device__ __device_builtin__ void __threadfence_block(void);
 
 #include "x11/cuda_x11_aes.cuh"
+
+#define TPB 128
+#define TPF 7
 
 __device__ __forceinline__ void AES_2ROUND(const uint32_t* __restrict__ sharedMemory,
 	uint32_t &x0, uint32_t &x1, uint32_t &x2, uint32_t &x3,
@@ -184,7 +188,7 @@ void x16_echo512_setBlock_80(void *endiandata)
 	cudaMemcpyToSymbol(c_PaddedMessage80, endiandata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
 
-__global__ __launch_bounds__(128, 7) /* will force 72 registers */
+__global__ __launch_bounds__(TPB,TPF) /* will force 72 registers */
 void x16_echo512_gpu_hash_80(uint32_t threads, uint32_t startNonce, uint64_t *g_hash)
 {
 	__shared__ uint32_t sharedMemory[1024];
@@ -203,12 +207,40 @@ void x16_echo512_gpu_hash_80(uint32_t threads, uint32_t startNonce, uint64_t *g_
 }
 
 __host__
-void x16_echo512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash)
+void x16_echo512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
-	const uint32_t threadsperblock = 128;
-
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + tpb-1)/tpb);
+	dim3 block(tpb);
 
 	x16_echo512_gpu_hash_80<<<grid, block>>>(threads, startNonce, (uint64_t*)d_hash);
+}
+
+__host__
+void x16_echo512_cpu_init_80(int thr_id, uint32_t threads) {}
+
+__host__
+void x16_echo512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int x16_echo512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x16_echo512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x16_echo512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "echo512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
 }
