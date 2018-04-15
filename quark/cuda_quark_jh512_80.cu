@@ -369,7 +369,9 @@ void quark_jh512_cpu_free_80(int thr_id) {}
 __host__
 int quark_jh512_calc_tpb_80(int thr_id) {
 
-	int blockSize, minGridSize, maxActiveBlocks, device;
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
 	cudaDeviceProp props;
 
 	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_jh512_gpu_hash_80, 0,	0);
@@ -381,7 +383,7 @@ int quark_jh512_calc_tpb_80(int thr_id) {
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
 			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
 
-	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "jh512_80 tpb calc - block size %d ; min grid size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "jh512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
 
 	return (uint32_t)blockSize;
 }

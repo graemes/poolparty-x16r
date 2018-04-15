@@ -3,6 +3,7 @@
 #include <cuda_helper.h>
 
 #define TPB 256
+#define TPF 4
 
 /*
  * fugue512-80 x16r kernel implementation.
@@ -303,8 +304,7 @@ void x16_fugue512_setBlock_80(void *pdata)
 
 /***************************************************/
 
-__global__
-__launch_bounds__(TPB)
+__global__ __launch_bounds__(TPB,TPF)
 void x16_fugue512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
 {
 	__shared__ uint32_t mixtabs[1024];
@@ -455,13 +455,35 @@ void x16_fugue512_cpu_free_80(int thr_id)
 	cudaFree(d_textures[thr_id][0]);
 }
 
-__host__
-void x16_fugue512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash)
-{
-	const uint32_t threadsperblock = TPB;
+#include "miner.h"
 
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+__host__
+void x16_fugue512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
+{
+	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 block(tpb);
 
 	x16_fugue512_gpu_hash_80 <<<grid, block>>> (threads, startNonce, (uint64_t*)d_hash);
+}
+
+__host__
+int x16_fugue512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x16_fugue512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x16_fugue512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "fugue512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
 }

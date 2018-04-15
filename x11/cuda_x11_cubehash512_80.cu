@@ -2,6 +2,7 @@
 #include <cuda_vectors.h>
 
 #define TPB 256
+#define TPF 1
 
 #define CUBEHASH_ROUNDS 16 /* this is r for CubeHashr/b */
 #define CUBEHASH_BLOCKBYTES 32 /* this is b for CubeHashr/b */
@@ -223,8 +224,8 @@ void x11_cubehash512_setBlock_80(int thr_id, uint32_t* endiandata)
 	cudaMemcpyToSymbol(c_PaddedMessage80, endiandata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
 
-__global__
-void cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint64_t *g_outhash)
+__global__ __launch_bounds__(TPB, TPF)
+void x11_cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint64_t *g_outhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -260,12 +261,12 @@ void cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce,
 }
 
 __host__
-void x11_cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
+void x11_cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	dim3 grid((threads + TPB-1)/TPB);
-	dim3 block(TPB);
+	const dim3 grid((threads+tpb-1)/tpb);
+	const dim3 block(tpb);
 
-	cubehash512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*) d_hash);
+	x11_cubehash512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*) d_hash);
 }
 
 __host__
@@ -273,3 +274,28 @@ void x11_cubehash512_cpu_init_80(int thr_id, uint32_t threads) {}
 
 __host__
 void x11_cubehash512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int x11_cubehash512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x11_cubehash512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x11_cubehash512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "cubehash512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
+
+	return (uint32_t)blockSize;
+}
+

@@ -1,10 +1,16 @@
 /*******************************************************************************
  * luffa512 for 80-bytes input (with midstate precalc based on the work of klausT and SP)
+ *
+ * Provos Alexis - 2016
+ * graemes - 2018
  */
 
 #include <miner.h>
 #include "cuda_helper.h"
 #include "cuda_vectors.h"
+
+#define TPB 384
+#define TPF 2
 
 __constant__ uint64_t c_PaddedMessage80[10]; // padded message (80 bytes + padding)
 __constant__ uint32_t _ALIGN(8) statebufferpre[8];
@@ -421,14 +427,7 @@ static void rnd512_nullhash(uint32_t *const __restrict__ state){
 	}
 }
 
-
-/***************************************************/
-//#if __CUDA_ARCH__ == 500
-//	#define __ldg(x) (*x)
-//#endif
-
-__global__
-__launch_bounds__(384,2)
+__global__ __launch_bounds__(TPB,TPF)
 void qubit_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -490,13 +489,11 @@ void qubit_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 }
 
 __host__
-void qubit_luffa512_cpu_hash_64(int thr_id, uint32_t threads,uint32_t *d_hash)
+void qubit_luffa512_cpu_hash_64(int thr_id, const uint32_t threads,uint32_t *d_hash, const uint32_t tpb)
 {
-    const uint32_t threadsperblock = 384;
-
     // berechne wie viele Thread Blocks wir brauchen
-    dim3 grid((threads + threadsperblock-1)/threadsperblock);
-    dim3 block(threadsperblock);
+    const dim3 grid((threads + tpb-1)/tpb);
+    const dim3 block(tpb);
 
     qubit_luffa512_gpu_hash_64<<<grid, block>>>(threads,d_hash);
 }
@@ -506,3 +503,25 @@ void qubit_luffa512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void qubit_luffa512_cpu_free_64(int thr_id) {}
+
+__host__
+int qubit_luffa512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, qubit_luffa512_gpu_hash_64, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, qubit_luffa512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "luffa512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

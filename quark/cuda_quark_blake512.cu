@@ -263,7 +263,7 @@ int quark_blake512_calc_tpb_64(int thr_id) {
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
 			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
 
-	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "blake512_64 tpb calc - block size %d ; min grid size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "blake512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
 
 	return (uint32_t)blockSize;
 }

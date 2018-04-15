@@ -28,6 +28,8 @@
  * @author djm34 (initial draft)
  * @author tpruvot (dual old/whirlpool modes, midstate)
  * @author SP ("final" function opt and tuning)
+ *
+ * graemes - 2018
  */
 #include <stdio.h>
 #include <memory.h>
@@ -35,6 +37,7 @@
 
 // don't change, used by shared mem fetch!
 #define TPB 256
+#define TPF 1
 
 #include <cuda_helper.h>
 #include <miner.h>
@@ -1028,7 +1031,7 @@ const int i0, const int i1, const int i2, const int i3, const int i4, const int 
 	ROUND(table, in, out, key[0], key[1], key[2],key[3], key[4], key[5], key[6], key[7]) \
 	TRANSFER(in, out)
 
-
+//__global__ __launch_bounds__(TPB,TPF)
 __global__
 void x15_whirlpool512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *outputHash, int swab)
 {
@@ -1149,10 +1152,10 @@ void x15_whirlpool512_setBlock_80(void *pdata)
 }
 
 __host__
-void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_outputHash)
+void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_outputHash, const uint32_t tpb)
 {
-	dim3 grid((threads + TPB - 1) / TPB);
-	dim3 block(TPB);
+	const dim3 grid((threads + tpb - 1) / tpb);
+	const dim3 block(tpb);
 
 	if (threads < 256)
 		applog(LOG_WARNING, "whirlpool requires a minimum of 256 threads to fetch constant tables!");
@@ -1162,3 +1165,25 @@ void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t
 
 __host__
 void x15_whirlpool512_cpu_free_80(int thr_id) {}
+
+__host__
+int x15_whirlpool512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x15_whirlpool512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x15_whirlpool512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "whirlpool512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

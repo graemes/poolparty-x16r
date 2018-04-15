@@ -32,6 +32,8 @@
 #include "cuda_vectors.h"
 
 #define TPB 256
+#define TPF 4
+
 #define SWAP64(u64) cuda_swab64(u64)
 
 static __constant__ uint64_t c_WB[80] = {
@@ -83,8 +85,7 @@ uint64_t Tone(const uint64_t* K, uint64_t* r, uint64_t* W, const uint8_t a, cons
 	r[(a+7) & 7] = T1 + (BSG5_0(r[a]) + MAJ(r[a], r[(a+1) & 7], r[(a+2) & 7])); \
 }
 
-__global__
-__launch_bounds__(256, 4)
+__global__ __launch_bounds__(TPB,TPF)
 void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -138,12 +139,10 @@ void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
 }
 
 __host__
-void x17_sha512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
+void x17_sha512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	//const uint32_t threadsperblock = 256;
-
-	dim3 grid((threads + TPB-1)/TPB);
-	dim3 block(TPB);
+	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 block(tpb);
 
 	x17_sha512_gpu_hash_64 <<<grid, block>>> (threads, (uint64_t*)d_hash);
 
@@ -154,3 +153,25 @@ void x17_sha512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void x17_sha512_cpu_free_64(int thr_id) {}
+
+__host__
+int x17_sha512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x17_sha512_gpu_hash_64, 0, 0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x17_sha512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "sha512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

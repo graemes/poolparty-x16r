@@ -1,6 +1,7 @@
 /*
 	Based on Tanguy Pruvot's repo
 	Provos Alexis - 2016
+	graemes - 2018
 */
 
 #include "cuda_helper.h"
@@ -10,6 +11,7 @@
 #include "cuda_x11_aes_alexis.cuh"
 
 #define TPB 128
+#define TPF 5
 
 __device__
 static void echo_round(const uint32_t sharedMemory[4][256], uint32_t *W, uint32_t &k0){
@@ -74,7 +76,7 @@ static void echo_round(const uint32_t sharedMemory[4][256], uint32_t *W, uint32_
 	}
 }
 
-__global__ __launch_bounds__(128, 5) /* will force 80 registers */
+__global__ __launch_bounds__(TPB, TPF) /* will force 80 registers */
 static void x11_echo512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
 {
 	__shared__ uint32_t sharedMemory[4][256];
@@ -234,10 +236,10 @@ static void x11_echo512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
 }
 
 __host__
-void x11_echo512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
+void x11_echo512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
-	dim3 grid((threads + TPB - 1)/ TPB);
-	dim3 block(TPB);
+	dim3 grid((threads + tpb - 1)/ tpb);
+	dim3 block(tpb);
 
 	x11_echo512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
 }
@@ -248,3 +250,24 @@ void x11_echo512_cpu_init_64(int thr_id, uint32_t threads) {}
 __host__
 void x11_echo512_cpu_free_64(int thr_id) {}
 
+__host__
+int x11_echo512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x11_echo512_gpu_hash_64, 0, 0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x11_echo512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "echo512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

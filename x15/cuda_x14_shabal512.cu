@@ -1,6 +1,7 @@
 /*
  * Shabal-512 for X14/X15
  * Provos Alexis - 2016
+ * graemes - 2018
  */
 #include "cuda_helper.h"
 #include "cuda_vectors.h"
@@ -38,6 +39,7 @@
  */
 
 #define TPB 384
+#define TPF 3
 
 __device__ __forceinline__ void PERM_ELT(uint32_t &xa0,const uint32_t xa1,uint32_t &xb0,const uint32_t xb1,const uint32_t xb2,const uint32_t xb3,const uint32_t xc,const uint32_t xm){
 
@@ -103,7 +105,7 @@ void ROTATE(uint32_t* A){
 }
 /***************************************************/
 // GPU Hash Function
-__global__ __launch_bounds__(TPB,3)
+__global__ __launch_bounds__(TPB,TPF)
 void x14_shabal512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -168,13 +170,11 @@ void x14_shabal512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 	}
 }
 
-__host__ void x14_shabal512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
+__host__ void x14_shabal512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	//const uint32_t threadsperblock = 384;
-
 	// berechne wie viele Thread Blocks wir brauchen
-	dim3 grid((threads + TPB-1)/TPB);
-	dim3 block(TPB);
+	dim3 grid((threads + tpb -1)/tpb);
+	dim3 block(tpb);
 
 	x14_shabal512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
 }
@@ -184,3 +184,27 @@ void x14_shabal512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void x14_shabal512_cpu_free_64(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int x14_shabal512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x14_shabal512_gpu_hash_64, 0, 0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x14_shabal512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "shabal512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

@@ -134,7 +134,9 @@ void quark_groestl512_cpu_free_64(int thr_id) {}
 __host__
 int quark_groestl512_calc_tpb_64(int thr_id) {
 
-	int blockSize, minGridSize, maxActiveBlocks, device;
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
 	cudaDeviceProp props;
 
 	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_groestl512_gpu_hash_64_quad, 0,	0);

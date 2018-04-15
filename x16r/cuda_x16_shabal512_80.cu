@@ -1,12 +1,16 @@
 /*
 * Shabal-512 for X16R
 * tpruvot 2018, based on alexis x14 and xevan kernlx code
+* graemes 2018
 */
 
 #include <cuda_helper.h>
 #include <cuda_vectors.h>
 
 typedef uint32_t sph_u32;
+
+#define TPB 256
+#define TPF 2
 
 #define C32(x) (x)
 #define T32(x) (x)
@@ -235,9 +239,7 @@ void x16_shabal512_setBlock_80(void *pdata)
 	cudaMemcpyToSymbol(c_PaddedMessage80, pdata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
 
-#define TPB_SHABAL 256
-
-__global__ __launch_bounds__(TPB_SHABAL, 2)
+__global__ __launch_bounds__(TPB,TPF)
 void x16_shabal512_gpu_hash_80(uint32_t threads, const uint32_t startNonce, uint32_t *g_hash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -338,12 +340,10 @@ void x16_shabal512_gpu_hash_80(uint32_t threads, const uint32_t startNonce, uint
 }
 
 __host__
-void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash)
+void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
-	const uint32_t threadsperblock = TPB_SHABAL;
-
-	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
-	dim3 block(threadsperblock);
+	dim3 grid((threads + tpb - 1) / tpb);
+	dim3 block(tpb);
 
 	x16_shabal512_gpu_hash_80 <<<grid, block >>>(threads, startNonce, d_hash);
 }
@@ -353,3 +353,27 @@ void x16_shabal512_cpu_init_80(int thr_id, uint32_t threads) {}
 
 __host__
 void x16_shabal512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int x16_shabal512_calc_tpb_80(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x16_shabal512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x16_shabal512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "shabal512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

@@ -419,7 +419,7 @@ int quark_bmw512_calc_tpb_80(int thr_id) {
 	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
 			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
 
-	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "bmw512_80 tpb calc - block size %d ; min grid size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "bmw512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
 
 	return (uint32_t)blockSize;
 }

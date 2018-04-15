@@ -1,6 +1,7 @@
 /*
 	Based on Tanguy Pruvot's repo
 	Provos Alexis - 2016
+	graemes - 2018
 */
 
 #include "cuda_helper.h"
@@ -9,6 +10,7 @@
 #define SWAP(a,b) { uint32_t u = a; a = b; b = u; }
 
 #define TPB 768
+#define TPF 1
 
 __device__ __forceinline__
 static void rrounds(uint32_t *x){
@@ -51,7 +53,7 @@ static void rrounds(uint32_t *x){
 
 /***************************************************/
 // GPU Hash Function
-__global__ __launch_bounds__(TPB, 1)
+__global__ __launch_bounds__(TPB, TPF)
 void x11_cubehash512_gpu_hash_64(uint32_t threads, uint64_t *g_hash){
 
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -102,11 +104,11 @@ void x11_cubehash512_gpu_hash_64(uint32_t threads, uint64_t *g_hash){
 }
 
 __host__
-void x11_cubehash512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
+void x11_cubehash512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
     // berechne wie viele Thread Blocks wir brauchen
-    dim3 grid((threads + TPB-1)/TPB);
-    dim3 block(TPB);
+    const dim3 grid((threads + tpb-1)/tpb);
+    const dim3 block(tpb);
 
     x11_cubehash512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash);
 
@@ -117,3 +119,27 @@ void x11_cubehash512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void x11_cubehash512_cpu_free_64(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int x11_cubehash512_calc_tpb_64(int thr_id) {
+
+	int blockSize = 0;
+	int minGridSize = 0;
+	int maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, x11_cubehash512_gpu_hash_64, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, x11_cubehash512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "cubehash512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}
