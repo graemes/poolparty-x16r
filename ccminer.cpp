@@ -158,7 +158,7 @@ int device_bfactor[MAX_GPUS] = { 0 }; // cryptonight
 int device_lookup_gap[MAX_GPUS] = { 0 };
 int device_interactive[MAX_GPUS] = { 0 };
 int opt_nfactor = 0;
-bool opt_autotune = true;
+bool opt_autotune = false;
 char *jane_params = NULL;
 
 // pools (failover/getwork infos)
@@ -314,6 +314,7 @@ Options:\n\
   -B, --background      run the miner in the background\n\
       --benchmark       run in offline benchmark mode\n\
       --benchmark-hash  benchmark a specific hashing algorithm (for example hamsi)\n\
+      --autotune        automatically tune internal parameters to match hardware (ALPHA - here be dragons)\n\
       --cputest         debug hashes from cpu algorithms\n\
       --donate          percentage of time to donate to developer (0 to disable ; 0.5 minimum)\n\
   -c, --config=FILE     load a JSON-format configuration file\n\
@@ -338,6 +339,7 @@ struct option options[] = {
 	{ "api-mcast-code", 1, NULL, 1035 },
 	{ "api-mcast-port", 1, NULL, 1036 },
 	{ "api-mcast-des", 1, NULL, 1037 },
+	{ "autotune", 0, NULL, 1004 },
 	{ "background", 0, NULL, 'B' },
 	{ "benchmark", 0, NULL, 1005 },
 	{ "benchmark-hash", 1, NULL, 1091 },
@@ -2585,7 +2587,7 @@ void parse_arg(int key, char *arg)
 		use_colors = false;
 		break;
 	case 1004:
-		opt_autotune = false;
+		opt_autotune = true;
 		break;
 	case 'l': /* --launch-config */
 		{
