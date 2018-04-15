@@ -2,6 +2,7 @@
 	Based upon Tanguy Pruvot's repo
 	
 	Provos Alexis - 2016
+	graemes - 2018
 */
 
 #include <stdio.h>
@@ -11,8 +12,10 @@
 #include "cuda_vectors.h"
 #include "miner.h"
 
-#define TPB52 128
 #define TPB50 256
+#define TPB52 128
+#define TPF50 3
+#define TPF52 7
 
 __constant__ 
 uint2 keccak_round_constants[24] = {
@@ -25,9 +28,9 @@ uint2 keccak_round_constants[24] = {
 };
 
 #if __CUDA_ARCH__ > 500
-__global__ __launch_bounds__(TPB52,7)
+__global__ __launch_bounds__(TPB52,TPF52)
 #else
-__global__ __launch_bounds__(TPB50,3)
+__global__ __launch_bounds__(TPB50,TPF50)
 #endif
 void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash, uint32_t *g_nonceVector){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -215,12 +218,13 @@ void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash, uint32_t *g_no
 }
 
 __host__
-void quark_keccak512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
+void quark_keccak512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	uint32_t tpb = TPB52;
-	int dev_id = device_map[thr_id];
-	if (device_sm[dev_id] <= 500) tpb = TPB50;
-	const dim3 grid((threads + tpb-1)/tpb);
+	//uint32_t tpb = TPB52;
+	//int dev_id = device_map[thr_id];
+	//if (device_sm[dev_id] <= 500) tpb = TPB50;
+
+	const dim3 grid((threads+tpb-1)/tpb);
 	const dim3 block(tpb);
 
 	quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_hash, NULL);
@@ -231,3 +235,23 @@ void quark_keccak512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void quark_keccak512_cpu_free_64(int thr_id) {}
+
+__host__
+int quark_keccak512_calc_tpb_64(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_keccak512_gpu_hash_64, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_keccak512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "keccak512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

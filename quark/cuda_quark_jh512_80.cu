@@ -1,9 +1,13 @@
 /**
- * JH512 64 and 80 kernels
+ * JH512 80 kernel
  *
  * JH80 by tpruvot - 2017 - under GPLv3
+ * graemes - 2018
  **/
 #include <cuda_helper.h>
+
+#define TPB 256
+#define TPF 1
 
 // #include <stdio.h>  // printf
 // #include <unistd.h> // sleep
@@ -277,7 +281,7 @@ static void E8(uint32_t x[8][4])
 __constant__ static uint32_t c_JHState[32];
 __constant__ static uint32_t c_Message[4];
 
-__global__
+__global__ __launch_bounds__(TPB,TPF)
 void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -325,11 +329,11 @@ void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce,
 }
 
 __host__
-void quark_jh512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash)
+void quark_jh512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	const uint32_t threadsperblock = 256;
-	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
-	dim3 block(threadsperblock);
+	//const uint32_t threadsperblock = 256;
+	const dim3 grid((threads + tpb - 1) / tpb);
+	const dim3 block(tpb);
 
 	quark_jh512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, d_hash);
 }
@@ -359,3 +363,25 @@ void quark_jh512_cpu_init_80(int thr_id, uint32_t threads) {}
 
 __host__
 void quark_jh512_cpu_free_80(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int quark_jh512_calc_tpb_80(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_jh512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_jh512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "jh512_80 tpb calc - block size %d ; min grid size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

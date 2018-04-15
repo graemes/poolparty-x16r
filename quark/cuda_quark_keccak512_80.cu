@@ -4,6 +4,9 @@
 
 #include "cuda_helper.h"
 
+#define TPB 256
+#define TPF 1
+
 __constant__ uint32_t d_OriginalData[20];
 
 __constant__ uint32_t c_PaddedMessage[18];
@@ -429,7 +432,7 @@ keccak_block_80(uint64_t *s, const uint32_t *in, const uint64_t *keccak_round_co
 	}
 }
 
-__global__
+__global__ __launch_bounds__(TPB,TPF)
 void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -513,12 +516,12 @@ void quark_keccak512_setBlock_80(int thr_id, void *pdata)
 }
 
 __host__
-void quark_keccak512_cuda_hash_80(const int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash)
+void quark_keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-	const uint32_t threadsperblock = 256;
+	//const uint32_t threadsperblock = 256;
 
-	dim3 grid((threads + threadsperblock-1)/threadsperblock);
-	dim3 block(threadsperblock);
+	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 block(tpb);
 
 	size_t shared_size = 0;
 
@@ -529,3 +532,24 @@ void quark_keccak512_cuda_hash_80(const int thr_id, uint32_t threads, uint32_t s
 __host__
 void quark_keccak512_cpu_free_80(int thr_id) {}
 
+#include "miner.h"
+
+__host__
+int quark_keccak512_calc_tpb_80(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_keccak512_gpu_hash_80, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_keccak512_gpu_hash_80, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "keccak512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

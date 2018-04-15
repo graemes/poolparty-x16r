@@ -19,7 +19,11 @@ __constant__ const uint32_t msg[2][4] = {
 						{0,0,0,0x01000000}
 					};
 
+#if __CUDA_ARCH__ > 500
+__global__ __launch_bounds__(TPB,THF)
+#else
 __global__ __launch_bounds__(TPB, 2)
+#endif
 void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint32_t* g_nonceVector){
 	uint32_t msgBitsliced[8];
 	uint32_t state[8];
@@ -55,7 +59,7 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 		output[10] = __byte_perm(output[10], __shfl(output[10], (threadIdx.x + 1) & 3, 4), 0x7610);
 		output[12] = __byte_perm(output[12], __shfl(output[12], (threadIdx.x + 1) & 3, 4), 0x7632);
 		output[14] = __byte_perm(output[14], __shfl(output[14], (threadIdx.x + 1) & 3, 4), 0x7632);
-	
+
 		if (thr == 0 || thr == 2){
 			output[0 + 1] = __shfl(output[0], (threadIdx.x + 2) & 3, 4);
 			output[2 + 1] = __shfl(output[2], (threadIdx.x + 2) & 3, 4);
@@ -64,7 +68,7 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 			output[8 + 1] = __shfl(output[8], (threadIdx.x + 2) & 3, 4);
 			output[10 + 1] = __shfl(output[10], (threadIdx.x + 2) & 3, 4);
 			output[12 + 1] = __shfl(output[12], (threadIdx.x + 2) & 3, 4);
-			output[14 + 1] = __shfl(output[14], (threadIdx.x + 2) & 3, 4);		
+			output[14 + 1] = __shfl(output[14], (threadIdx.x + 2) & 3, 4);
 			if(thr==0){
 				*(uint2x4*)&inpHash[0] = *(uint2x4*)&output[0];
 				*(uint2x4*)&inpHash[8] = *(uint2x4*)&output[8];
@@ -76,22 +80,22 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 
 		output[2] = __byte_perm(output[2], __shfl(output[2], (threadIdx.x + 1) & 3, 4), 0x7610);
 		output[2 + 1] = __shfl(output[2], (threadIdx.x + 2) & 3, 4);
-		
+
 		output[4] = __byte_perm(output[4], __shfl(output[4], (threadIdx.x + 1) & 3, 4), 0x7632);
 		output[4 + 1] = __shfl(output[4], (threadIdx.x + 2) & 3, 4);
-		
+
 		output[6] = __byte_perm(output[6], __shfl(output[6], (threadIdx.x + 1) & 3, 4), 0x7632);
 		output[6 + 1] = __shfl(output[6], (threadIdx.x + 2) & 3, 4);
-		
+
 		output[8] = __byte_perm(output[8], __shfl(output[8], (threadIdx.x + 1) & 3, 4), 0x7610);
 		output[8 + 1] = __shfl(output[8], (threadIdx.x + 2) & 3, 4);
 
 		output[10] = __byte_perm(output[10], __shfl(output[10], (threadIdx.x + 1) & 3, 4), 0x7610);
 		output[10 + 1] = __shfl(output[10], (threadIdx.x + 2) & 3, 4);
-		
+
 		output[12] = __byte_perm(output[12], __shfl(output[12], (threadIdx.x + 1) & 3, 4), 0x7632);
 		output[12 + 1] = __shfl(output[12], (threadIdx.x + 2) & 3, 4);
-		
+
 		output[14] = __byte_perm(output[14], __shfl(output[14], (threadIdx.x + 1) & 3, 4), 0x7632);
 		output[14 + 1] = __shfl(output[14], (threadIdx.x + 2) & 3, 4);
 
@@ -103,17 +107,19 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 	}
 }
 
+
 __host__
 //void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash){
-void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash){
+void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
 	// Compute 3.0 benutzt die registeroptimierte Quad Variante mit Warp Shuffle
 	// mit den Quad Funktionen brauchen wir jetzt 4 threads pro Hash, daher Faktor 4 bei der Blockzahl
 	// berechne wie viele Thread Blocks wir brauchen
-	uint32_t tpb = TPB;
+	const uint32_t factor = THF;
 
-	dim3 grid((THF*threads + tpb-1)/tpb);
-	dim3 block(tpb);
+	const dim3 grid((factor*(threads+tpb-1))/tpb);
+	const dim3 block(tpb);
+
 	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, NULL);
 }
 
@@ -122,3 +128,25 @@ void quark_groestl512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void quark_groestl512_cpu_free_64(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int quark_groestl512_calc_tpb_64(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_groestl512_gpu_hash_64_quad, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_groestl512_gpu_hash_64_quad, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "groestl512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

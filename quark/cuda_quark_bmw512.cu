@@ -9,6 +9,9 @@
 #include "cuda_helper.h"
 #include "cuda_vectors.h"
 
+#define TPB 32
+#define TPF 8
+
 #define CONST_EXP3d(i)   devectorize(ROL2(q[i+ 1], 5))    + devectorize(ROL2(q[i+ 3],11)) + devectorize(ROL2(q[i+5], 27)) + \
                          devectorize(SWAPDWORDS2(q[i+7])) + devectorize(ROL2(q[i+9], 37)) + devectorize(ROL2(q[i+11],43)) + \
                          devectorize(ROL2(q[i+13],53))    + devectorize(SHR2(q[i+14],1) ^ q[i+14]) + devectorize(SHR2(q[i+15],2) ^ q[i+15])
@@ -202,7 +205,7 @@ static void bmw512_round1(uint2* q,uint2* h,const uint64_t* msg){
 		h[15] = (ROL16(h[ 3]))   + (XH64 ^ q[31] ^ 512)  + (SHR2(XL64, 2) ^ q[22] ^ q[15]);
 }
 
-__global__ __launch_bounds__(32,8)
+__global__ __launch_bounds__(TPB,TPF)
 void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_hash, const uint32_t *const __restrict__ g_nonceVector){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -411,19 +414,45 @@ void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_h
 }
 
 //__host__ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash)
-__host__ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
+__host__ void quark_bmw512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	const uint32_t threadsperblock = 32;
+	//const uint32_t threadsperblock = 32;
 
     // berechne wie viele Thread Blocks wir brauchen
-    dim3 grid((threads + threadsperblock-1)/threadsperblock);
-    dim3 block(threadsperblock);
+    //dim3 grid((threads + threadsperblock-1)/threadsperblock);
+    //dim3 block(threadsperblock);
+
+    const dim3 grid((threads + tpb-1)/tpb);
+    const dim3 block(tpb);
 
     quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash, NULL);
 }
+
+#include "miner.h"
 
 __host__
 void quark_bmw512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void quark_bmw512_cpu_free_64(int thr_id) {}
+
+__host__
+int quark_bmw512_calc_tpb_64(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_bmw512_gpu_hash_64, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_bmw512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "bmw512_64 tpb calc - block size %d ; min grid size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}
+

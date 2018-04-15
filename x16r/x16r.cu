@@ -40,8 +40,9 @@ extern "C" {
 
 // Internal functions
 static void getAlgoString(const uint32_t* prevblock, char *output);
-static uint32_t init_x16r(int thr_id);
+static uint32_t init_x16r(int thr_id, uint32_t *endiandata, uint32_t startNounce, uint32_t *d_outputHash);
 static void setBenchHash();
+static void calcOptimumPBPs(int thr_id, uint32_t threads, uint32_t *endiandata, uint32_t startNounce, uint32_t *d_hash);
 
 enum Algo {
 	BLAKE = 0,
@@ -65,9 +66,9 @@ enum Algo {
 
 static const char* algo_strings[] = {
 	"blake",
-	"bmw512",
+	"bmw",
 	"groestl",
-	"jh512",
+	"jh",
 	"keccak",
 	"skein",
 	"luffa",
@@ -86,9 +87,15 @@ static const char* algo_strings[] = {
 static uint32_t *d_hash[MAX_GPUS];
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
+
 static bool init[MAX_GPUS] = { 0 };
+
 static uint64_t bench_hash = 0x67452301EFCDAB89;
 extern char* opt_bench_hash;
+
+// Initialise tpb arrays to default values (based on dm > 50
+static uint32_t tpb64[HASH_FUNC_COUNT + 1] = { 192, 32,512,512,128,512 } ;
+static uint32_t tpb80[HASH_FUNC_COUNT + 1] = { 512,128,256,256,256,512 } ;
 
 // X16R CPU Hash (Validation)
 extern "C" void x16r_hash(void *output, const void *input)
@@ -220,17 +227,12 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	const uint32_t first_nonce = pdata[19];
 
 	static uint32_t throughput = 0;
-	
-	// Only initialise (and calculate throughput) when necessary
-	if (!init[thr_id])
-	{
-		throughput = init_x16r(thr_id);
-	}
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
 		*((uint64_t*)&pdata[1]) = bench_hash;
 	}
+
 	uint32_t _ALIGN(64) endiandata[20];
 
 	for (int k=0; k < 19; k++)
@@ -242,6 +244,9 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		s_ntime = ntime;
 		if (!thr_id && !opt_quiet) applog(LOG_INFO, "hash order %s (%08x)", hashOrder, ntime);
 	}
+
+	// Only initialise (and calculate throughput) when necessary
+	if (!init[thr_id]) throughput = init_x16r(thr_id, endiandata, pdata[19], d_hash[thr_id] );
 
 	cuda_check_cpu_setTarget(ptarget);
 
@@ -310,27 +315,28 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		// Hash with CUDA
 		switch (algo80) {
 			case BLAKE:
-				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BLAKE]);
 				TRACE("blake80:");
 				break;
 			case BMW:
-				quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0);
+				quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BMW]);
 				TRACE("bmw80  :");
 				break;
 			case GROESTL:
-				quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+				//quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+				quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[GROESTL]);
 				TRACE("grstl80:");
 				break;
 			case JH:
-				quark_jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+				quark_jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[JH]);
 				TRACE("jh51280:");
 				break;
 			case KECCAK:
-				quark_keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
+				quark_keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[KECCAK]);
 				TRACE("keccak80:");
 				break;
 			case SKEIN:
-				quark_skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], 0);
+				quark_skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[SKEIN]);
 				TRACE("skein80:");
 				break;
 			case LUFFA:
@@ -382,27 +388,27 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 			switch (algo64) {
 			case BLAKE:
-				quark_blake512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
+				quark_blake512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[BLAKE]);
 				TRACE("blake    :");
 				break;
 			case BMW:
-				quark_bmw512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
+				quark_bmw512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[BMW]);
 				TRACE("bmw      :");
 				break;
 			case GROESTL:
-				quark_groestl512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
+				quark_groestl512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[GROESTL]);
 				TRACE("groestl  :");
 				break;
 			case JH:
-				quark_jh512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
+				quark_jh512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[JH]);
 				TRACE("jh512    :");
 				break;
 			case KECCAK:
-				quark_keccak512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
+				quark_keccak512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[KECCAK]);
 				TRACE("keccak   :");
 				break;
 			case SKEIN:
-				quark_skein512_cpu_hash_64(thr_id, throughput, d_hash[thr_id]);
+				quark_skein512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[SKEIN]);
 				TRACE("skein    :");
 				break;
 			case LUFFA:
@@ -585,7 +591,7 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 }
 
 //extern "C" uint32_t init_x16r(int thr_id)
-static uint32_t init_x16r(int thr_id)
+static uint32_t init_x16r(int thr_id, uint32_t *endiandata, uint32_t startNounce, uint32_t *d_outputHash)
 {
 	uint32_t throughput = 0;
 	int dev_id = device_map[thr_id];
@@ -663,6 +669,8 @@ static uint32_t init_x16r(int thr_id)
 
 	cuda_check_cpu_init(thr_id, throughput);
 
+	calcOptimumPBPs(thr_id, throughput, endiandata, startNounce, d_hash[thr_id]);
+
 	init[thr_id] = true;
 
 	return throughput;
@@ -734,4 +742,28 @@ static void setBenchHash() {
 			break;
 		}
 	}
+}
+
+static void calcOptimumPBPs(int thr_id, uint32_t threads, uint32_t *endiandata, uint32_t startNounce, uint32_t *d_hash){
+
+	tpb64[BLAKE] = quark_blake512_calc_tpb_64(thr_id);
+	tpb80[BLAKE] = quark_blake512_calc_tpb_80(thr_id);
+
+	tpb64[BMW] = quark_bmw512_calc_tpb_64(thr_id);
+	tpb80[BMW] = quark_bmw512_calc_tpb_80(thr_id);
+
+	tpb64[GROESTL] = quark_groestl512_calc_tpb_64(thr_id);
+	tpb80[GROESTL] = quark_groestl512_calc_tpb_80(thr_id);
+	tpb80[GROESTL] = 256 ; // override
+
+	tpb64[JH] = quark_jh512_calc_tpb_64(thr_id);
+	tpb80[JH] = quark_jh512_calc_tpb_80(thr_id);
+
+	tpb64[KECCAK] = quark_keccak512_calc_tpb_64(thr_id);
+	tpb80[KECCAK] = quark_keccak512_calc_tpb_80(thr_id);
+	//tpb80[KECCAK] = 256; //override
+
+	tpb64[SKEIN] = quark_skein512_calc_tpb_64(thr_id);
+	tpb80[SKEIN] = quark_skein512_calc_tpb_80(thr_id);
+
 }

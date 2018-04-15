@@ -1,6 +1,7 @@
 /*
 	Based on Tanguy Pruvot's repo
 	Provos Alexis - 2016
+	graemes - 2018
 */
 
 #include "cuda_helper.h"
@@ -8,6 +9,7 @@
 #include "miner.h"
 
 #define TPB 512
+#define TPF 1
 
 /* 1344 bytes */
 __constant__ static uint32_t c_E8[42][8] = {
@@ -240,7 +242,7 @@ static void E8(uint32_t x[8][4])
 	}
 }
 //----------------------------------------------------------------------------------------------------------
-__global__ __launch_bounds__(TPB)
+__global__ __launch_bounds__(TPB,TPF)
 void quark_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash, const uint32_t* __restrict__ g_nonceVector){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -285,11 +287,10 @@ void quark_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash, const uint32_t*
 }
 
 __host__
-//void quark_jh512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash)
-void quark_jh512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash)
+void quark_jh512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	dim3 grid((threads + TPB-1)/TPB);
-	dim3 block(TPB);
+	const dim3 grid((threads + tpb-1)/tpb);
+	const dim3 block(tpb);
 
 	quark_jh512_gpu_hash_64<<<grid, block>>>(threads, d_hash, NULL);
 }
@@ -299,3 +300,25 @@ void quark_jh512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void quark_jh512_cpu_free_64(int thr_id) {}
+
+#include "miner.h"
+
+__host__
+int quark_jh512_calc_tpb_64(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_jh512_gpu_hash_64, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_jh512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "jh512_64 tpb calc - block size %d ; min grid size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}

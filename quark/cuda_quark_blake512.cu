@@ -2,6 +2,7 @@
 	Based upon Tanguy Pruvot's and SP's work
 			
 	Provos Alexis - 2016
+	graemes - 2018
 */
 #include "miner.h"
 #include "cuda_helper.h"
@@ -105,8 +106,7 @@ __constant__ const uint2 h[8] = {
 	v[b] = ROTR64( v[b] ^ v[c], 11); \
 }
 
-__global__
-__launch_bounds__(192, 1)
+__global__ __launch_bounds__(TPB50_64, 1)
 void quark_blake512_gpu_hash_64(uint32_t threads, const uint32_t *const __restrict__ g_nonceVector, uint2* g_hash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -225,15 +225,20 @@ void quark_blake512_gpu_hash_64(uint32_t threads, const uint32_t *const __restri
 }
 
 // ---------------------------- END CUDA quark_blake512 functions ------------------------------------
-
+/*
 __host__
 void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_outputHash){
 	uint32_t tpb = TPB52_64;
 	int dev_id = device_map[thr_id];
 	
 	if (device_sm[dev_id] <= 500) tpb = TPB50_64;
+*/
+__host__
+void quark_blake512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb){
+
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
+
 	quark_blake512_gpu_hash_64<<<grid, block>>>(threads, NULL, (uint2*)d_outputHash);
 }
 
@@ -242,3 +247,23 @@ void quark_blake512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void quark_blake512_cpu_free_64(int thr_id) {}
+
+__host__
+int quark_blake512_calc_tpb_64(int thr_id) {
+
+	int blockSize, minGridSize, maxActiveBlocks, device;
+	cudaDeviceProp props;
+
+	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_blake512_gpu_hash_64, 0,	0);
+
+	// calculate theoretical occupancy
+	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_blake512_gpu_hash_64, blockSize, 0);
+	cudaGetDevice(&device);
+	cudaGetDeviceProperties(&props, device);
+	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "blake512_64 tpb calc - block size %d ; min grid size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+	return (uint32_t)blockSize;
+}
