@@ -9,8 +9,7 @@
 #include "skein_header.h"
 
 #define TPB 512
-#define TPF_52 3
-#define TPF_50 5
+#define TPF 3
 
 /* ************************ */
 __constant__ const uint2 buffer[152] = {
@@ -36,11 +35,7 @@ __constant__ const uint2 buffer[152] = {
 };
 
 __global__
-#if __CUDA_ARCH__ > 500
-__launch_bounds__(TPB, 3)
-#else
-__launch_bounds__(TPB, 5)
-#endif
+__launch_bounds__(TPB, TPF)
 void quark_skein512_gpu_hash_64(const uint32_t threads,uint64_t* g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
