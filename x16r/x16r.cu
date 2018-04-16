@@ -673,9 +673,9 @@ static uint32_t init_x16r(int thr_id)
 		setBenchHash();
 	}
 
-	if (device_sm[dev_id] == 500) {
-		tpb64[KECCAK] = 256;
-	}
+	//if (device_sm[dev_id] == 500) {
+	//	tpb64[KECCAK] = 256;
+	//}
 
 	if (opt_autotune) calcOptimumTPBs(thr_id);
 
