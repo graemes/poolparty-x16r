@@ -8,8 +8,7 @@
 #include "cuda_helper.h"
 #include "cuda_vectors.h"
 
-#define TPB 512
-#define TPF 2
+#define TPB80 512
 
 __constant__ uint2 _ALIGN(16) c_m[16]; // padded message (80 bytes + padding)
 
@@ -95,7 +94,7 @@ __constant__ _ALIGN(16) uint2 z[16] =
 	v[b] = ROTR64( v[b] ^ v[c], 11); \
 }
 
-__global__ __launch_bounds__(TPB,TPF)
+__global__ __launch_bounds__(TPB80,2)
 void quark_blake512_gpu_hash_80(const uint32_t threads,const uint32_t startNounce, uint2x4 *const __restrict__ g_hash){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 

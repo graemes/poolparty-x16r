@@ -32,13 +32,13 @@ __global__ __launch_bounds__(TPB52,TPF52)
 #else
 __global__ __launch_bounds__(TPB50,TPF50)
 #endif
-void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash){
+void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash, uint32_t *g_nonceVector){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint2 t[5], u[5], v, w;
 	uint2 s[25];
 	if (thread < threads){
 	
-		const uint32_t hashPosition = thread;
+		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
 
 		uint2x4* d_hash = (uint2x4 *)&g_hash[hashPosition * 8];
 
@@ -227,7 +227,7 @@ void quark_keccak512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d
 	const dim3 grid((threads+tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_hash);
+	quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_hash, NULL);
 }
 
 __host__
