@@ -1326,7 +1326,7 @@ static void c512(const uint32_t* sharedMemory, uint32_t *state, uint32_t *msg, c
 }
 
 __device__ __forceinline__
-void shavite_gpu_init(uint32_t *sharedMemory)
+void shavite_gpu_init_80(uint32_t *sharedMemory)
 {
 	/* each thread startup will fill a uint32 */
 	if (threadIdx.x < 128) {
@@ -1347,7 +1347,7 @@ void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *ou
 {
 	__shared__ uint32_t sharedMemory[1024];
 
-	shavite_gpu_init(sharedMemory);
+	shavite_gpu_init_80(sharedMemory);
 	__threadfence_block();
 
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
