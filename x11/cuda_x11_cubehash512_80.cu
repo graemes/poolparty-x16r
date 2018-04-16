@@ -224,7 +224,8 @@ void x11_cubehash512_setBlock_80(int thr_id, uint32_t* endiandata)
 	cudaMemcpyToSymbol(c_PaddedMessage80, endiandata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
 
-__global__ __launch_bounds__(TPB, TPF)
+__global__
+__launch_bounds__(TPB, TPF)
 void x11_cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint64_t *g_outhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
@@ -278,8 +279,8 @@ void x11_cubehash512_cpu_free_80(int thr_id) {}
 #include "miner.h"
 
 __host__
-int x11_cubehash512_calc_tpb_80(int thr_id) {
-
+int x11_cubehash512_calc_tpb_80(int thr_id)
+{
 	int blockSize = 0;
 	int minGridSize = 0;
 	int maxActiveBlocks, device;
