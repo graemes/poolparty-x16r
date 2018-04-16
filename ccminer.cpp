@@ -87,7 +87,6 @@ bool opt_protocol = false;
 bool opt_benchmark = false;
 bool opt_showdiff = true;
 bool opt_hwmonitor = true;
-bool opt_api_bound = false;
 
 // todo: limit use of these flags,
 // prefer the pools[] attributes
@@ -224,7 +223,7 @@ char *opt_bench_hash = strdup("");
 // strdup on char* to allow a common free() if used
 static char* opt_syslog_pfx = strdup(PROGRAM_NAME);
 char *opt_api_bind = strdup("127.0.0.1"); /* 0.0.0.0 for all ips */
-int opt_api_port = 0; /* 0 to disable */
+int opt_api_port = 4068; /* 0 to disable */
 char *opt_api_allow = NULL;
 char *opt_api_groups = NULL;
 bool opt_api_mcast = false;
@@ -2336,7 +2335,6 @@ void parse_arg(int key, char *arg)
 			/* port or 0 to disable */
 			opt_api_port = atoi(arg);
 		}
-		if (opt_api_port > 0) opt_api_bound = true;
 		break;
 	case 1030: /* --api-remote */
 		if (opt_api_allow) free(opt_api_allow);
@@ -2431,7 +2429,7 @@ void parse_arg(int key, char *arg)
 		v = atoi(arg);
 		if (v < 1)
 			opt_statsavg = INT_MAX;
-		opt_statsavg = v;
+			opt_statsavg = v;
 		break;
 	case 'n': /* --ndevs */
 		// to get gpu vendors...
