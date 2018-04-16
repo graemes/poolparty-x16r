@@ -372,7 +372,7 @@
     <CudaCompile Include="x16r\cuda_x16_simd512_80.cu">
       <MaxRegCount>64</MaxRegCount>
     </CudaCompile>
-    <CudaCompile Include="x11\cuda_x11_echo.cu" />
+    <CudaCompile Include="x11\cuda_x11_echo512.cu" />
     <CudaCompile Include="x16r\cuda_x16_echo512_80.cu" />
     <CudaCompile Include="x13\cuda_x13_hamsi512.cu">
       <MaxRegCount>72</MaxRegCount>
