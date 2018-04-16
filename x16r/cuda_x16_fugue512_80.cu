@@ -459,7 +459,7 @@ void x16_fugue512_cpu_free_80(int thr_id)
 #include "miner.h"
 
 __host__
-void x16_fugue512_cuda_hash_80(int thr_id, const uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
+void x16_fugue512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);

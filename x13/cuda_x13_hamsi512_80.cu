@@ -425,10 +425,10 @@ void x13_hamsi512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 }
 
 __host__
-void x13_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
+void x13_hamsi512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb - 1) / tpb);
-	const dim3 block(tpb);
+	dim3 block(tpb);
 
 	x13_hamsi512_gpu_hash_80 <<<grid, block>>> (threads, startNounce, (uint64_t*)d_hash);
 }
