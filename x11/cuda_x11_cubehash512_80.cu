@@ -1,5 +1,7 @@
-#include <cuda_helper.h>
-#include <cuda_vectors.h>
+#include "cuda_helper.h"
+#include "cuda_vectors.h"
+
+#include "miner.h"
 
 #define TPB 256
 #define TPF 1
@@ -275,8 +277,6 @@ void x11_cubehash512_cpu_init_80(int thr_id, uint32_t threads) {}
 
 __host__
 void x11_cubehash512_cpu_free_80(int thr_id) {}
-
-#include "miner.h"
 
 __host__
 int x11_cubehash512_calc_tpb_80(int thr_id)
