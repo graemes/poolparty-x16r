@@ -95,8 +95,7 @@ __constant__ _ALIGN(16) uint2 z[16] =
 	v[b] = ROTR64( v[b] ^ v[c], 11); \
 }
 
-__global__
-__launch_bounds__( TPB, 2 )
+__global__ __launch_bounds__(TPB,TPF)
 void quark_blake512_gpu_hash_80(const uint32_t threads,const uint32_t startNounce, uint2x4 *const __restrict__ g_hash){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
