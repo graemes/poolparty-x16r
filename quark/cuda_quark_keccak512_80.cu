@@ -517,13 +517,14 @@ void quark_keccak512_setBlock_80(int thr_id, void *pdata)
 }
 
 __host__
-void quark_keccak512_cuda_hash_80(const int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
+void quark_keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
 	//const uint32_t threadsperblock = 256;
 
-	const dim3 grid((threads + tpb-1)/tpb);
-	const dim3 block(tpb);
-	const size_t shared_size = 0;
+	dim3 grid((threads + tpb-1)/tpb);
+	dim3 block(tpb);
+
+	size_t shared_size = 0;
 
 	quark_keccak512_gpu_hash_80<<<grid, block, shared_size>>>(threads, startNounce, (uint64_t*)d_hash);
 	//MyStreamSynchronize(NULL, order, thr_id);
