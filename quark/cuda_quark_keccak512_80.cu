@@ -517,7 +517,7 @@ void quark_keccak512_setBlock_80(int thr_id, void *pdata)
 }
 
 __host__
-void quark_keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, uint32_t tpb)
+void quark_keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
 	//const uint32_t threadsperblock = 256;
 
