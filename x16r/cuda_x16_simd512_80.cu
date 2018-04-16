@@ -1824,10 +1824,10 @@ static void x16_simd512_gpu_80(const uint32_t threads, const uint32_t startNonce
 /***************************************************/
 
 __host__
-void x16_simd512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, uint32_t tpb)
+void x16_simd512_cuda_hash_80(int thr_id, const uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
-	dim3 grid((threads + tpb - 1) / tpb);
-	dim3 block(tpb);
+	const dim3 grid((threads + tpb - 1) / tpb);
+	const dim3 block(tpb);
 
 	x16_simd512_gpu_80 <<<grid, block>>> (threads, startNonce, (uint64_t*) d_hash);
 }
