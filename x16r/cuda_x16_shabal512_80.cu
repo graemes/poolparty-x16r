@@ -340,7 +340,7 @@ void x16_shabal512_gpu_hash_80(uint32_t threads, const uint32_t startNonce, uint
 }
 
 __host__
-void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
+void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
 	dim3 grid((threads + tpb - 1) / tpb);
 	dim3 block(tpb);

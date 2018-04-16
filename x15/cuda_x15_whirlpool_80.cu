@@ -1152,7 +1152,7 @@ void x15_whirlpool512_setBlock_80(void *pdata)
 }
 
 __host__
-void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_outputHash, const uint32_t tpb)
+void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, uint32_t startNonce, uint32_t *d_outputHash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb - 1) / tpb);
 	const dim3 block(tpb);

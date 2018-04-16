@@ -78,7 +78,7 @@ void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNou
 }
 
 __host__
-void quark_groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
+void quark_groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
 	const uint32_t threadsperblock = TPB;
 	const uint32_t factor = THF;

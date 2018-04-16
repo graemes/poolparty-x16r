@@ -330,7 +330,7 @@ void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce,
 }
 
 __host__
-void quark_jh512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
+void quark_jh512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
 	//const uint32_t threadsperblock = 256;
 	const dim3 grid((threads + tpb - 1) / tpb);
