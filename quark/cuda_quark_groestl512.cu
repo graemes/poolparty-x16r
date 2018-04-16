@@ -8,9 +8,8 @@
 #include "cuda_vectors.h"
 #include "cuda_helper.h"
 
-#define TPB52 512
-#define TPB50 512
-#define THF 4
+#define TPB 512
+#define THF 2
 
 #include "quark/groestl_functions_quad.cuh"
 #include "quark/groestl_transf_quad.cuh"
@@ -20,11 +19,7 @@ __constant__ const uint32_t msg[2][4] = {
 						{0,0,0,0x01000000}
 					};
 
-#if __CUDA_ARCH__ > 500
-__global__ __launch_bounds__(TPB52, 2)
-#else
-__global__ __launch_bounds__(TPB50, 2)
-#endif
+__global__ __launch_bounds__(TPB,THF)
 void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint32_t* g_nonceVector){
 	uint32_t msgBitsliced[8];
 	uint32_t state[8];
@@ -32,12 +27,10 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 	// durch 4 dividieren, weil jeweils 4 Threads zusammen ein Hash berechnen
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
 	if (thread < threads){
-	        // GROESTL
+		// GROESTL
 		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : __ldg(&g_nonceVector[thread]);
-
-	        uint32_t *inpHash = &g_hash[hashPosition<<4];
-
-	        const uint32_t thr = threadIdx.x & (THF-1);
+		uint32_t *inpHash = &g_hash[hashPosition<<4];
+		const uint32_t thr = threadIdx.x & (THF-1);
 
 		uint32_t message[8] = {
 			#if __CUDA_ARCH__ > 500

@@ -42,7 +42,7 @@ extern "C" {
 static void getAlgoString(const uint32_t* prevblock, char *output);
 static uint32_t init_x16r(int thr_id);
 static void setBenchHash();
-static void calcOptimumTBPs(int thr_id);
+static void calcOptimumTPBs(int thr_id);
 
 enum Algo {
 	BLAKE = 0,
@@ -312,6 +312,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		}
 	}
 
+	/*
+	 * TODO: a1i3nj03 has what looks to be a far more concise way of calling the algo's but when I looked at it
+	 * some compiler warnings related to the pointers made me nervous - needs further investigation.
+	 */
 	int warn = 0;
 	do {
 		// Hash with CUDA
@@ -325,7 +329,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("bmw80  :");
 				break;
 			case GROESTL:
-				//quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id]);
 				quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[GROESTL]);
 				TRACE("grstl80:");
 				break;
@@ -574,7 +577,6 @@ extern "C" void free_x16r(int thr_id)
 }
 
 // Internal functions
-
 static void getAlgoString(const uint32_t* prevblock, char *output)
 {
 	char *sptr = output;
@@ -607,7 +609,7 @@ static uint32_t init_x16r(int thr_id)
 	int gpu_model;
 	char gpu_family1[10], gpu_family2[10];
 	sscanf(device_name[dev_id], "%s %s %d", gpu_family1, gpu_family2,
-			&gpu_model);  // More robust way to extract model number?
+			&gpu_model);  // TODO: More robust way to extract model number?
 	if (gpu_model > 1070)
 		intensity = 20;
 	else if (gpu_model > 1000)
@@ -671,7 +673,11 @@ static uint32_t init_x16r(int thr_id)
 		setBenchHash();
 	}
 
-	if (opt_autotune) calcOptimumTBPs(thr_id);
+	if (device_sm[dev_id] == 500) {
+		tpb64[KECCAK] = 256;
+	}
+
+	if (opt_autotune) calcOptimumTPBs(thr_id);
 
 	init[thr_id] = true;
 
@@ -740,13 +746,13 @@ static void setBenchHash() {
 			bench_hash = 0xFFFFFFFFFFFFFFFF;
 			break;
 		default:
-			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found", opt_bench_hash);
+			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default ", opt_bench_hash);
 			break;
 		}
 	}
 }
 
-static void calcOptimumTBPs(int thr_id){
+static void calcOptimumTPBs(int thr_id){
 
 	tpb64[BLAKE] = quark_blake512_calc_tpb_64(thr_id);
 	tpb80[BLAKE] = quark_blake512_calc_tpb_80(thr_id);
