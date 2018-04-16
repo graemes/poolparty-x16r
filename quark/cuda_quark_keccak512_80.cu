@@ -432,14 +432,8 @@ keccak_block_80(uint64_t *s, const uint32_t *in, const uint64_t *keccak_round_co
 	}
 }
 
-<<<<<<< HEAD
 __global__ __launch_bounds__(TPB,TPF)
 void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
-=======
-__global__
-__launch_bounds__( TPB, 1)
-void quark_keccak512_gpu_hash_80(uint32_t threads, const uint32_t startNounce, uint64_t *g_hash)
->>>>>>> parent of 218a5b8... interim
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -522,14 +516,8 @@ void quark_keccak512_setBlock_80(int thr_id, void *pdata)
 }
 
 __host__
-<<<<<<< HEAD
-void quark_keccak512_cuda_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
-=======
 void quark_keccak512_cuda_hash_80(const int thr_id, uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
->>>>>>> parent of 218a5b8... interim
 {
-	//const uint32_t threadsperblock = 256;
-
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
