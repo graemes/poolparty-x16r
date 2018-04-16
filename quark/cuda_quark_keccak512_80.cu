@@ -537,7 +537,13 @@ void quark_keccak512_cpu_free_80(int thr_id) {}
 __host__
 int quark_keccak512_calc_tpb_80(int thr_id) {
 
+<<<<<<< HEAD
 	int blockSize, minGridSize, maxActiveBlocks, device;
+=======
+    int blockSize = 0;
+    int minGridSize = 0;
+    int maxActiveBlocks, device;
+>>>>>>> v1.4.0
 	cudaDeviceProp props;
 
 	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_keccak512_gpu_hash_80, 0,	0);

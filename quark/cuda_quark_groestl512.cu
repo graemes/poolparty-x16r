@@ -109,6 +109,7 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 
 
 __host__
+<<<<<<< HEAD
 //void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash){
 void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
@@ -118,6 +119,12 @@ void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash
 	const uint32_t factor = THF;
 
 	const dim3 grid((factor*(threads+tpb-1))/tpb);
+=======
+void quark_groestl512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
+
+	// Compute 3.0 benutzt die registeroptimierte Quad Variante mit Warp Shuffle
+	const dim3 grid((THF*threads + tpb-1)/tpb);
+>>>>>>> v1.4.0
 	const dim3 block(tpb);
 
 	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, NULL);
@@ -134,6 +141,7 @@ void quark_groestl512_cpu_free_64(int thr_id) {}
 __host__
 int quark_groestl512_calc_tpb_64(int thr_id) {
 
+<<<<<<< HEAD
 	int blockSize = 0;
 	int minGridSize = 0;
 	int maxActiveBlocks, device;
@@ -151,4 +159,23 @@ int quark_groestl512_calc_tpb_64(int thr_id) {
 	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "groestl512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
 
 	return (uint32_t)blockSize;
+=======
+        int blockSize = 0;
+        int minGridSize = 0;
+        int maxActiveBlocks, device;
+        cudaDeviceProp props;
+
+        cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_groestl512_gpu_hash_64_quad, 0, 0);
+
+        // calculate theoretical occupancy
+        cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_groestl512_gpu_hash_64_quad, blockSize, 0);
+        cudaGetDevice(&device);
+        cudaGetDeviceProperties(&props, device);
+        float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
+                        / (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
+
+        if (!opt_quiet) gpulog(LOG_INFO, thr_id, "groestl512_64 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, minGridSize, occupancy);
+
+        return (uint32_t)blockSize;
+>>>>>>> v1.4.0
 }

@@ -281,7 +281,12 @@ static void E8(uint32_t x[8][4])
 __constant__ static uint32_t c_JHState[32];
 __constant__ static uint32_t c_Message[4];
 
+<<<<<<< HEAD:quark/cuda_quark_jh512_80.cu
 __global__ __launch_bounds__(TPB,TPF)
+=======
+//__global__ __launch_bounds__(TPB,TPF)
+__global__ __launch_bounds__(TPB)
+>>>>>>> v1.4.0:quark/cuda_quark_jh512_80.cu
 void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
