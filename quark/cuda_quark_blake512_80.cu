@@ -521,7 +521,9 @@ void quark_blake512_cpu_free_80(int thr_id) {}
 __host__
 int quark_blake512_calc_tpb_80(int thr_id) {
 
-	int blockSize, minGridSize, maxActiveBlocks, device;
+    int blockSize = 0;
+    int minGridSize = 0;
+    int maxActiveBlocks, device;
 	cudaDeviceProp props;
 
 	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_blake512_gpu_hash_80, 0,	0);

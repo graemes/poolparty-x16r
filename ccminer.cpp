@@ -2243,7 +2243,7 @@ wait_stratum_url:
 
 		if (!s) {
 			stratum_disconnect(&stratum);
-			if (!opt_quiet && !pool_on_hold)
+			if (!pool_on_hold)
 				applog(LOG_WARNING, "Stratum connection interrupted");
 			continue;
 		}

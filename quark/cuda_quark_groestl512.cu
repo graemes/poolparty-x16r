@@ -111,18 +111,12 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 }
 
 __host__
-//void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash){
-void quark_groestl512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash, const uint32_t threadsperblock){
+void quark_groestl512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
-	const int dev_id = device_map[thr_id];
 	// Compute 3.0 benutzt die registeroptimierte Quad Variante mit Warp Shuffle
-	// mit den Quad Funktionen brauchen wir jetzt 4 threads pro Hash, daher Faktor 4 bei der Blockzahl
-	// berechne wie viele Thread Blocks wir brauchen
-	uint32_t tpb = (device_sm[dev_id] <= 500) ? TPB50 : TPB52;
+	const dim3 grid((THF*threads + tpb-1)/tpb);
+	const dim3 block(tpb);
 
-	dim3 grid((THF*threads + tpb-1)/tpb);
-	dim3 block(tpb);
-	//quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, d_nonceVector);
 	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, NULL);
 }
 
@@ -142,7 +136,7 @@ int quark_groestl512_calc_tpb_64(int thr_id) {
         int maxActiveBlocks, device;
         cudaDeviceProp props;
 
-        cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_groestl512_gpu_hash_64_quad, 0,      0);
+        cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_groestl512_gpu_hash_64_quad, 0, 0);
 
         // calculate theoretical occupancy
         cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_groestl512_gpu_hash_64_quad, blockSize, 0);
