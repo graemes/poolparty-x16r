@@ -95,3 +95,34 @@ nvcc_FLAGS += $(JANSSON_INCLUDES) --ptxas-options="-v"
 .cu.o:
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=128 -o $@ -c $<
 
+# Some algorithms are faster with less registers 
+//quark/cuda_quark_blake512.o: quark/cuda_quark_blake512.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
+
+//quark/cuda_jh512.o: quark/cuda_jh512.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
+
+//quark/cuda_quark_keccak512.o: quark/cuda_quark_keccak512.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=88 -o $@ -c $<
+
+//x11/cuda_x11_luffa512.o: x11/cuda_x11_luffa512.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
+
+x11/cuda_x11_simd512.o: x11/cuda_x11_simd512.cu
+	$(NVCC) $(nvcc_FLAGS) -Xcompiler -Wno-unused-variable -o $@ -c $<
+
+//x13/cuda_x13_hamsi512.o: x13/cuda_x13_hamsi512.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
+
+//x13/cuda_x13_hamsi512_80.o: x13/cuda_x13_hamsi512_80.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
+
+//x15/cuda_x15_fugue.o: x15/cuda_x15_fugue.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
+
+//x15/cuda_x15_whirlpool.o: x15/cuda_x15_whirlpool.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=72 -o $@ -c $<
+
+//x17/cuda_x17_sha512.o: x17/cuda_x17_sha512.cu
+//	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
+
