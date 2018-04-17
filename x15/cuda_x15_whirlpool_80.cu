@@ -1167,7 +1167,7 @@ __host__
 void x15_whirlpool512_cpu_free_80(int thr_id) {}
 
 __host__
-int x15_whirlpool512_calc_tpb_80(int thr_id) {
+uint32_t x15_whirlpool512_calc_tpb_80(int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

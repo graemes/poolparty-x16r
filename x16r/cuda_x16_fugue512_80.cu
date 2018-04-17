@@ -468,7 +468,7 @@ void x16_fugue512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_
 }
 
 __host__
-int x16_fugue512_calc_tpb_80(int thr_id) {
+uint32_t x16_fugue512_calc_tpb_80(int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

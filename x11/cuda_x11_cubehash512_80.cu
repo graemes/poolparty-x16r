@@ -279,7 +279,7 @@ __host__
 void x11_cubehash512_cpu_free_80(int thr_id) {}
 
 __host__
-int x11_cubehash512_calc_tpb_80(int thr_id)
+uint32_t x11_cubehash512_calc_tpb_80(int thr_id)
 {
 	int blockSize = 0;
 	int minGridSize = 0;

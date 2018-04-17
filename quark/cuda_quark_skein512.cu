@@ -260,7 +260,7 @@ __host__
 void quark_skein512_cpu_free_64(int thr_id) {}
 
 __host__
-int quark_skein512_calc_tpb_64(int thr_id) {
+uint32_t quark_skein512_calc_tpb_64(int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

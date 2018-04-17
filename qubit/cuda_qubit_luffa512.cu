@@ -505,7 +505,7 @@ __host__
 void qubit_luffa512_cpu_free_64(int thr_id) {}
 
 __host__
-int qubit_luffa512_calc_tpb_64(int thr_id) {
+uint32_t qubit_luffa512_calc_tpb_64(int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;
