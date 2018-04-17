@@ -188,7 +188,7 @@ void x14_shabal512_cpu_free_64(int thr_id) {}
 #include "miner.h"
 
 __host__
-int x14_shabal512_calc_tpb_64(int thr_id) {
+uint32_t x14_shabal512_calc_tpb_64(int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

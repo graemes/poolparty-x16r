@@ -224,7 +224,7 @@ void x16_echo512_cpu_free_80(int thr_id) {}
 #include "miner.h"
 
 __host__
-int x16_echo512_calc_tpb_80(int thr_id) {
+uint32_t x16_echo512_calc_tpb_80(int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

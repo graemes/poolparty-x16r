@@ -519,7 +519,7 @@ __host__
 void quark_blake512_cpu_free_80(int thr_id) {}
 
 __host__
-int quark_blake512_calc_tpb_80(int thr_id) {
+uint32_t quark_blake512_calc_tpb_80(int thr_id) {
 
 <<<<<<< HEAD
 	int blockSize, minGridSize, maxActiveBlocks, device;

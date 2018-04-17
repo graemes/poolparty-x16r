@@ -322,7 +322,6 @@
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="cuda.cpp" />
-    <CudaCompile Include="x16r\x16r.cu" />
     <CudaCompile Include="cuda_checkhash.cu">
       <CInterleavedPTX>false</CInterleavedPTX>
     </CudaCompile>
@@ -372,7 +371,7 @@
     <CudaCompile Include="x16r\cuda_x16_simd512_80.cu">
       <MaxRegCount>64</MaxRegCount>
     </CudaCompile>
-    <CudaCompile Include="x11\cuda_x11_echo.cu" />
+    <CudaCompile Include="x11\cuda_x11_echo512.cu" />
     <CudaCompile Include="x16r\cuda_x16_echo512_80.cu" />
     <CudaCompile Include="x13\cuda_x13_hamsi512.cu">
       <MaxRegCount>72</MaxRegCount>
@@ -392,6 +391,7 @@
     <CudaCompile Include="x17\cuda_x17_sha512_80.cu">
       <MaxRegCount>80</MaxRegCount>
     </CudaCompile>
+    <CudaCompile Include="x16r\x16r.cu" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\raven.ico" />

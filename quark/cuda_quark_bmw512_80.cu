@@ -405,7 +405,7 @@ void quark_bmw512_cpu_free_80(int thr_id) {}
 #include "miner.h"
 
 __host__
-int quark_bmw512_calc_tpb_80(int thr_id) {
+uint32_t quark_bmw512_calc_tpb_80(int thr_id) {
 
 <<<<<<< HEAD:quark/cuda_quark_bmw512_80.cu
 	int blockSize, minGridSize, maxActiveBlocks, device;

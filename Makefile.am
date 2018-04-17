@@ -99,13 +99,19 @@ nvcc_FLAGS += $(JANSSON_INCLUDES) --ptxas-options="-v"
 quark/cuda_quark_blake512.o: quark/cuda_quark_blake512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
 
-quark/cuda_jh512.o: quark/cuda_jh512.cu
+quark/cuda_quark_blake512_80.o: quark/cuda_quark_blake512_80.cu
+	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
+
+quark/cuda_quark_jh512.o: quark/cuda_quark_jh512.cu
+	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
+
+quark/cuda_quark_jh512_80.o: quark/cuda_quark_jh512_80.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
 
 quark/cuda_quark_keccak512.o: quark/cuda_quark_keccak512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=88 -o $@ -c $<
 
-x11/cuda_x11_luffa512.o: x11/cuda_x11_luffa512.cu
+qubit/cuda_qubit_luffa512.o: qubit/cuda_qubit_luffa512.cu
 	$(NVCC) $(nvcc_FLAGS) --maxrregcount=80 -o $@ -c $<
 
 x11/cuda_x11_simd512.o: x11/cuda_x11_simd512.cu
