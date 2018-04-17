@@ -98,7 +98,7 @@ void quark_groestl512_cpu_free_80(int thr_id) {}
 #include "miner.h"
 
 __host__
-int quark_groestl512_calc_tpb_80(int thr_id) {
+uint32_t quark_groestl512_calc_tpb_80(int thr_id) {
 
         int blockSize = 0;
         int minGridSize = 0;
@@ -117,5 +117,6 @@ int quark_groestl512_calc_tpb_80(int thr_id) {
         if (!opt_quiet) gpulog(LOG_INFO, thr_id, "groestl512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
 
         return (uint32_t)blockSize;
+        //tpb = blockSize;
 }
 
