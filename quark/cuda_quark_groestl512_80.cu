@@ -25,7 +25,7 @@ void quark_groestl512_setBlock_80(int thr_id, uint32_t *endiandata)
 }
 
 __global__ __launch_bounds__(TPB, THF)
-void quark_groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
+void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
 {
 	// BEWARE : 4-WAY CODE (one hash need 4 threads)
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
@@ -80,33 +80,6 @@ void quark_groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t st
 __host__
 void quark_groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
-<<<<<<< HEAD
-	//tbp = TPB;
-	const uint32_t factor = THF;
-
-	const dim3 grid(factor*((tpb+tpb-1)/tpb));
-	const dim3 block(tpb);
-
-	quark_groestl512_gpu_hash_80_quad<<<grid, block>>>(threads, startNounce, d_hash);
-}
-
-__host__
-void quark_groestl512_cpu_init_80(int thr_id, uint32_t threads) {}
-
-__host__
-void quark_groestl512_cpu_free_80(int thr_id) {}
-
-#include "miner.h"
-
-__host__
-int quark_groestl512_calc_tpb_80(int thr_id) {
-
-	int blockSize = 0;
-	int minGridSize = 0;
-	int maxActiveBlocks, device;
-	cudaDeviceProp props;
-
-=======
 	const uint32_t threadsperblock = TPB;
 	const uint32_t factor = THF;
 
@@ -145,18 +118,4 @@ uint32_t quark_groestl512_calc_tpb_80(int thr_id) {
 
         return (uint32_t)blockSize;
 }
->>>>>>> v1.4.0
 
-	cudaOccupancyMaxPotentialBlockSize(&minGridSize, &blockSize, quark_groestl512_gpu_hash_80_quad, 0,	0);
-
-	// calculate theoretical occupancy
-	cudaOccupancyMaxActiveBlocksPerMultiprocessor(&maxActiveBlocks, quark_groestl512_gpu_hash_80_quad, blockSize, 0);
-	cudaGetDevice(&device);
-	cudaGetDeviceProperties(&props, device);
-	float occupancy = (maxActiveBlocks * blockSize / props.warpSize)
-			/ (float) (props.maxThreadsPerMultiProcessor / props.warpSize);
-
-	if (!opt_quiet) gpulog(LOG_INFO, thr_id, "groestl512_80 tpb calc - block size %d. Theoretical occupancy: %f", blockSize, occupancy);
-
-	return (uint32_t)blockSize;
-}

@@ -242,12 +242,8 @@ static void E8(uint32_t x[8][4])
 	}
 }
 //----------------------------------------------------------------------------------------------------------
-<<<<<<< HEAD
-__global__ __launch_bounds__(TPB,TPF)
-=======
 //__global__ __launch_bounds__(TPB,TPF)
 __global__ __launch_bounds__(TPB)
->>>>>>> v1.4.0
 void quark_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash, const uint32_t* __restrict__ g_nonceVector){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
