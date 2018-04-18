@@ -12,10 +12,13 @@
 #include "cuda_vectors.h"
 #include "miner.h"
 
-#define TPB50 256
-#define TPB52 128
-#define TPF50 3
-#define TPF52 7
+//#define TPB50 256
+//#define TPB52 128
+//#define TPF50 3
+//#define TPF52 7
+
+#define TPB 128
+#define TPF 7
 
 __constant__ 
 uint2 keccak_round_constants[24] = {
@@ -27,11 +30,12 @@ uint2 keccak_round_constants[24] = {
 		{ 0x80008081, 0x80000000 }, { 0x00008080, 0x80000000 },	{ 0x80000001, 0x00000000 }, { 0x80008008, 0x80000000 }
 };
 
-#if __CUDA_ARCH__ > 500
-__global__ __launch_bounds__(TPB52,TPF52)
-#else
-__global__ __launch_bounds__(TPB50,TPF50)
-#endif
+//#if __CUDA_ARCH__ > 500
+//__global__ __launch_bounds__(TPB52,TPF52)
+//#else
+//__global__ __launch_bounds__(TPB50,TPF50)
+//#endif
+__global__ __launch_bounds__( TPB, TPF )
 void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash, uint32_t *g_nonceVector){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint2 t[5], u[5], v, w;

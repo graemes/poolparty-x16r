@@ -7,7 +7,7 @@
 #include "cuda_vectors.h"
 
 #define INTENSIVE_GMF
-#include "cuda_x11_aes_alexis.cuh"
+#include "tribus/cuda_echo512_aes.cuh"
 
 #define TPB 384
 #define TPF 2
@@ -441,6 +441,8 @@ void x11_shavite512_cpu_init_64(int thr_id, uint32_t threads) {}
 
 __host__
 void x11_shavite512_cpu_free_64(int thr_id) {}
+
+#include "miner.h"
 
 __host__
 uint32_t x11_shavite512_calc_tpb_64(int thr_id) {

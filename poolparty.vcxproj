@@ -325,7 +325,7 @@
     <CudaCompile Include="cuda_checkhash.cu">
       <CInterleavedPTX>false</CInterleavedPTX>
     </CudaCompile>
-    <ClInclude Include="x11\cuda_x11_aes_alexis.cuh" />
+    <ClInclude Include="tribus\cuda_echo512_aes.cuh" />
     <ClInclude Include="x11\cuda_x11_simd512_func.cuh" />
     <CudaCompile Include="quark\cuda_quark_blake512.cu">
       <MaxRegCount>80</MaxRegCount>
