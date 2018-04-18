@@ -40,7 +40,7 @@ extern "C" {
 
 // Internal functions
 static void getAlgoString(const uint32_t* prevblock, char *output);
-static uint32_t init_x16r(int thr_id);
+static void init_x16r(int thr_id, int dev_id);
 static void setBenchHash();
 static void calcOptimumTPBs(int thr_id);
 
@@ -85,10 +85,11 @@ static const char* algo_strings[] = {
 };
 
 static uint32_t *d_hash[MAX_GPUS];
+static uint32_t thr_throughput[MAX_GPUS] = { 0 };
+static bool init[MAX_GPUS] = { 0 };
+
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
-
-static bool init[MAX_GPUS] = { 0 };
 
 static uint64_t bench_hash = 0x67452301EFCDAB89;
 extern char* opt_bench_hash;
@@ -224,14 +225,20 @@ static int algo80_fails[HASH_FUNC_COUNT] = { 0 };
 
 extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
 {
+	const int dev_id = device_map[thr_id];
+
 	uint32_t *pdata = work->data;
 	uint32_t *ptarget = work->target;
 	const uint32_t first_nonce = pdata[19];
 
-	static uint32_t throughput = 0;
-
 	// Only initialise (and calculate throughput) when necessary
-	if (!init[thr_id]) throughput = init_x16r(thr_id);
+	if (!init[thr_id]){
+		init_x16r(thr_id, dev_id);
+		CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * thr_throughput[thr_id]), 0);
+		cuda_check_cpu_init(thr_id, thr_throughput[thr_id]);
+	}
+
+	uint32_t throughput = thr_throughput[thr_id];
 
 	if (opt_benchmark) {
 		((uint32_t*)ptarget)[7] = 0x003f;
@@ -595,29 +602,22 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 }
 
 //extern "C" uint32_t init_x16r(int thr_id)
-static uint32_t init_x16r(int thr_id)
+static void init_x16r(int thr_id, int dev_id)
 {
 	uint32_t throughput = 0;
-	int dev_id = device_map[thr_id];
 	int intensity = 18;
 
-	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
-
 	cuda_get_arch(thr_id);
+	gpulog(LOG_INFO, thr_id, "Detected %s", device_name[dev_id]);
 
 	// Simple heuristic for setting default intensity
 	int gpu_model;
 	char gpu_family1[10], gpu_family2[10];
-	sscanf(device_name[dev_id], "%s %s %d", gpu_family1, gpu_family2,
-			&gpu_model);  // More robust way to extract model number?
-	if (gpu_model > 1070)
-		intensity = 20;
-	else if (gpu_model > 1000)
-		intensity = 19;
+	sscanf(device_name[dev_id], "%s %s %d", gpu_family1, gpu_family2, &gpu_model);  // More robust way to extract model number?
+	if (gpu_model > 1070) intensity = 20;
+	else if (gpu_model > 1000) intensity = 19;
 
-	if (throughput == 0) {
-		throughput = cuda_default_throughput(thr_id, 1U << intensity);
-	}
+	throughput = cuda_default_throughput(thr_id, 1U << intensity);
 
 	cudaSetDevice(device_map[thr_id]);
 	if (opt_cudaschedule == -1 && gpu_threads == 1) {
@@ -665,23 +665,18 @@ static uint32_t init_x16r(int thr_id)
 	x15_whirlpool512_cpu_init_80(thr_id, throughput);
 	x17_sha512_cpu_init_80(thr_id, throughput);
 
-	CUDA_CALL_OR_RET_X(cudaMalloc(&d_hash[thr_id], (size_t) 64 * throughput), 0);
-
-	cuda_check_cpu_init(thr_id, throughput);
-
 	if (opt_benchmark) {
 		setBenchHash();
 	}
 
-	//if (device_sm[dev_id] == 500) {
-	//		tpb64[KECCAK] = 256;
-	//	}
+	if (device_sm[dev_id] == 500) {
+			tpb64[KECCAK] = 256;
+	}
 
 	if (opt_autotune) calcOptimumTPBs(thr_id);
 
+	thr_throughput[thr_id] = throughput;
 	init[thr_id] = true;
-
-	return throughput;
 }
 
 static void setBenchHash() {

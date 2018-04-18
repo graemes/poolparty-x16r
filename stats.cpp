@@ -31,8 +31,8 @@ uint32_t thr_samples[MAX_GPUS] = { 0 };
 void stats_remember_speed(int thr_id, uint32_t hashcount, double hashrate, uint8_t found, uint32_t height)
 {
 	// Enough hashes to give right stats?
-	if (hashcount < 1000 || hashrate < 0.01)
-		return;
+	//if (hashcount < 1000 || hashrate < 0.01)
+	//	return;
 
 	// Only store the full set of data if we want to retrieve from the api or calculating hashrate from last N samples
 	if (!opt_api_port && opt_simple_hashrate) {
@@ -82,7 +82,8 @@ double stats_get_speed(int thr_id, double def_speed)
 		if (thr_id == -1) {
 			int i;
 			for (i = 0; i < MAX_GPUS; i++) {
-				speed += thr_hashrate[thr_id] / thr_samples[thr_id];
+				if (thr_samples[i]) speed += thr_hashrate[i] / thr_samples[i];
+				//applog(LOG_BLUE, "Samples: %d %x %.1f", thr_id, thr_hashrate[i], thr_samples[i]);
 			}
 		} else {
 			speed = thr_hashrate[thr_id] / thr_samples[thr_id];

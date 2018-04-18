@@ -136,6 +136,7 @@
       <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OpenMPSupport>true</OpenMPSupport>
+      <FloatingPointModel>Fast</FloatingPointModel>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -152,12 +153,13 @@
     </Link>
     <CudaCompile>
       <CInterleavedPTX>false</CInterleavedPTX>
-      <MaxRegCount>80</MaxRegCount>
+      <MaxRegCount>128</MaxRegCount>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <Keep>true</Keep>
+      <Keep>false</Keep>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;compute_50,sm_50</CodeGeneration>
       <AdditionalOptions>--ptxas-options="-O2" --Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
       <Optimization>O2</Optimization>
+      <FastMath>true</FastMath>
     </CudaCompile>
     <CudaLink>
       <GPUDebugInfo>false</GPUDebugInfo>
@@ -170,8 +172,7 @@
       <Optimization>MaxSpeed</Optimization>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
-      <EnableEnhancedInstructionSet>
-      </EnableEnhancedInstructionSet>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
       <OpenMPSupport>true</OpenMPSupport>
       <CompileAsManaged>false</CompileAsManaged>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -180,6 +181,9 @@
       <AdditionalIncludeDirectories>.;compat;compat\curl-for-windows\curl\include;compat\jansson;compat\getopt;compat\pthreads;compat\curl-for-windows\openssl\openssl\include;compat\curl-for-windows\zlib;%(AdditionalIncludeDirectories);$(CudaToolkitIncludeDir)</AdditionalIncludeDirectories>
       <MinimalRebuild>true</MinimalRebuild>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <OmitFramePointers>false</OmitFramePointers>
+      <EnableParallelCodeGeneration>true</EnableParallelCodeGeneration>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>false</GenerateDebugInformation>
@@ -195,14 +199,15 @@
     </Link>
     <CudaCompile>
       <CInterleavedPTX>false</CInterleavedPTX>
-      <MaxRegCount>80</MaxRegCount>
+      <MaxRegCount>128</MaxRegCount>
       <PtxAsOptionV>true</PtxAsOptionV>
-      <Keep>true</Keep>
+      <Keep>false</Keep>
       <CodeGeneration>compute_61,sm_61;compute_52,sm_52;compute_50,sm_50</CodeGeneration>
       <Include>$(NVTOOLSEXT_PATH)\include</Include>
-      <Optimization>O3</Optimization>
+      <Optimization>O2</Optimization>
       <TargetMachinePlatform>64</TargetMachinePlatform>
       <AdditionalOptions>--Wno-deprecated-gpu-targets %(AdditionalOptions)</AdditionalOptions>
+      <FastMath>true</FastMath>
     </CudaCompile>
     <CudaLink>
       <Optimization>O3</Optimization>
@@ -339,8 +344,8 @@
     <CudaCompile Include="quark\cuda_quark_bmw512_80.cu">
       <MaxRegCount>128</MaxRegCount>
     </CudaCompile>
-    <CudaCompile Include="quark\cuda_quark_groestl512_80.cu"/>
-    <CudaCompile Include="quark\cuda_quark_groestl512.cu"/>
+    <CudaCompile Include="quark\cuda_quark_groestl512_80.cu" />
+    <CudaCompile Include="quark\cuda_quark_groestl512.cu" />
     <ClInclude Include="quark\groestl_transf_quad.cuh" />
     <ClInclude Include="quark\groestl_functions_quad.cuh" />
     <ClInclude Include="quark\groestl_transf_quad_80.cuh" />
@@ -357,8 +362,8 @@
     <CudaCompile Include="quark\cuda_quark_keccak512_80.cu">
       <MaxRegCount>88</MaxRegCount>
     </CudaCompile>
-    <CudaCompile Include="quark\cuda_quark_skein512.cu"/>
-    <CudaCompile Include="quark\cuda_quark_skein512_80.cu"/>
+    <CudaCompile Include="quark\cuda_quark_skein512.cu" />
+    <CudaCompile Include="quark\cuda_quark_skein512_80.cu" />
     <CudaCompile Include="qubit\cuda_qubit_luffa512.cu" />
     <CudaCompile Include="qubit\cuda_qubit_luffa512_80.cu" />
     <CudaCompile Include="x11\cuda_x11_cubehash512.cu" />
