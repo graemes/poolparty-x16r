@@ -549,24 +549,25 @@ extern "C" void free_x16r(int thr_id)
 // Internal functions
 static void getAlgoString(const uint32_t* prevblock, char *output)
 {
-	for (int i = 0; i < 16; i++)
-	{
-			*output++ = (*(uint64_t*)prevblock >> 60 - (i * 4)) & 0x0f;
-	}
-
-//	char *sptr = output;
-//	uint8_t* data = (uint8_t*)prevblock;
-//
-//	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
-//		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
-//		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
-//		if (algoDigit >= 10)
-//			sprintf(sptr, "%c", 'A' + (algoDigit - 10));
-//		else
-//			sprintf(sptr, "%u", (uint32_t) algoDigit);
-//		sptr++;
+//	for (int i = 0; i < 16; i++)
+//	{
+//			*output++ = (*(uint64_t*)prevblock >> 60 - (i * 4)) & 0x0f;
 //	}
-//	*sptr = '\0';
+
+	char *sptr = output;
+	uint8_t* data = (uint8_t*)prevblock;
+
+	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
+		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
+		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
+		if (algoDigit >= 10)
+			sprintf(sptr, "%c", 'A' + (algoDigit - 10));
+		else
+			sprintf(sptr, "%u", (uint32_t) algoDigit);
+		sptr++;
+	}
+	*sptr = '\0';
+
 }
 
 //extern "C" uint32_t init_x16r(int thr_id)
