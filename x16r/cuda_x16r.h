@@ -1,3 +1,45 @@
+// Definitions here FNPRAA
+
+enum x16r_algos {
+	BLAKE = 0,
+	BMW,
+	GROESTL,
+	JH,
+	KECCAK,
+	SKEIN,
+	LUFFA,
+	CUBEHASH,
+	SHAVITE,
+	SIMD,
+	ECHO,
+	HAMSI,
+	FUGUE,
+	SHABAL,
+	WHIRLPOOL,
+	SHA512,
+	HASH_FUNC_COUNT
+};
+
+static const char* algo_strings[] = {
+	"blake",
+	"bmw",
+	"groestl",
+	"jh",
+	"keccak",
+	"skein",
+	"luffa",
+	"cubehash",
+	"shavite",
+	"simd",
+	"echo",
+	"hamsi",
+	"fugue",
+	"shabal",
+	"whirlpool",
+	"sha512",
+	NULL
+};
+
 // Include all of the function definitions here for ease of maintenance
 
 // ---- 64 byte kernels

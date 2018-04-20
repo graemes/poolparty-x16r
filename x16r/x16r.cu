@@ -44,46 +44,7 @@ static void init_x16r(int thr_id, int dev_id);
 static void setBenchHash();
 static void calcOptimumTPBs(int thr_id);
 
-enum Algo {
-	BLAKE = 0,
-	BMW,
-	GROESTL,
-	JH,
-	KECCAK,
-	SKEIN,
-	LUFFA,
-	CUBEHASH,
-	SHAVITE,
-	SIMD,
-	ECHO,
-	HAMSI,
-	FUGUE,
-	SHABAL,
-	WHIRLPOOL,
-	SHA512,
-	HASH_FUNC_COUNT
-};
-
-static const char* algo_strings[] = {
-	"blake",
-	"bmw",
-	"groestl",
-	"jh",
-	"keccak",
-	"skein",
-	"luffa",
-	"cubehash",
-	"shavite",
-	"simd",
-	"echo",
-	"hamsi",
-	"fugue",
-	"shabal",
-	"whirlpool",
-	"sha512",
-	NULL
-};
-
+// Local variables
 static uint32_t *d_hash[MAX_GPUS];
 static uint32_t thr_throughput[MAX_GPUS] = { 0 };
 static bool init[MAX_GPUS] = { 0 };
@@ -99,6 +60,8 @@ extern bool opt_autotune;
 // Initialise tpb arrays to default values (based on sm > 50)
 static uint32_t tpb64[HASH_FUNC_COUNT + 1] = { 192, 32,512,512,128,512,384,768,384,128,128,384,256,384,384,256 } ;
 static uint32_t tpb80[HASH_FUNC_COUNT + 1] = { 512,128,256,256,256,512,256,256,128,128,128,128,256,256,256,256 } ;
+
+// Lets do it
 
 // X16R CPU Hash (Validation)
 extern "C" void x16r_hash(void *output, const void *input)
@@ -586,19 +549,24 @@ extern "C" void free_x16r(int thr_id)
 // Internal functions
 static void getAlgoString(const uint32_t* prevblock, char *output)
 {
-	char *sptr = output;
-	uint8_t* data = (uint8_t*)prevblock;
-
-	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
-		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
-		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
-		if (algoDigit >= 10)
-			sprintf(sptr, "%c", 'A' + (algoDigit - 10));
-		else
-			sprintf(sptr, "%u", (uint32_t) algoDigit);
-		sptr++;
+	for (int i = 0; i < 16; i++)
+	{
+			*output++ = (*(uint64_t*)prevblock >> 60 - (i * 4)) & 0x0f;
 	}
-	*sptr = '\0';
+
+//	char *sptr = output;
+//	uint8_t* data = (uint8_t*)prevblock;
+//
+//	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
+//		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
+//		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
+//		if (algoDigit >= 10)
+//			sprintf(sptr, "%c", 'A' + (algoDigit - 10));
+//		else
+//			sprintf(sptr, "%u", (uint32_t) algoDigit);
+//		sptr++;
+//	}
+//	*sptr = '\0';
 }
 
 //extern "C" uint32_t init_x16r(int thr_id)
