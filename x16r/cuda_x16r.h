@@ -40,6 +40,63 @@ static const char* algo_strings[] = {
 	NULL
 };
 
+static const uint64_t algo_hashes[] = {
+	0x0000000000000000,
+	0x1111111111111111,
+	0x2222222222222222,
+	0x3333333333333333,
+	0x4444444444444444,
+	0x5555555555555555,
+	0x6666666666666666,
+	0x7777777777777777,
+	0x8888888888888888,
+	0x9999999999999999,
+	0xAAAAAAAAAAAAAAAA,
+	0xBBBBBBBBBBBBBBBB,
+	0xCCCCCCCCCCCCCCCC,
+	0xDDDDDDDDDDDDDDDD,
+	0xEEEEEEEEEEEEEEEE,
+	0xFFFFFFFFFFFFFFFF
+};
+
+static const char* algo80_strings[] = {
+	"blake_80",
+	"bmw_80",
+	"groestl_80",
+	"jh_80",
+	"keccak_80",
+	"skein_80",
+	"luffa_80",
+	"cubehash_80",
+	"shavite_80",
+	"simd_80",
+	"echo_80",
+	"hamsi_80",
+	"fugue_80",
+	"shabal_80",
+	"whirlpool_80",
+	"sha512_80",
+	NULL
+};
+
+static const uint64_t algo80_hashes[] = {
+	0x0000000000000000,
+	0x1000000000000000,
+	0x2000000000000000,
+	0x3000000000000000,
+	0x4000000000000000,
+	0x5000000000000000,
+	0x6000000000000000,
+	0x7000000000000000,
+	0x8000000000000000,
+	0x9000000000000000,
+	0xA000000000000000,
+	0xB000000000000000,
+	0xC000000000000000,
+	0xD000000000000000,
+	0xE000000000000000
+};
+
 // Include all of the function definitions here for ease of maintenance
 
 // ---- 64 byte kernels

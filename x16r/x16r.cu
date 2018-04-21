@@ -52,7 +52,8 @@ static bool init[MAX_GPUS] = { 0 };
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 
-static uint64_t bench_hash = 0x67452301EFCDAB89;
+#define DEFAULT_BENCH_HASH 0x67452301EFCDAB89
+static uint64_t bench_hash = DEFAULT_BENCH_HASH;
 extern char* opt_bench_hash;
 
 extern bool opt_autotune;
@@ -224,6 +225,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	char elem = hashOrder[0];
 	const uint8_t algo80 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
+//	const uint8_t algo80 = (*(uint64_t*)&endiandata[1] >> 60 - (0 * 4)) & 0x0f ;
 
 	switch (algo80) {
 		case BLAKE:
@@ -276,7 +278,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			break;
 		default: {
 			if (!thr_id)
-				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo_strings[algo80], elem, hashOrder);
+//				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo_strings[algo80], elem, hashOrder);
 			sleep(5);
 			return -1;
 		}
@@ -360,6 +362,9 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		{
 			const char elem = hashOrder[i];
 			const uint8_t algo64 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
+//			const uint8_t algo64t = (*(uint64_t*)&endiandata[1] >> 60 - (1 * 4)) & 0x0f ;
+//			const uint8_t algo64t;
+//			memcpy(algo64t,(&endiandata[1] >> 60 - (1 * 4)) & 0x0f),sizeof endiandata[1] ;
 
 			switch (algo64) {
 			case BLAKE:
@@ -649,70 +654,21 @@ static void init_x16r(int thr_id, int dev_id)
 }
 
 static void setBenchHash() {
-	// I'm sure a1i3nj03 would write this more elegantly :)
+
 	if (opt_bench_hash[0]) {
 		applog(LOG_INFO, "Benchmark hashing algorithm %s", opt_bench_hash);
 		uint8_t bench_algo = 0;
 		for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
-			if (strcmp(algo_strings[j], opt_bench_hash) != 0) {
-				bench_algo++;
-			} else
-				break;
+			// Normal hash?
+			if ((strcmp(algo_strings[j], opt_bench_hash) == 0))
+				bench_hash = algo_hashes[bench_algo];
+			// Hash 80?
+			if ((strcmp(algo80_strings[j], opt_bench_hash) == 0))
+				bench_hash = algo80_hashes[bench_algo];
 		}
 
-		switch (bench_algo) {
-		case BLAKE:
-			bench_hash = 0x0000000000000000;
-			break;
-		case BMW:
-			bench_hash = 0x1111111111111111;
-			break;
-		case GROESTL:
-			bench_hash = 0x2222222222222222;
-			break;
-		case JH:
-			bench_hash = 0x3333333333333333;
-			break;
-		case KECCAK:
-			bench_hash = 0x4444444444444444;
-			break;
-		case SKEIN:
-			bench_hash = 0x5555555555555555;
-			break;
-		case LUFFA:
-			bench_hash = 0x6666666666666666;
-			break;
-		case CUBEHASH:
-			bench_hash = 0x7777777777777777;
-			break;
-		case SHAVITE:
-			bench_hash = 0x8888888888888888;
-			break;
-		case SIMD:
-			bench_hash = 0x9999999999999999;
-			break;
-		case ECHO:
-			bench_hash = 0xAAAAAAAAAAAAAAAA;
-			break;
-		case HAMSI:
-			bench_hash = 0xBBBBBBBBBBBBBBBB;
-			break;
-		case FUGUE:
-			bench_hash = 0xCCCCCCCCCCCCCCCC;
-			break;
-		case SHABAL:
-			bench_hash = 0xDDDDDDDDDDDDDDDD;
-			break;
-		case WHIRLPOOL:
-			bench_hash = 0xEEEEEEEEEEEEEEEE;
-			break;
-		case SHA512:
-			bench_hash = 0xFFFFFFFFFFFFFFFF;
-			break;
-		default:
+		if (bench_hash == DEFAULT_BENCH_HASH)
 			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default: %s", opt_bench_hash, bench_hash);
-			break;
-		}
 	}
 }
 
