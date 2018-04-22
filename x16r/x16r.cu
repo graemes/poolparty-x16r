@@ -657,19 +657,15 @@ static void setBenchHash() {
 
 	if (opt_bench_hash[0]) {
 		bench_hash = DEFAULT_BENCH_HASH;
-		applog(LOG_INFO, "Benchmark hashing algorithm %s", opt_bench_hash);
+		applog(LOG_INFO, "Looking for benchmark hashing algorithm %s", opt_bench_hash);
 		uint8_t bench_algo = 0;
 		for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
 			// full hash?
 			if ((strcmp(algo_strings[j], opt_bench_hash) == 0))
 				bench_hash = algo_hashes[j];
-				applog(LOG_INFO, "Found hash %s", algo_strings[j]);
-				//break;
 			// hash 80 only?
 			if ((strcmp(algo80_strings[j], opt_bench_hash) == 0))
 				bench_hash = algo80_hashes[j];
-				applog(LOG_INFO, "Found hash %s", algo80_strings[j]);
-				//break;
 		}
 
 		if (bench_hash == DEFAULT_BENCH_HASH)
