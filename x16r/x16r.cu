@@ -676,8 +676,8 @@ static void setBenchHash() {
 
 		if (!bench_hash_found){
 			applog(LOG_INFO, "WTF?");
-			bench_hash = 0x67452301EFCDAB89;
-			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default: %s", opt_bench_hash, bench_hash);
+			//bench_hash = 0x67452301EFCDAB89;
+			applog(LOG_INFO, "Specified benchmark hashing algorithm %s not found. Using default: %s", opt_bench_hash, bench_hash);
 		} else {
 			applog(LOG_INFO, "Check failed");
 		}
