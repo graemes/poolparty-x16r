@@ -662,9 +662,11 @@ static void setBenchHash() {
 			// Normal hash?
 			if ((strcmp(algo_strings[j], opt_bench_hash) == 0))
 				bench_hash = algo_hashes[bench_algo];
+				applog(LOG_INFO, "Found hash %s", algo_strings[j]);
 			// Hash 80?
 			if ((strcmp(algo80_strings[j], opt_bench_hash) == 0))
 				bench_hash = algo80_hashes[bench_algo];
+				applog(LOG_INFO, "Found hash %s", algo80_strings[j]);
 		}
 
 		if (bench_hash == DEFAULT_BENCH_HASH)
