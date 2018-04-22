@@ -34,6 +34,8 @@ extern "C" {
 #include "cuda_vectors.h"
 #include "cuda_x16r.h"
 
+#define NBN 2
+
 //#define _DEBUG
 #define _DEBUG_PREFIX "x16r-"
 #include "cuda_debug.cuh"
@@ -232,6 +234,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			break;
 		case BMW:
 			quark_bmw512_cpu_setBlock_80(endiandata);
+			cudaMemset(d_hash[thr_id], 0xff, NBN*sizeof(uint32_t));
 			break;
 		case GROESTL:
 			quark_groestl512_setBlock_80(thr_id, endiandata);
@@ -298,6 +301,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			case BMW:
 				//quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BMW]);
 				quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], *(uint64_t*)&ptarget[6], tpb80[BMW]);
+				cudaMemcpy(work->nonces, d_hash[thr_id], NBN*sizeof(uint32_t), cudaMemcpyDeviceToHost);
 				TRACE("bmw80  :");
 				break;
 			case GROESTL:
