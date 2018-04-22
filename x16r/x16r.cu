@@ -656,20 +656,26 @@ static void init_x16r(int thr_id, int dev_id)
 static void setBenchHash() {
 
 	if (opt_bench_hash[0]) {
-		bench_hash = DEFAULT_BENCH_HASH;
+		bool bench_hash_found = false;
 		applog(LOG_INFO, "Looking for benchmark hashing algorithm %s", opt_bench_hash);
 		uint8_t bench_algo = 0;
 		for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
 			// full hash?
-			if ((strcmp(algo_strings[j], opt_bench_hash) == 0))
+			if ((strcmp(algo_strings[j], opt_bench_hash) == 0)) {
 				bench_hash = algo_hashes[j];
+				bench_hash_found = true;
+			}
 			// hash 80 only?
-			if ((strcmp(algo80_strings[j], opt_bench_hash) == 0))
+			if ((strcmp(algo80_strings[j], opt_bench_hash) == 0)) {
 				bench_hash = algo80_hashes[j];
+				bench_hash_found = true;
+			}
 		}
 
-		if (bench_hash == DEFAULT_BENCH_HASH)
+		if (!bench_hash_found){
+			bench_hash = DEFAULT_BENCH_HASH;
 			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default: %s", opt_bench_hash, bench_hash);
+		}
 	}
 }
 
