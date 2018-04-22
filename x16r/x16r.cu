@@ -52,8 +52,7 @@ static bool init[MAX_GPUS] = { 0 };
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 
-#define DEFAULT_BENCH_HASH 0x67452301EFCDAB89
-static uint64_t bench_hash = DEFAULT_BENCH_HASH;
+static uint64_t bench_hash = 0x67452301EFCDAB89;
 extern char* opt_bench_hash;
 
 extern bool opt_autotune;
@@ -673,7 +672,6 @@ static void setBenchHash() {
 		}
 
 		if (!bench_hash_found){
-			bench_hash = DEFAULT_BENCH_HASH;
 			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default: %s", opt_bench_hash, bench_hash);
 		}
 	}
