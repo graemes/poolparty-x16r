@@ -660,11 +660,11 @@ static void setBenchHash() {
 		uint8_t bench_algo = 0;
 		for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
 			// Normal hash?
-			if ((strcmp(algo_strings[j], opt_bench_hash) == 0))
+			if (!(strcmp(algo_strings[j], opt_bench_hash) != 0))
 				bench_hash = algo_hashes[bench_algo];
 				applog(LOG_INFO, "Found hash %s", algo_strings[j]);
 			// Hash 80?
-			if ((strcmp(algo80_strings[j], opt_bench_hash) == 0))
+			if (!(strcmp(algo80_strings[j], opt_bench_hash) != 0))
 				bench_hash = algo80_hashes[bench_algo];
 				applog(LOG_INFO, "Found hash %s", algo80_strings[j]);
 		}
