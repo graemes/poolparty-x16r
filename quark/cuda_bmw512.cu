@@ -458,7 +458,7 @@ void quark_bmw512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t start
 	const uint32_t threadsperblock = 128;
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);
 	dim3 block(threadsperblock);
-	quark_bmw512_gpu_hash_80<<<grid, block>>>(threads, startNounce, d_resNonce, NULL);
+	quark_bmw512_gpu_hash_80<<<grid, block>>>(threads, startNounce, d_resNonce, target);
 }
 
 __host__
