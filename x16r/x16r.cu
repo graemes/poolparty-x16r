@@ -52,7 +52,7 @@ static bool init[MAX_GPUS] = { 0 };
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 
-static uint64_t bench_hash = 0x67452301EFCDAB89;
+static uint64_t bench_hash = 0x67452301EFCDAB89;	// Default
 extern char* opt_bench_hash;
 
 extern bool opt_autotune;
@@ -657,7 +657,6 @@ static void setBenchHash() {
 	if (opt_bench_hash[0]) {
 		bool bench_hash_found = false;
 		applog(LOG_INFO, "Looking for benchmark hashing algorithm %s", opt_bench_hash);
-		//uint8_t bench_algo = 0;
 		for (uint8_t j = 0; j < (HASH_FUNC_COUNT); j++) {
 			// full hash?
 			if ((strcmp(algo_strings[j], opt_bench_hash) == 0)) {
@@ -669,18 +668,10 @@ static void setBenchHash() {
 				bench_hash = algo80_hashes[j];
 				bench_hash_found = true;
 			}
-			applog(LOG_INFO, "Looking for benchmark hashing algorithm %d", j);
 		}
 
-		applog(LOG_INFO, "Exited for loop");
-
-		if (!bench_hash_found){
-			applog(LOG_INFO, "WTF?");
-			bench_hash = 0x67452301EFCDAB89;
-			applog(LOG_INFO, "Specified benchmark hashing algorithm %s not found. Using default: %d", opt_bench_hash, bench_hash);
-		} else {
-			applog(LOG_INFO, "Check failed");
-		}
+		if (!bench_hash_found)
+			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default.", opt_bench_hash);
 	}
 }
 
