@@ -190,8 +190,8 @@ extern void quark_blake512_cpu_free_80(int thr_id);
 
 extern void quark_bmw512_cpu_init_80(int thr_id, const uint32_t threads);
 extern void quark_bmw512_cpu_setBlock_80(void *pdata);
-//extern void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, uint32_t tpb);
-extern void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const uint64_t target, uint32_t tpb);
+extern void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, uint32_t tpb);
+//extern void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const uint64_t target, uint32_t tpb);
 extern uint32_t quark_bmw512_calc_tpb_80(int thr_id);
 extern void quark_bmw512_cpu_free_80(int thr_id);
 
