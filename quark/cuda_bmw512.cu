@@ -452,7 +452,8 @@ void quark_bmw512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_resNonce, const uint32_t tpb)
+//void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_resNonce, const uint32_t tpb)
+void quark_bmw512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_resNonce, const uint64_t target, const uint32_t tpb)
 {
 	const uint32_t threadsperblock = 128;
 	dim3 grid((threads + threadsperblock-1)/threadsperblock);

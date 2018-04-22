@@ -296,7 +296,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("blake80:");
 				break;
 			case BMW:
-				quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BMW]);
+				//quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BMW]);
+				quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], *(uint64_t*)&ptarget[6], tpb80[BMW]);
 				TRACE("bmw80  :");
 				break;
 			case GROESTL:
