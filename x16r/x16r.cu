@@ -658,7 +658,7 @@ static void setBenchHash() {
 		bool bench_hash_found = false;
 		applog(LOG_INFO, "Looking for benchmark hashing algorithm %s", opt_bench_hash);
 		//uint8_t bench_algo = 0;
-		for (uint8_t j = 0; j < (HASH_FUNC_COUNT-1); j++) {
+		for (uint8_t j = 0; j < (HASH_FUNC_COUNT+1); j++) {
 			// full hash?
 			if ((strcmp(algo_strings[j], opt_bench_hash) == 0)) {
 				bench_hash = algo_hashes[j];
