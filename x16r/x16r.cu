@@ -631,5 +631,4 @@ static void calcOptimumTPBs(int thr_id){
 
 	tpb64[SHA512] = x17_sha512_calc_tpb_64(thr_id);
 	tpb80[SHA512] = x17_sha512_calc_tpb_80(thr_id);
-
 }

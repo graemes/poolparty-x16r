@@ -25,7 +25,7 @@ __global__ __launch_bounds__(TPB52, 2)
 #else
 __global__ __launch_bounds__(TPB50, 2)
 #endif
-void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint32_t* g_nonceVector){
+void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash){
 	uint32_t msgBitsliced[8];
 	uint32_t state[8];
 	uint32_t output[16];
@@ -33,7 +33,7 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
 	if (thread < threads){
 	        // GROESTL
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : __ldg(&g_nonceVector[thread]);
+			const uint32_t hashPosition = thread;
 
 	        uint32_t *inpHash = &g_hash[hashPosition<<4];
 
@@ -117,7 +117,7 @@ void quark_groestl512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *
 	const dim3 grid((THF*threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, NULL);
+	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash);
 }
 
 __host__

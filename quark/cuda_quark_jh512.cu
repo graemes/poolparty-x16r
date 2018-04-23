@@ -244,12 +244,12 @@ static void E8(uint32_t x[8][4])
 //----------------------------------------------------------------------------------------------------------
 //__global__ __launch_bounds__(TPB,TPF)
 __global__ __launch_bounds__(TPB)
-void quark_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash, const uint32_t* __restrict__ g_nonceVector){
+void quark_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
 	if (thread < threads){
-		const uint32_t hashPosition = (g_nonceVector != NULL) ? g_nonceVector[thread] : thread;
+		const uint32_t hashPosition = thread;
 
 		uint32_t *Hash = &g_hash[hashPosition<<4];
 		
@@ -293,7 +293,7 @@ void quark_jh512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_has
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_jh512_gpu_hash_64<<<grid, block>>>(threads, d_hash, NULL);
+	quark_jh512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
 }
 
 __host__

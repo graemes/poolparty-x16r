@@ -36,7 +36,7 @@ __constant__ const uint2 buffer[152] = {
 
 __global__
 __launch_bounds__(TPB, TPF)
-void quark_skein512_gpu_hash_64(const uint32_t threads,uint64_t* g_hash, const uint32_t* g_nonceVector){
+void quark_skein512_gpu_hash_64(const uint32_t threads,uint64_t* g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
@@ -45,7 +45,7 @@ void quark_skein512_gpu_hash_64(const uint32_t threads,uint64_t* g_hash, const u
 		// Skein
 		uint2 p[8], h[9];
 
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
+		const uint32_t hashPosition = thread;
 
 		uint64_t *Hash = &g_hash[hashPosition<<3];
 
@@ -250,7 +250,7 @@ void quark_skein512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_skein512_gpu_hash_64 << <grid, block >> >(threads, (uint64_t*)d_hash, NULL);
+	quark_skein512_gpu_hash_64 << <grid, block >> >(threads, (uint64_t*)d_hash);
 }
 
 __host__

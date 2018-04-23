@@ -12,13 +12,10 @@
 #include "cuda_vectors.h"
 #include "miner.h"
 
-//#define TPB50 256
-//#define TPB52 128
-//#define TPF50 3
-//#define TPF52 7
-
-#define TPB 128
-#define TPF 7
+#define TPB50 256
+#define TPB52 128
+#define TPF50 3
+#define TPF52 7
 
 __constant__ 
 uint2 keccak_round_constants[24] = {
@@ -30,19 +27,19 @@ uint2 keccak_round_constants[24] = {
 		{ 0x80008081, 0x80000000 }, { 0x00008080, 0x80000000 },	{ 0x80000001, 0x00000000 }, { 0x80008008, 0x80000000 }
 };
 
-//#if __CUDA_ARCH__ > 500
-//__global__ __launch_bounds__(TPB52,TPF52)
-//#else
-//__global__ __launch_bounds__(TPB50,TPF50)
-//#endif
-__global__ __launch_bounds__( TPB, TPF )
-void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash, uint32_t *g_nonceVector){
+#if __CUDA_ARCH__ > 500
+__global__ __launch_bounds__(TPB52,TPF52)
+#else
+__global__ __launch_bounds__(TPB50,TPF50)
+#endif
+void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash){
+
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint2 t[5], u[5], v, w;
 	uint2 s[25];
 	if (thread < threads){
 	
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
+		const uint32_t hashPosition = thread;
 
 		uint2x4* d_hash = (uint2x4 *)&g_hash[hashPosition * 8];
 
@@ -224,14 +221,10 @@ void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash, uint32_t *g_no
 __host__
 void quark_keccak512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	//uint32_t tpb = TPB52;
-	//int dev_id = device_map[thr_id];
-	//if (device_sm[dev_id] <= 500) tpb = TPB50;
-
 	const dim3 grid((threads+tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_hash, NULL);
+	quark_keccak512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_hash);
 }
 
 __host__

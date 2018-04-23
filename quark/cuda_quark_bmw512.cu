@@ -206,13 +206,12 @@ static void bmw512_round1(uint2* q,uint2* h,const uint64_t* msg){
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_hash, const uint32_t *const __restrict__ g_nonceVector){
+void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads){
 
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
-
+		const uint32_t hashPosition = thread;
 		uint64_t *inpHash = &g_hash[8 * hashPosition];
 
 		uint64_t msg[16];
@@ -425,7 +424,7 @@ __host__ void quark_bmw512_cpu_hash_64(int thr_id, const uint32_t threads, uint3
     const dim3 grid((threads + tpb-1)/tpb);
     const dim3 block(tpb);
 
-    quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash, NULL);
+    quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash);
 }
 
 #include "miner.h"
