@@ -65,8 +65,47 @@ extern bool opt_autotune;
 static uint32_t tpb64[HASH_FUNC_COUNT + 1] = { 192, 32,512,512,128,512,384,768,384,128,128,384,256,384,384,256 } ;
 static uint32_t tpb80[HASH_FUNC_COUNT + 1] = { 512,128,256,256,256,512,256,256,128,128,128,128,256,256,256,256 } ;
 
-// Lets do it
+static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
+{
+	quark_blake512_cpu_hash_64,
+	quark_bmw512_cpu_hash_64,
+	quark_groestl512_cpu_hash_64,
+	quark_jh512_cpu_hash_64,
+	quark_keccak512_cpu_hash_64,
+	quark_skein512_cpu_hash_64,
+	qubit_luffa512_cpu_hash_64,
+	x11_cubehash512_cpu_hash_64,
+	x11_shavite512_cpu_hash_64,
+	x11_simd512_cpu_hash_64,
+	x11_echo512_cpu_hash_64,
+	x13_hamsi512_cpu_hash_64,
+	x13_fugue512_cpu_hash_64,
+	x14_shabal512_cpu_hash_64,
+	x15_whirlpool512_cpu_hash_64,
+	x17_sha512_cpu_hash_64
+};
+static void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
+{
+	quark_blake512_cpu_hash_80,
+	quark_bmw512_cpu_hash_80,
+	quark_groestl512_cuda_hash_80,
+	quark_jh512_cuda_hash_80,
+	quark_keccak512_cuda_hash_80,
+	quark_skein512_cpu_hash_80,
+	qubit_luffa512_cpu_hash_80,
+	x11_cubehash512_cuda_hash_80,
+	x11_shavite512_cpu_hash_80,
+	x16_simd512_cuda_hash_80,
+	x16_echo512_cuda_hash_80,
+	x13_hamsi512_cuda_hash_80,
+	x16_fugue512_cuda_hash_80,
+	x16_shabal512_cuda_hash_80,
+	x15_whirlpool512_hash_80,
+	x17_sha512_cuda_hash_80
+};
 
+
+// Lets do it
 // X16R CPU Hash (Validation)
 extern "C" void x16r_hash(void *output, const void *input)
 {
@@ -101,7 +140,7 @@ extern "C" void x16r_hash(void *output, const void *input)
 		//const char elem = hashOrderStr[i];
 		//const uint8_t algo = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
 
-		const char algo = hashOrder[i];
+		const uint8_t algo = hashOrder[i];
 
 		switch (algo) {
 		case BLAKE:
@@ -302,7 +341,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	 */
 	int warn = 0;
 	do {
-		// Hash with CUDA
+/*		// Hash with CUDA
 		switch (algo80) {
 			case BLAKE:
 				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BLAKE]);
@@ -374,7 +413,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		{
 //			const char elem = hashOrder[i];
 //			const uint8_t algo64 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
-//			const uint8_t algo64t = (*(uint64_t*)&endiandata[1] >> 60 - (1 * 4)) & 0x0f ;
+//			const uint8_t algo64t = hashOrder[x] ;
 //			const uint8_t algo64t;
 //			memcpy(algo64t,(&endiandata[1] >> 60 - (1 * 4)) & 0x0f),sizeof endiandata[1] ;
 
@@ -446,6 +485,12 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				TRACE("sha512   :");
 				break;
 			}
+		}
+*/
+
+		pAlgo80[hashOrder[0]](thr_id, throughput, pdata[19], d_hash[thr_id],tpb80[hashOrder[0]]);
+		for (uint8_t j = 1; j < HASH_FUNC_COUNT; j++) {
+			pAlgo64[hashOrder[j]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[j]]);
 		}
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
