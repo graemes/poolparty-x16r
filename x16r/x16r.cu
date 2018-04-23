@@ -132,14 +132,10 @@ extern "C" void x16r_hash(void *output, const void *input)
 	int size = 80;
 
 	uint32_t *in32 = (uint32_t*) input;
-	//getAlgoString(&in32[1], hashOrderStr);
 	getAlgoSequence(&in32[1], hashOrder);
 
 	for (int i = 0; i < 16; i++)
 	{
-		//const char elem = hashOrderStr[i];
-		//const uint8_t algo = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
-
 		const uint8_t algo = hashOrder[i];
 
 		switch (algo) {
@@ -272,13 +268,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	cuda_check_cpu_setTarget(ptarget);
 
-//	char elem = hashOrder[0];
-//	const uint8_t algo80 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
-//	const uint8_t algo80 = (*(uint64_t*)&endiandata[1] >> 60 - (0 * 4)) & 0x0f ;
-
-	uint8_t algo80 = hashOrder[0];
-
-	switch (algo80) {
+	switch (hashOrder[0]) {
 		case BLAKE:
 			quark_blake512_cpu_setBlock_80(thr_id, endiandata);
 			break;
@@ -331,7 +321,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			if (!thr_id) {
 				char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
 				getAlgoString(&endiandata[1], hashOrderStr);
-				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo80_strings[algo80], algo80, hashOrder);
+				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo80_strings[hashOrder[0]], hashOrder[0], hashOrderStr);
 			}
 			sleep(5);
 			return -1;
@@ -383,7 +373,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			else if (vhash[7] > Htarg) {
 				// x11+ coins could do some random error, but not on retry
 				gpu_increment_reject(thr_id);
-				algo80_fails[algo80]++;
+				algo80_fails[hashOrder[0]]++;
 				if (!warn) {
 					warn++;
 					pdata[19] = work->nonces[0] + 1;
@@ -391,8 +381,10 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 				} else {
 //					if (!opt_quiet)	gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
 //						work->nonces[0], algo_strings[algo80], hashOrder);
+					char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
+					getAlgoString(&endiandata[1], hashOrderStr);
 					gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
-							work->nonces[0], algo_strings[algo80], hashOrder);
+							work->nonces[0], algo_strings[hashOrder[0]], hashOrderStr);
 					warn = 0;
 				}
 			}
