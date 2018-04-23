@@ -2,6 +2,7 @@
  * X16R algorithm (X16 with Randomized chain order)
  *
  * tpruvot 2018 - GPL code
+ * graemes 2018
  */
 
 #include <stdio.h>
@@ -376,8 +377,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 					pdata[19] = work->nonces[0] + 1;
 					continue;
 				} else {
-//					if (!opt_quiet)	gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
-//						work->nonces[0], algo_strings[algo80], hashOrder);
 					char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
 					getAlgoString(&endiandata[1], hashOrderStr);
 					gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
