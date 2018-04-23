@@ -39,9 +39,7 @@ void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash){
 	uint2 s[25];
 	if (thread < threads){
 	
-		const uint32_t hashPosition = thread;
-
-		uint2x4* d_hash = (uint2x4 *)&g_hash[hashPosition * 8];
+		uint2x4* d_hash = (uint2x4 *)&g_hash[thread * 8];
 
 		#if __CUDA_ARCH__ > 500
 		*(uint2x4*)&s[ 0] = __ldg4(&d_hash[ 0]);

@@ -29,13 +29,13 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash){
 	uint32_t msgBitsliced[8];
 	uint32_t state[8];
 	uint32_t output[16];
+
 	// durch 4 dividieren, weil jeweils 4 Threads zusammen ein Hash berechnen
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
+
 	if (thread < threads){
 	        // GROESTL
-			const uint32_t hashPosition = thread;
-
-	        uint32_t *inpHash = &g_hash[hashPosition<<4];
+	        uint32_t *inpHash = &g_hash[thread<<4];
 
 	        const uint32_t thr = threadIdx.x & (THF-1);
 

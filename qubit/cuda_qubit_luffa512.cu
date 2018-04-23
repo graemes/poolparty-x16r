@@ -12,7 +12,7 @@
 #define TPB 384
 #define TPF 2
 
-__constant__ uint64_t c_PaddedMessage80[10]; // padded message (80 bytes + padding)
+//__constant__ uint64_t c_PaddedMessage80[10]; // padded message (80 bytes + padding)
 __constant__ uint32_t _ALIGN(8) statebufferpre[8];
 __constant__ uint32_t _ALIGN(8) statechainvpre[40];
 

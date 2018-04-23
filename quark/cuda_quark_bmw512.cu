@@ -211,8 +211,7 @@ void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_h
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads){
 
-		const uint32_t hashPosition = thread;
-		uint64_t *inpHash = &g_hash[8 * hashPosition];
+		uint64_t *inpHash = &g_hash[8 * thread];
 
 		uint64_t msg[16];
 		uint2    h[16];

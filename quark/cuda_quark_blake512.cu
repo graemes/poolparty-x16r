@@ -113,10 +113,9 @@ void quark_blake512_gpu_hash_64(uint32_t threads, uint2* g_hash)
 
 	if (thread < threads){
 
-		const uint32_t hashPosition = thread;
 		uint2 msg[16];
 
-		uint2x4 *phash = (uint2x4*)&g_hash[hashPosition<<3];
+		uint2x4 *phash = (uint2x4*)&g_hash[thread<<3];
 		uint2x4 *outpt = (uint2x4*)msg;
 		outpt[0] = __ldg4(&phash[0]);
 		outpt[1] = __ldg4(&phash[1]);

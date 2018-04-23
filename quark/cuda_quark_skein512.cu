@@ -45,9 +45,7 @@ void quark_skein512_gpu_hash_64(const uint32_t threads,uint64_t* g_hash){
 		// Skein
 		uint2 p[8], h[9];
 
-		const uint32_t hashPosition = thread;
-
-		uint64_t *Hash = &g_hash[hashPosition<<3];
+		uint64_t *Hash = &g_hash[thread<<3];
 
 		uint2x4 *phash = (uint2x4*)Hash;
 		*(uint2x4*)&p[0] = __ldg4(&phash[0]);
