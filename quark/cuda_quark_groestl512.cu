@@ -34,10 +34,9 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash){
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
 
 	if (thread < threads){
-	        // GROESTL
-	        uint32_t *inpHash = &g_hash[thread<<4];
-
-	        const uint32_t thr = threadIdx.x & (THF-1);
+		// GROESTL
+		uint32_t *inpHash = &g_hash[thread<<4];
+		const uint32_t thr = threadIdx.x & (THF-1);
 
 		uint32_t message[8] = {
 			#if __CUDA_ARCH__ > 500
@@ -48,9 +47,7 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash){
 		};
 
 		to_bitslice_quad(message, msgBitsliced);
-
-	        groestl512_progressMessage_quad(state, msgBitsliced,thr);
-
+		groestl512_progressMessage_quad(state, msgBitsliced,thr);
 		from_bitslice_quad52(state, output);
 
 #if __CUDA_ARCH__ <= 500
