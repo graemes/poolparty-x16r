@@ -330,7 +330,6 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	int warn = 0;
 	do {
 		// Hash with CUDA
-		if (work_restart[thr_id].restart) return -127;
 		pAlgo80[hashOrder[0]](thr_id, throughput, pdata[19], d_hash[thr_id],tpb80[hashOrder[0]]);
 		//for (uint8_t j = 1; j < HASH_FUNC_COUNT; j++) {
 		//	pAlgo64[hashOrder[j]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[j]]);
@@ -352,7 +351,8 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		pAlgo64[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]]);
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
-		if (work_restart[thr_id].restart) return -127;
+		// No point continuing if we've already been told to restart
+		if (work_restart[thr_id].restart) break;
 
 		work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
 #ifdef _DEBUG
