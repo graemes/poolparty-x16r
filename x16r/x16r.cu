@@ -54,7 +54,7 @@ static bool init[MAX_GPUS] = { 0 };
 
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread uint8_t hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
-static __thread char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
+//static __thread char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
 
 static uint64_t bench_hash = 0x67452301EFCDAB89;	// Default
 extern char* opt_bench_hash;
@@ -93,12 +93,15 @@ extern "C" void x16r_hash(void *output, const void *input)
 	int size = 80;
 
 	uint32_t *in32 = (uint32_t*) input;
-	getAlgoString(&in32[1], hashOrderStr);
+	//getAlgoString(&in32[1], hashOrderStr);
+	getAlgoSequence(&in32[1], hashOrder);
 
 	for (int i = 0; i < 16; i++)
 	{
-		const char elem = hashOrderStr[i];
-		const uint8_t algo = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
+		//const char elem = hashOrderStr[i];
+		//const uint8_t algo = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
+
+		const char algo = hashOrder[i];
 
 		switch (algo) {
 		case BLAKE:
@@ -219,10 +222,13 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	uint32_t ntime = swab32(pdata[17]);
 	if (s_ntime != ntime) {
-		getAlgoString(&endiandata[1], hashOrderStr);
 		getAlgoSequence(&endiandata[1], hashOrder);
 		s_ntime = ntime;
-		if (!thr_id && !opt_quiet) applog(LOG_INFO, "hash order %s (%08x)", hashOrderStr, ntime);
+		if (!thr_id && !opt_quiet){
+			char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
+			getAlgoString(&endiandata[1], hashOrderStr);
+			applog(LOG_INFO, "hash order %s (%08x)", hashOrderStr, ntime);
+		}
 	}
 
 	cuda_check_cpu_setTarget(ptarget);
