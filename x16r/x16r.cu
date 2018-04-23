@@ -34,15 +34,13 @@ extern "C" {
 #include "cuda_vectors.h"
 #include "cuda_x16r.h"
 
-#define NBN 2
-
 //#define _DEBUG
 #define _DEBUG_PREFIX "x16r-"
 #include "cuda_debug.cuh"
 
 // Internal functions
-static void getAlgoString(const uint32_t* prevblock, char *output);
 static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output);
+static void getAlgoString(const uint32_t* prevblock, char *output);
 static void init_x16r(int thr_id, int dev_id);
 static void setBenchHash();
 static void calcOptimumTPBs(int thr_id);
@@ -54,7 +52,6 @@ static bool init[MAX_GPUS] = { 0 };
 
 static __thread uint32_t s_ntime = UINT32_MAX;
 static __thread uint8_t hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
-//static __thread char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
 
 static uint64_t bench_hash = 0x67452301EFCDAB89;	// Default
 extern char* opt_bench_hash;
@@ -458,6 +455,17 @@ extern "C" void free_x16r(int thr_id)
 }
 
 // Internal functions
+static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output)
+{
+	uint8_t* data = (uint8_t*)prevblock;
+
+	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
+		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
+		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
+		output[j] = algoDigit ;
+	}
+}
+
 static void getAlgoString(const uint32_t* prevblock, char *output)
 {
 	char *sptr = output;
@@ -475,18 +483,6 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 	*sptr = '\0';
 }
 
-static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output)
-{
-	uint8_t* data = (uint8_t*)prevblock;
-
-	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
-		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
-		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
-		output[j] = algoDigit ;
-	}
-}
-
-//extern "C" uint32_t init_x16r(int thr_id)
 static void init_x16r(int thr_id, int dev_id)
 {
 	uint32_t throughput = 0;
