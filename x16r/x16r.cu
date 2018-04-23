@@ -42,6 +42,7 @@ extern "C" {
 
 // Internal functions
 static void getAlgoString(const uint32_t* prevblock, char *output);
+static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output);
 static void init_x16r(int thr_id, int dev_id);
 static void setBenchHash();
 static void calcOptimumTPBs(int thr_id);
@@ -52,7 +53,8 @@ static uint32_t thr_throughput[MAX_GPUS] = { 0 };
 static bool init[MAX_GPUS] = { 0 };
 
 static __thread uint32_t s_ntime = UINT32_MAX;
-static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
+static __thread uint8_t hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
+static __thread char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
 
 static uint64_t bench_hash = 0x67452301EFCDAB89;	// Default
 extern char* opt_bench_hash;
@@ -91,11 +93,11 @@ extern "C" void x16r_hash(void *output, const void *input)
 	int size = 80;
 
 	uint32_t *in32 = (uint32_t*) input;
-	getAlgoString(&in32[1], hashOrder);
+	getAlgoString(&in32[1], hashOrderStr);
 
 	for (int i = 0; i < 16; i++)
 	{
-		const char elem = hashOrder[i];
+		const char elem = hashOrderStr[i];
 		const uint8_t algo = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
 
 		switch (algo) {
@@ -217,16 +219,19 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	uint32_t ntime = swab32(pdata[17]);
 	if (s_ntime != ntime) {
-		getAlgoString(&endiandata[1], hashOrder);
+		getAlgoString(&endiandata[1], hashOrderStr);
+		getAlgoSequence(&endiandata[1], hashOrder);
 		s_ntime = ntime;
-		if (!thr_id && !opt_quiet) applog(LOG_INFO, "hash order %s (%08x)", hashOrder, ntime);
+		if (!thr_id && !opt_quiet) applog(LOG_INFO, "hash order %s (%08x)", hashOrderStr, ntime);
 	}
 
 	cuda_check_cpu_setTarget(ptarget);
 
-	char elem = hashOrder[0];
-	const uint8_t algo80 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
+//	char elem = hashOrder[0];
+//	const uint8_t algo80 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
 //	const uint8_t algo80 = (*(uint64_t*)&endiandata[1] >> 60 - (0 * 4)) & 0x0f ;
+
+	uint8_t algo80 = hashOrder[0];
 
 	switch (algo80) {
 		case BLAKE:
@@ -361,11 +366,13 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 		for (int i = 1; i < 16; i++)
 		{
-			const char elem = hashOrder[i];
-			const uint8_t algo64 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
+//			const char elem = hashOrder[i];
+//			const uint8_t algo64 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
 //			const uint8_t algo64t = (*(uint64_t*)&endiandata[1] >> 60 - (1 * 4)) & 0x0f ;
 //			const uint8_t algo64t;
 //			memcpy(algo64t,(&endiandata[1] >> 60 - (1 * 4)) & 0x0f),sizeof endiandata[1] ;
+
+			uint8_t algo64 = hashOrder[i];
 
 			switch (algo64) {
 			case BLAKE:
@@ -573,7 +580,17 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 		sptr++;
 	}
 	*sptr = '\0';
+}
 
+static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output)
+{
+	uint8_t* data = (uint8_t*)prevblock;
+
+	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
+		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
+		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
+		output[j] = algoDigit ;
+	}
 }
 
 //extern "C" uint32_t init_x16r(int thr_id)
