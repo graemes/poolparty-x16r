@@ -464,7 +464,7 @@ static void FFT_16(int *y){
 
 /***************************************************/
 __global__ __launch_bounds__(TPB,TPF_EXPAND)
-static void x11_simd512_gpu_expand_64(uint32_t threads,const uint32_t* __restrict__ g_hash, uint4 *g_temp4)
+static void x11_simd512_gpu_expand_64(const uint32_t threads,const uint32_t* __restrict__ g_hash, uint4 *g_temp4)
 {
 	const uint32_t threadBloc = (blockDim.x * blockIdx.x + threadIdx.x)>>3;
 	const uint8_t thr        = (threadIdx.x & 7);
@@ -680,7 +680,7 @@ __launch_bounds__(TPB,TPF)
 #else
 __launch_bounds__(TPB,TPF50)
 #endif
-static void x11_simd512_gpu_compress_64_maxwell(uint32_t threads, uint32_t *g_hash,const uint4 *const __restrict__ g_fft4)
+static void x11_simd512_gpu_compress_64_maxwell(const uint32_t threads, uint32_t *g_hash,const uint4 *const __restrict__ g_fft4)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	const uint32_t thr_offset = thread << 6; // thr_id * 128 (je zwei elemente)

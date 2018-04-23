@@ -206,7 +206,7 @@ static void bmw512_round1(uint2* q,uint2* h,const uint64_t* msg){
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_hash){
+void quark_bmw512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads){
@@ -411,15 +411,9 @@ void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_h
 	}
 }
 
-//__host__ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash)
-__host__ void quark_bmw512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+__host__ void quark_bmw512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	//const uint32_t threadsperblock = 32;
-
     // berechne wie viele Thread Blocks wir brauchen
-    //dim3 grid((threads + threadsperblock-1)/threadsperblock);
-    //dim3 block(threadsperblock);
-
     const dim3 grid((threads + tpb-1)/tpb);
     const dim3 block(tpb);
 

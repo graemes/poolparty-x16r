@@ -178,7 +178,7 @@ static __constant__ const uint32_t d_T512[1024] = {
 	}
 
 __global__ __launch_bounds__(TPB,TPF)
-void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
+void x13_hamsi512_gpu_hash_64(const uint32_t threads, uint32_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)

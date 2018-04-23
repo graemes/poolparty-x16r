@@ -428,7 +428,7 @@ static void rnd512_nullhash(uint32_t *const __restrict__ state){
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void qubit_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
+void qubit_luffa512_gpu_hash_64(const uint32_t threads, uint32_t *g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint32_t statebuffer[8];

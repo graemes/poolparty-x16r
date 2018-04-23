@@ -32,7 +32,7 @@ __global__ __launch_bounds__(TPB52,TPF52)
 #else
 __global__ __launch_bounds__(TPB50,TPF50)
 #endif
-void quark_keccak512_gpu_hash_64(uint32_t threads, uint2* g_hash){
+void quark_keccak512_gpu_hash_64(const uint32_t threads, uint2* g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint2 t[5], u[5], v, w;
