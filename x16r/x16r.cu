@@ -331,9 +331,24 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		// Hash with CUDA
 		if (work_restart[thr_id].restart) return -127;
 		pAlgo80[hashOrder[0]](thr_id, throughput, pdata[19], d_hash[thr_id],tpb80[hashOrder[0]]);
-		for (uint8_t j = 1; j < HASH_FUNC_COUNT; j++) {
-			pAlgo64[hashOrder[j]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[j]]);
-		}
+		//for (uint8_t j = 1; j < HASH_FUNC_COUNT; j++) {
+		//	pAlgo64[hashOrder[j]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[j]]);
+		//}
+		pAlgo64[hashOrder[1]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[1]]);
+		pAlgo64[hashOrder[2]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[2]]);
+		pAlgo64[hashOrder[3]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[3]]);
+		pAlgo64[hashOrder[4]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[4]]);
+		pAlgo64[hashOrder[5]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[5]]);
+		pAlgo64[hashOrder[6]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[6]]);
+		pAlgo64[hashOrder[7]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[7]]);
+		pAlgo64[hashOrder[8]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[8]]);
+		pAlgo64[hashOrder[9]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[9]]);
+		pAlgo64[hashOrder[10]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[10]]);
+		pAlgo64[hashOrder[11]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[11]]);
+		pAlgo64[hashOrder[12]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[12]]);
+		pAlgo64[hashOrder[13]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[13]]);
+		pAlgo64[hashOrder[14]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[14]]);
+		pAlgo64[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]]);
 		if (work_restart[thr_id].restart) return -127;
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
