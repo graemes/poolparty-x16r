@@ -328,8 +328,11 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			x17_sha512_setBlock_80(endiandata);
 			break;
 		default: {
-			if (!thr_id)
-//				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo_strings[algo80], elem, hashOrder);
+			if (!thr_id) {
+				char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
+				getAlgoString(&endiandata[1], hashOrderStr);
+				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo80_strings[algo80], algo80, hashOrder);
+			}
 			sleep(5);
 			return -1;
 		}
@@ -465,11 +468,6 @@ extern "C" void free_x16r(int thr_id)
 // Internal functions
 static void getAlgoString(const uint32_t* prevblock, char *output)
 {
-//	for (int i = 0; i < 16; i++)
-//	{
-//			*output++ = (*(uint64_t*)prevblock >> 60 - (i * 4)) & 0x0f;
-//	}
-
 	char *sptr = output;
 	uint8_t* data = (uint8_t*)prevblock;
 
