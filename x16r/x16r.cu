@@ -63,7 +63,7 @@ extern bool opt_autotune;
 static uint32_t tpb64[HASH_FUNC_COUNT + 1] = { 192, 32,512,512,128,512,384,768,384,128,128,384,256,384,384,256 } ;
 static uint32_t tpb80[HASH_FUNC_COUNT + 1] = { 512,128,256,256,256,512,256,256,128,128,128,128,256,256,256,256 } ;
 
-static const void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
+static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
 {
 	quark_blake512_cpu_hash_64,
 	quark_bmw512_cpu_hash_64,
@@ -83,7 +83,7 @@ static const void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
 	x17_sha512_cpu_hash_64
 };
 
-static const void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
+static void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
 {
 	quark_blake512_cpu_hash_80,
 	quark_bmw512_cpu_hash_80,
@@ -350,9 +350,9 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 		pAlgo64[hashOrder[13]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[13]]);
 		pAlgo64[hashOrder[14]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[14]]);
 		pAlgo64[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]]);
-		if (work_restart[thr_id].restart) return -127;
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
+		if (work_restart[thr_id].restart) return -127;
 
 		work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
 #ifdef _DEBUG
