@@ -1,3 +1,103 @@
+// Definitions here FNPRAA
+
+enum x16r_algos {
+	BLAKE = 0,
+	BMW,
+	GROESTL,
+	JH,
+	KECCAK,
+	SKEIN,
+	LUFFA,
+	CUBEHASH,
+	SHAVITE,
+	SIMD,
+	ECHO,
+	HAMSI,
+	FUGUE,
+	SHABAL,
+	WHIRLPOOL,
+	SHA512,
+	HASH_FUNC_COUNT
+};
+
+static const char* algo_strings[] = {
+	"blake",
+	"bmw",
+	"groestl",
+	"jh",
+	"keccak",
+	"skein",
+	"luffa",
+	"cubehash",
+	"shavite",
+	"simd",
+	"echo",
+	"hamsi",
+	"fugue",
+	"shabal",
+	"whirlpool",
+	"sha512",
+	NULL
+};
+
+static const uint64_t algo_hashes[] = {
+	0x0000000000000000,
+	0x1111111111111111,
+	0x2222222222222222,
+	0x3333333333333333,
+	0x4444444444444444,
+	0x5555555555555555,
+	0x6666666666666666,
+	0x7777777777777777,
+	0x8888888888888888,
+	0x9999999999999999,
+	0xAAAAAAAAAAAAAAAA,
+	0xBBBBBBBBBBBBBBBB,
+	0xCCCCCCCCCCCCCCCC,
+	0xDDDDDDDDDDDDDDDD,
+	0xEEEEEEEEEEEEEEEE,
+	0xFFFFFFFFFFFFFFFF
+};
+
+static const char* algo80_strings[] = {
+	"blake_80",
+	"bmw_80",
+	"groestl_80",
+	"jh_80",
+	"keccak_80",
+	"skein_80",
+	"luffa_80",
+	"cubehash_80",
+	"shavite_80",
+	"simd_80",
+	"echo_80",
+	"hamsi_80",
+	"fugue_80",
+	"shabal_80",
+	"whirlpool_80",
+	"sha512_80",
+	NULL
+};
+
+static const uint64_t algo80_hashes[] = {
+	0x0000000000000000,
+	0x0000001000000000,
+	0x0000002000000000,
+	0x0000003000000000,
+	0x0000004000000000,
+	0x0000005000000000,
+	0x0000006000000000,
+	0x0000007000000000,
+	0x0000008000000000,
+	0x0000009000000000,
+	0x000000A000000000,
+	0x000000B000000000,
+	0x000000C000000000,
+	0x000000D000000000,
+	0x000000E000000000,
+	0x000000F000000000
+};
+
 // Include all of the function definitions here for ease of maintenance
 
 // ---- 64 byte kernels
@@ -91,6 +191,7 @@ extern void quark_blake512_cpu_free_80(int thr_id);
 extern void quark_bmw512_cpu_init_80(int thr_id, const uint32_t threads);
 extern void quark_bmw512_cpu_setBlock_80(void *pdata);
 extern void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, uint32_t tpb);
+//extern void quark_bmw512_cpu_hash_80(int thr_id, uint32_t threads, uint32_t startNonce, uint32_t *d_hash, const uint64_t target, uint32_t tpb);
 extern uint32_t quark_bmw512_calc_tpb_80(int thr_id);
 extern void quark_bmw512_cpu_free_80(int thr_id);
 

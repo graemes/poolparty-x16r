@@ -2,6 +2,7 @@
  * X16R algorithm (X16 with Randomized chain order)
  *
  * tpruvot 2018 - GPL code
+ * graemes 2018
  */
 
 #include <stdio.h>
@@ -39,59 +40,21 @@ extern "C" {
 #include "cuda_debug.cuh"
 
 // Internal functions
+static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output);
 static void getAlgoString(const uint32_t* prevblock, char *output);
 static void init_x16r(int thr_id, int dev_id);
 static void setBenchHash();
 static void calcOptimumTPBs(int thr_id);
 
-enum Algo {
-	BLAKE = 0,
-	BMW,
-	GROESTL,
-	JH,
-	KECCAK,
-	SKEIN,
-	LUFFA,
-	CUBEHASH,
-	SHAVITE,
-	SIMD,
-	ECHO,
-	HAMSI,
-	FUGUE,
-	SHABAL,
-	WHIRLPOOL,
-	SHA512,
-	HASH_FUNC_COUNT
-};
-
-static const char* algo_strings[] = {
-	"blake",
-	"bmw",
-	"groestl",
-	"jh",
-	"keccak",
-	"skein",
-	"luffa",
-	"cubehash",
-	"shavite",
-	"simd",
-	"echo",
-	"hamsi",
-	"fugue",
-	"shabal",
-	"whirlpool",
-	"sha512",
-	NULL
-};
-
+// Local variables
 static uint32_t *d_hash[MAX_GPUS];
 static uint32_t thr_throughput[MAX_GPUS] = { 0 };
 static bool init[MAX_GPUS] = { 0 };
 
 static __thread uint32_t s_ntime = UINT32_MAX;
-static __thread char hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
+static __thread uint8_t hashOrder[HASH_FUNC_COUNT + 1] = { 0 };
 
-static uint64_t bench_hash = 0x67452301EFCDAB89;
+static uint64_t bench_hash = 0x67452301EFCDAB89;	// Default
 extern char* opt_bench_hash;
 
 extern bool opt_autotune;
@@ -100,6 +63,47 @@ extern bool opt_autotune;
 static uint32_t tpb64[HASH_FUNC_COUNT + 1] = { 192, 32,512,512,128,512,384,768,384,128,128,384,256,384,384,256 } ;
 static uint32_t tpb80[HASH_FUNC_COUNT + 1] = { 512,128,256,256,256,512,256,256,128,128,128,128,256,256,256,256 } ;
 
+static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
+{
+	quark_blake512_cpu_hash_64,
+	quark_bmw512_cpu_hash_64,
+	quark_groestl512_cpu_hash_64,
+	quark_jh512_cpu_hash_64,
+	quark_keccak512_cpu_hash_64,
+	quark_skein512_cpu_hash_64,
+	qubit_luffa512_cpu_hash_64,
+	x11_cubehash512_cpu_hash_64,
+	x11_shavite512_cpu_hash_64,
+	x11_simd512_cpu_hash_64,
+	x11_echo512_cpu_hash_64,
+	x13_hamsi512_cpu_hash_64,
+	x13_fugue512_cpu_hash_64,
+	x14_shabal512_cpu_hash_64,
+	x15_whirlpool512_cpu_hash_64,
+	x17_sha512_cpu_hash_64
+};
+static void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
+{
+	quark_blake512_cpu_hash_80,
+	quark_bmw512_cpu_hash_80,
+	quark_groestl512_cuda_hash_80,
+	quark_jh512_cuda_hash_80,
+	quark_keccak512_cuda_hash_80,
+	quark_skein512_cpu_hash_80,
+	qubit_luffa512_cpu_hash_80,
+	x11_cubehash512_cuda_hash_80,
+	x11_shavite512_cpu_hash_80,
+	x16_simd512_cuda_hash_80,
+	x16_echo512_cuda_hash_80,
+	x13_hamsi512_cuda_hash_80,
+	x16_fugue512_cuda_hash_80,
+	x16_shabal512_cuda_hash_80,
+	x15_whirlpool512_hash_80,
+	x17_sha512_cuda_hash_80
+};
+
+
+// Lets do it
 // X16R CPU Hash (Validation)
 extern "C" void x16r_hash(void *output, const void *input)
 {
@@ -126,12 +130,11 @@ extern "C" void x16r_hash(void *output, const void *input)
 	int size = 80;
 
 	uint32_t *in32 = (uint32_t*) input;
-	getAlgoString(&in32[1], hashOrder);
+	getAlgoSequence(&in32[1], hashOrder);
 
 	for (int i = 0; i < 16; i++)
 	{
-		const char elem = hashOrder[i];
-		const uint8_t algo = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
+		const uint8_t algo = hashOrder[i];
 
 		switch (algo) {
 		case BLAKE:
@@ -252,17 +255,18 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 	uint32_t ntime = swab32(pdata[17]);
 	if (s_ntime != ntime) {
-		getAlgoString(&endiandata[1], hashOrder);
+		getAlgoSequence(&endiandata[1], hashOrder);
 		s_ntime = ntime;
-		if (!thr_id && !opt_quiet) applog(LOG_INFO, "hash order %s (%08x)", hashOrder, ntime);
+		if (!thr_id && !opt_quiet){
+			char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
+			getAlgoString(&endiandata[1], hashOrderStr);
+			applog(LOG_INFO, "hash order %s (%08x)", hashOrderStr, ntime);
+		}
 	}
 
 	cuda_check_cpu_setTarget(ptarget);
 
-	char elem = hashOrder[0];
-	const uint8_t algo80 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
-
-	switch (algo80) {
+	switch (hashOrder[0]) {
 		case BLAKE:
 			quark_blake512_cpu_setBlock_80(thr_id, endiandata);
 			break;
@@ -312,159 +316,25 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			x17_sha512_setBlock_80(endiandata);
 			break;
 		default: {
-			if (!thr_id)
-				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo_strings[algo80], elem, hashOrder);
+			if (!thr_id) {
+				char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
+				getAlgoString(&endiandata[1], hashOrderStr);
+				applog(LOG_WARNING, "kernel %s %c unimplemented, order %s", algo80_strings[hashOrder[0]], hashOrder[0], hashOrderStr);
+			}
 			sleep(5);
 			return -1;
 		}
 	}
 
-	/*
-	 * TODO: a1i3nj03 has what looks to be a far more concise way of calling the algo's but when I looked at it
-	 * some compiler warnings related to the pointers made me nervous - needs further investigation.
-	 */
 	int warn = 0;
 	do {
 		// Hash with CUDA
-		switch (algo80) {
-			case BLAKE:
-				quark_blake512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BLAKE]);
-				TRACE("blake80:");
-				break;
-			case BMW:
-				quark_bmw512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[BMW]);
-				TRACE("bmw80  :");
-				break;
-			case GROESTL:
-				quark_groestl512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[GROESTL]);
-				TRACE("grstl80:");
-				break;
-			case JH:
-				quark_jh512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[JH]);
-				TRACE("jh51280:");
-				break;
-			case KECCAK:
-				quark_keccak512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[KECCAK]);
-				TRACE("keccak80:");
-				break;
-			case SKEIN:
-				quark_skein512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[SKEIN]);
-				TRACE("skein80:");
-				break;
-			case LUFFA:
-				qubit_luffa512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[LUFFA]);
-				TRACE("luffa80:");
-				break;
-			case CUBEHASH:
-				x11_cubehash512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[CUBEHASH]);
-				TRACE("cube 80:");
-				break;
-			case SHAVITE:
-				x11_shavite512_cpu_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[SHAVITE]);
-				TRACE("shavite:");
-				break;
-			case SIMD:
-				x16_simd512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[SIMD]);
-				TRACE("simd512:");
-				break;
-			case ECHO:
-				x16_echo512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[ECHO]);
-				TRACE("echo   :");
-				break;
-			case HAMSI:
-				x13_hamsi512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[HAMSI]);
-				TRACE("hamsi  :");
-				break;
-			case FUGUE:
-				x16_fugue512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[FUGUE]);
-				TRACE("fugue  :");
-				break;
-			case SHABAL:
-				x16_shabal512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[SHABAL]);
-				TRACE("shabal :");
-				break;
-			case WHIRLPOOL:
-				x15_whirlpool512_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[WHIRLPOOL]);
-				TRACE("whirl  :");
-				break;
-			case SHA512:
-				x17_sha512_cuda_hash_80(thr_id, throughput, pdata[19], d_hash[thr_id], tpb80[SHA512]);
-				TRACE("sha512 :");
-				break;
+		if (work_restart[thr_id].restart) return -127;
+		pAlgo80[hashOrder[0]](thr_id, throughput, pdata[19], d_hash[thr_id],tpb80[hashOrder[0]]);
+		for (uint8_t j = 1; j < HASH_FUNC_COUNT; j++) {
+			pAlgo64[hashOrder[j]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[j]]);
 		}
-
-		for (int i = 1; i < 16; i++)
-		{
-			const char elem = hashOrder[i];
-			const uint8_t algo64 = elem >= 'A' ? elem - 'A' + 10 : elem - '0';
-
-			switch (algo64) {
-			case BLAKE:
-				quark_blake512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[BLAKE]);
-				TRACE("blake    :");
-				break;
-			case BMW:
-				quark_bmw512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[BMW]);
-				TRACE("bmw      :");
-				break;
-			case GROESTL:
-				quark_groestl512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[GROESTL]);
-				TRACE("groestl  :");
-				break;
-			case JH:
-				quark_jh512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[JH]);
-				TRACE("jh512    :");
-				break;
-			case KECCAK:
-				quark_keccak512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[KECCAK]);
-				TRACE("keccak   :");
-				break;
-			case SKEIN:
-				quark_skein512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[SKEIN]);
-				TRACE("skein    :");
-				break;
-			case LUFFA:
-				qubit_luffa512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[LUFFA]);
-				TRACE("luffa    :");
-				break;
-			case CUBEHASH:
-				x11_cubehash512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[CUBEHASH]);
-				TRACE("cubehash :");
-				break;
-			case SHAVITE:
-				x11_shavite512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[SHAVITE]);
-				TRACE("shavite  :");
-				break;
-			case SIMD:
-				x11_simd512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[SIMD]);
-				TRACE("simd     :");
-				break;
-			case ECHO:
-				x11_echo512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[ECHO]);
-				TRACE("echo     :");
-				break;
-			case HAMSI:
-				x13_hamsi512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[HAMSI]);
-				TRACE("hamsi    :");
-				break;
-			case FUGUE:
-				x13_fugue512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[FUGUE]);
-				TRACE("fugue    :");
-				break;
-			case SHABAL:
-				x14_shabal512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[SHABAL]);
-				TRACE("shabal   :");
-				break;
-			case WHIRLPOOL:
-				x15_whirlpool512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[WHIRLPOOL]);
-				TRACE("whirlpool:");
-				break;
-			case SHA512:
-				x17_sha512_cpu_hash_64(thr_id, throughput, d_hash[thr_id], tpb64[SHA512]);
-				TRACE("sha512   :");
-				break;
-			}
-		}
+		if (work_restart[thr_id].restart) return -127;
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
 
@@ -501,16 +371,16 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 			else if (vhash[7] > Htarg) {
 				// x11+ coins could do some random error, but not on retry
 				gpu_increment_reject(thr_id);
-				algo80_fails[algo80]++;
+				algo80_fails[hashOrder[0]]++;
 				if (!warn) {
 					warn++;
 					pdata[19] = work->nonces[0] + 1;
 					continue;
 				} else {
-//					if (!opt_quiet)	gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
-//						work->nonces[0], algo_strings[algo80], hashOrder);
+					char hashOrderStr[HASH_FUNC_COUNT + 1] = { 0 };
+					getAlgoString(&endiandata[1], hashOrderStr);
 					gpulog(LOG_WARNING, thr_id, "result for %08x does not validate on CPU! %s %s",
-							work->nonces[0], algo_strings[algo80], hashOrder);
+							work->nonces[0], algo_strings[hashOrder[0]], hashOrderStr);
 					warn = 0;
 				}
 			}
@@ -584,6 +454,17 @@ extern "C" void free_x16r(int thr_id)
 }
 
 // Internal functions
+static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output)
+{
+	uint8_t* data = (uint8_t*)prevblock;
+
+	for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
+		uint8_t b = (15 - j) >> 1; // 16 ascii hex chars, reversed
+		uint8_t algoDigit = (j & 1) ? data[b] & 0xF : data[b] >> 4;
+		output[j] = algoDigit ;
+	}
+}
+
 static void getAlgoString(const uint32_t* prevblock, char *output)
 {
 	char *sptr = output;
@@ -601,7 +482,6 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 	*sptr = '\0';
 }
 
-//extern "C" uint32_t init_x16r(int thr_id)
 static void init_x16r(int thr_id, int dev_id)
 {
 	uint32_t throughput = 0;
@@ -680,70 +560,25 @@ static void init_x16r(int thr_id, int dev_id)
 }
 
 static void setBenchHash() {
-	// I'm sure a1i3nj03 would write this more elegantly :)
+
 	if (opt_bench_hash[0]) {
-		applog(LOG_INFO, "Benchmark hashing algorithm %s", opt_bench_hash);
-		uint8_t bench_algo = 0;
-		for (uint8_t j = 0; j < HASH_FUNC_COUNT; j++) {
-			if (strcmp(algo_strings[j], opt_bench_hash) != 0) {
-				bench_algo++;
-			} else
-				break;
+		bool bench_hash_found = false;
+		applog(LOG_INFO, "Looking for benchmark hashing algorithm %s", opt_bench_hash);
+		for (uint8_t j = 0; j < (HASH_FUNC_COUNT); j++) {
+			// full hash?
+			if ((strcmp(algo_strings[j], opt_bench_hash) == 0)) {
+				bench_hash = algo_hashes[j];
+				bench_hash_found = true;
+			}
+			// hash 80 only?
+			if ((strcmp(algo80_strings[j], opt_bench_hash) == 0)) {
+				bench_hash = algo80_hashes[j];
+				bench_hash_found = true;
+			}
 		}
 
-		switch (bench_algo) {
-		case BLAKE:
-			bench_hash = 0x0000000000000000;
-			break;
-		case BMW:
-			bench_hash = 0x1111111111111111;
-			break;
-		case GROESTL:
-			bench_hash = 0x2222222222222222;
-			break;
-		case JH:
-			bench_hash = 0x3333333333333333;
-			break;
-		case KECCAK:
-			bench_hash = 0x4444444444444444;
-			break;
-		case SKEIN:
-			bench_hash = 0x5555555555555555;
-			break;
-		case LUFFA:
-			bench_hash = 0x6666666666666666;
-			break;
-		case CUBEHASH:
-			bench_hash = 0x7777777777777777;
-			break;
-		case SHAVITE:
-			bench_hash = 0x8888888888888888;
-			break;
-		case SIMD:
-			bench_hash = 0x9999999999999999;
-			break;
-		case ECHO:
-			bench_hash = 0xAAAAAAAAAAAAAAAA;
-			break;
-		case HAMSI:
-			bench_hash = 0xBBBBBBBBBBBBBBBB;
-			break;
-		case FUGUE:
-			bench_hash = 0xCCCCCCCCCCCCCCCC;
-			break;
-		case SHABAL:
-			bench_hash = 0xDDDDDDDDDDDDDDDD;
-			break;
-		case WHIRLPOOL:
-			bench_hash = 0xEEEEEEEEEEEEEEEE;
-			break;
-		case SHA512:
-			bench_hash = 0xFFFFFFFFFFFFFFFF;
-			break;
-		default:
-			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default: %s", opt_bench_hash, bench_hash);
-			break;
-		}
+		if (!bench_hash_found)
+			applog(LOG_WARNING, "Specified benchmark hashing algorithm %s not found. Using default.", opt_bench_hash);
 	}
 }
 
