@@ -777,7 +777,7 @@ void quark_skein512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void quark_skein512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
+void quark_skein512_cpu_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
@@ -787,15 +787,15 @@ void quark_skein512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t sta
 }
 
 __host__
-void quark_skein512_cpu_init_80(int thr_id, uint32_t threads) {}
+void quark_skein512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_skein512_cpu_free_80(int thr_id) {}
+void quark_skein512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_skein512_calc_tpb_80(int thr_id) {
+uint32_t quark_skein512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

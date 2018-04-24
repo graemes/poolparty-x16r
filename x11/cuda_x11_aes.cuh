@@ -294,7 +294,7 @@ static __constant__ __align__(64) uint32_t d_AES1[256];
 static __constant__ __align__(64) uint32_t d_AES2[256];
 static __constant__ __align__(64) uint32_t d_AES3[256];
 
-static void aes_cpu_init(int thr_id)
+static void aes_cpu_init(const int thr_id)
 {
 	CUDA_CALL_OR_RET(cudaMemcpyToSymbol( d_AES0,
                         h_AES0,
@@ -317,7 +317,7 @@ static void aes_cpu_init(int thr_id)
                         0, cudaMemcpyHostToDevice));
 }
 #else
-static void aes_cpu_init(int thr_id) {}
+static void aes_cpu_init(const int thr_id) {}
 #endif
 
 __device__ __forceinline__

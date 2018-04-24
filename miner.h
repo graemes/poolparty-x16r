@@ -273,17 +273,17 @@ void sha256d(unsigned char *hash, const unsigned char *data, int len);
 
 struct work;
 
-extern int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
+extern int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done);
 
 /* free device allocated memory per algo */
-void algo_free_all(int thr_id);
+void algo_free_all(const int thr_id);
 
-extern void free_x16r(int thr_id);
+extern void free_x16r(const int thr_id);
 
 /* api related */
 void *api_thread(void *userdata);
-void api_set_throughput(int thr_id, uint32_t throughput);
-void gpu_increment_reject(int thr_id);
+void api_set_throughput(const int thr_id, uint32_t throughput);
+void gpu_increment_reject(const int thr_id);
 
 struct monitor_info {
 	uint32_t gpu_temp;
@@ -453,19 +453,19 @@ extern int opt_cudaschedule;
 // cuda.cpp
 int cuda_num_devices();
 void cuda_devicenames();
-void cuda_reset_device(int thr_id, bool *init);
+void cuda_reset_device(const int thr_id, bool *init);
 void cuda_shutdown();
 int cuda_finddevice(char *name);
 int cuda_version();
 void cuda_print_devices();
 int cuda_gpu_info(struct cgpu_info *gpu);
-int cuda_available_memory(int thr_id);
+int cuda_available_memory(const int thr_id);
 
-uint32_t cuda_default_throughput(int thr_id, uint32_t defcount);
+uint32_t cuda_default_throughput(const int thr_id, uint32_t defcount);
 #define device_intensity(t,f,d) cuda_default_throughput(t,d)
 double throughput2intensity(uint32_t throughput);
 
-void cuda_log_lasterror(int thr_id, const char* func, int line);
+void cuda_log_lasterror(const int thr_id, const char* func, int line);
 void cuda_clear_lasterror();
 #define CUDA_LOG_ERROR() cuda_log_lasterror(thr_id, __func__, __LINE__)
 
@@ -529,8 +529,8 @@ void work_set_target_ratio(struct work* work, uint32_t* hash);
 extern int bench_algo;
 void bench_init(int threads);
 void bench_free();
-bool bench_algo_switch_next(int thr_id);
-void bench_set_throughput(int thr_id, uint32_t throughput);
+bool bench_algo_switch_next(const int thr_id);
+void bench_set_throughput(const int thr_id, uint32_t throughput);
 void bench_display_results();
 
 struct stratum_job {
@@ -681,8 +681,8 @@ void pool_init_defaults(void);
 void pool_set_creds(int pooln);
 void pool_set_attr(int pooln, const char* key, char* arg);
 bool pool_switch_url(char *params);
-bool pool_switch(int thr_id, int pooln);
-bool pool_switch_next(int thr_id);
+bool pool_switch(const int thr_id, int pooln);
+bool pool_switch_next(const int thr_id);
 int pool_get_first_valid(int startfrom, bool donate);
 bool parse_pool_array(json_t *obj);
 void pool_dump_infos(void);
@@ -715,10 +715,10 @@ void hashlog_purge_all(void);
 void hashlog_dump_job(char* jobid);
 void hashlog_getmeminfo(uint64_t *mem, uint32_t *records);
 
-void stats_remember_speed(int thr_id, uint32_t hashcount, double hashrate, uint8_t found, uint32_t height);
-double stats_get_speed(int thr_id, double def_speed);
+void stats_remember_speed(const int thr_id, uint32_t hashcount, double hashrate, uint8_t found, uint32_t height);
+double stats_get_speed(const int thr_id, double def_speed);
 double stats_get_gpu_speed(int gpu_id);
-int  stats_get_history(int thr_id, struct stats_data *data, int max_records);
+int  stats_get_history(const int thr_id, struct stats_data *data, int max_records);
 void stats_purge_old(void);
 void stats_purge_all(void);
 void stats_getmeminfo(uint64_t *mem, uint32_t *records);

@@ -340,7 +340,7 @@ void x16_shabal512_gpu_hash_80(uint32_t threads, const uint32_t startNonce, uint
 }
 
 __host__
-void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
+void x16_shabal512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
 	dim3 grid((threads + tpb - 1) / tpb);
 	dim3 block(tpb);
@@ -349,15 +349,15 @@ void x16_shabal512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32
 }
 
 __host__
-void x16_shabal512_cpu_init_80(int thr_id, uint32_t threads) {}
+void x16_shabal512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void x16_shabal512_cpu_free_80(int thr_id) {}
+void x16_shabal512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t x16_shabal512_calc_tpb_80(int thr_id) {
+uint32_t x16_shabal512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

@@ -476,7 +476,7 @@ void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_
 
 // Setup-Funktionen
 __host__
-void quark_keccak512_cpu_init_80(int thr_id, uint32_t threads)
+void quark_keccak512_cpu_init_80(const int thr_id, uint32_t threads)
 {
 	// Kopiere die Hash-Tabellen in den GPU-Speicher
 	cudaMemcpyToSymbol(c_keccak_round_constants, host_keccak_round_constants,
@@ -485,7 +485,7 @@ void quark_keccak512_cpu_init_80(int thr_id, uint32_t threads)
 
 // inlen kann 72...143 betragen
 __host__
-void quark_keccak512_setBlock_80(int thr_id, void *pdata)
+void quark_keccak512_setBlock_80(const int thr_id, void *pdata)
 {
 	size_t BLOCKSIZE = 80;
 
@@ -528,12 +528,12 @@ void quark_keccak512_cuda_hash_80(const int thr_id, uint32_t threads, const uint
 }
 
 __host__
-void quark_keccak512_cpu_free_80(int thr_id) {}
+void quark_keccak512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_keccak512_calc_tpb_80(int thr_id) {
+uint32_t quark_keccak512_calc_tpb_80(const int thr_id) {
 
     int blockSize = 0;
     int minGridSize = 0;

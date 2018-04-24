@@ -736,7 +736,7 @@ static void x11_simd512_gpu_compress_64_maxwell(const uint32_t threads, uint32_t
 }
 
 __host__
-void x11_simd512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
+void x11_simd512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
 	const dim3 grid1((8*threads + tpb - 1) / tpb);
 	const dim3 block1(tpb);
@@ -749,17 +749,17 @@ void x11_simd512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_has
 }
 
 __host__
-void x11_simd512_cpu_init_64(int thr_id, uint32_t threads){
+void x11_simd512_cpu_init_64(const int thr_id, uint32_t threads){
 	cudaMalloc(&d_temp4[thr_id], 64*sizeof(uint4)*threads);
 }
 
 __host__
-void x11_simd512_cpu_free_64(int thr_id){
+void x11_simd512_cpu_free_64(const int thr_id){
 	cudaFree(d_temp4[thr_id]);
 }
 
 __host__
-uint32_t x11_simd512_calc_tpb_64(int thr_id) {
+uint32_t x11_simd512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

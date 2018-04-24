@@ -348,7 +348,7 @@ extern "C" {
 }
 
 __host__
-void quark_jh512_setBlock_80(int thr_id, uint32_t *endiandata)
+void quark_jh512_setBlock_80(const int thr_id, uint32_t *endiandata)
 {
 	sph_jh512_context ctx_jh;
 
@@ -360,15 +360,15 @@ void quark_jh512_setBlock_80(int thr_id, uint32_t *endiandata)
 }
 
 __host__
-void quark_jh512_cpu_init_80(int thr_id, uint32_t threads) {}
+void quark_jh512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_jh512_cpu_free_80(int thr_id) {}
+void quark_jh512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_jh512_calc_tpb_80(int thr_id) {
+uint32_t quark_jh512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

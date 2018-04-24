@@ -423,13 +423,13 @@ __host__ void quark_bmw512_cpu_hash_64(const int thr_id, const uint32_t threads,
 #include "miner.h"
 
 __host__
-void quark_bmw512_cpu_init_64(int thr_id, uint32_t threads) {}
+void quark_bmw512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_bmw512_cpu_free_64(int thr_id) {}
+void quark_bmw512_cpu_free_64(const int thr_id) {}
 
 __host__
-uint32_t quark_bmw512_calc_tpb_64(int thr_id) {
+uint32_t quark_bmw512_calc_tpb_64(const int thr_id) {
 
     int blockSize = 0;
     int minGridSize = 0;

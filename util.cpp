@@ -1623,7 +1623,7 @@ static bool stratum_get_algo(struct stratum_ctx *sctx, json_t *id, json_t *param
 extern char driver_version[32];
 extern int cuda_arch[MAX_GPUS];
 
-void gpu_increment_reject(int thr_id)
+void gpu_increment_reject(const int thr_id)
 {
 	struct cgpu_info *gpu = &thr_info[thr_id].gpu;
 	if (gpu) gpu->rejected++;

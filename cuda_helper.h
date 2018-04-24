@@ -29,14 +29,14 @@ extern "C"  long device_sm[MAX_GPUS];
 extern int cuda_arch[MAX_GPUS];
 
 // common functions
-extern int cuda_get_arch(int thr_id);
-extern void cuda_check_cpu_init(int thr_id, uint32_t threads);
-extern void cuda_check_cpu_free(int thr_id);
+extern int cuda_get_arch(const int thr_id);
+extern void cuda_check_cpu_init(const int thr_id, uint32_t threads);
+extern void cuda_check_cpu_free(const int thr_id);
 extern void cuda_check_cpu_setTarget(const void *ptarget);
-extern uint32_t cuda_check_hash(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_inputHash);
-extern uint32_t cuda_check_hash_suppl(int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_inputHash, uint8_t numNonce);
+extern uint32_t cuda_check_hash(const int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_inputHash);
+extern uint32_t cuda_check_hash_suppl(const int thr_id, uint32_t threads, uint32_t startNounce, uint32_t *d_inputHash, uint8_t numNonce);
 extern cudaError_t MyStreamSynchronize(cudaStream_t stream, int situation, int thr_id);
-extern void cudaReportHardwareFailure(int thr_id, cudaError_t error, const char* func);
+extern void cudaReportHardwareFailure(const int thr_id, cudaError_t error, const char* func);
 extern __device__ __device_builtin__ void __syncthreads(void);
 extern __device__ __device_builtin__ void __threadfence(void);
 

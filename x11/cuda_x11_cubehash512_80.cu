@@ -221,7 +221,7 @@ __constant__
 static uint32_t c_PaddedMessage80[20];
 
 __host__
-void x11_cubehash512_setBlock_80(int thr_id, uint32_t* endiandata)
+void x11_cubehash512_setBlock_80(const int thr_id, uint32_t* endiandata)
 {
 	cudaMemcpyToSymbol(c_PaddedMessage80, endiandata, sizeof(c_PaddedMessage80), 0, cudaMemcpyHostToDevice);
 }
@@ -273,13 +273,13 @@ void x11_cubehash512_cuda_hash_80(const int thr_id, const uint32_t threads, cons
 }
 
 __host__
-void x11_cubehash512_cpu_init_80(int thr_id, uint32_t threads) {}
+void x11_cubehash512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void x11_cubehash512_cpu_free_80(int thr_id) {}
+void x11_cubehash512_cpu_free_80(const int thr_id) {}
 
 __host__
-uint32_t x11_cubehash512_calc_tpb_80(int thr_id)
+uint32_t x11_cubehash512_calc_tpb_80(const int thr_id)
 {
 	int blockSize = 0;
 	int minGridSize = 0;

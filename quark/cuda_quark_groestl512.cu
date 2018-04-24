@@ -108,7 +108,7 @@ void quark_groestl512_gpu_hash_64_quad(const uint32_t threads,  uint32_t* g_hash
 }
 
 __host__
-void quark_groestl512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
+void quark_groestl512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
 	// Compute 3.0 benutzt die registeroptimierte Quad Variante mit Warp Shuffle
 	const dim3 grid((THF*threads + tpb-1)/tpb);
@@ -118,15 +118,15 @@ void quark_groestl512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *
 }
 
 __host__
-void quark_groestl512_cpu_init_64(int thr_id, uint32_t threads) {}
+void quark_groestl512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_groestl512_cpu_free_64(int thr_id) {}
+void quark_groestl512_cpu_free_64(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_groestl512_calc_tpb_64(int thr_id) {
+uint32_t quark_groestl512_calc_tpb_64(const int thr_id) {
 
         int blockSize = 0;
         int minGridSize = 0;

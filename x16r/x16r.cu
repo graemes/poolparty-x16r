@@ -42,9 +42,9 @@ extern "C" {
 // Internal functions
 static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output);
 static void getAlgoString(const uint32_t* prevblock, char *output);
-static void init_x16r(int thr_id, int dev_id);
+static void init_x16r(const int thr_id, int dev_id);
 static void setBenchHash();
-static void calcOptimumTPBs(int thr_id);
+static void calcOptimumTPBs(const int thr_id);
 
 // Local variables
 static uint32_t *d_hash[MAX_GPUS];
@@ -416,7 +416,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 }
 
 // cleanup
-extern "C" void free_x16r(int thr_id)
+extern "C" void free_x16r(const int thr_id)
 {
 	if (!init[thr_id])
 		return;
@@ -598,7 +598,7 @@ static void setBenchHash() {
 	}
 }
 
-static void calcOptimumTPBs(int thr_id){
+static void calcOptimumTPBs(const int thr_id){
 
 	tpb64[BLAKE] = quark_blake512_calc_tpb_64(thr_id);
 	tpb80[BLAKE] = quark_blake512_calc_tpb_80(thr_id);

@@ -163,7 +163,7 @@ int cuda_finddevice(char *name)
 }
 
 // since 1.7
-uint32_t cuda_default_throughput(int thr_id, uint32_t defcount)
+uint32_t cuda_default_throughput(const int thr_id, uint32_t defcount)
 {
 	//int dev_id = device_map[thr_id % MAX_GPUS];
 	uint32_t throughput = gpus_intensity[thr_id] ? gpus_intensity[thr_id] : defcount;
@@ -189,7 +189,7 @@ double throughput2intensity(uint32_t throughput)
 }
 
 // if we use 2 threads on the same gpu, we need to reinit the threads
-void cuda_reset_device(int thr_id, bool *init)
+void cuda_reset_device(const int thr_id, bool *init)
 {
 	int dev_id = device_map[thr_id % MAX_GPUS];
 	cudaSetDevice(dev_id);
@@ -216,7 +216,7 @@ void cuda_reset_device(int thr_id, bool *init)
 }
 
 // return free memory in megabytes
-int cuda_available_memory(int thr_id)
+int cuda_available_memory(const int thr_id)
 {
 	int dev_id = device_map[thr_id % MAX_GPUS];
 #if defined(_WIN32) && defined(USE_WRAPNVML)
@@ -234,7 +234,7 @@ int cuda_available_memory(int thr_id)
 }
 
 // Check (and reset) last cuda error, and report it in logs
-void cuda_log_lasterror(int thr_id, const char* func, int line)
+void cuda_log_lasterror(const int thr_id, const char* func, int line)
 {
 	cudaError_t err = cudaGetLastError();
 	if (err != cudaSuccess && !opt_quiet)
@@ -301,7 +301,7 @@ cudaError_t MyStreamSynchronize(cudaStream_t stream, int situation, int thr_id)
 	return result;
 }
 
-void cudaReportHardwareFailure(int thr_id, cudaError_t err, const char* func)
+void cudaReportHardwareFailure(const int thr_id, cudaError_t err, const char* func)
 {
 	struct cgpu_info *gpu = &thr_info[thr_id].gpu;
 	gpu->hw_errors++;

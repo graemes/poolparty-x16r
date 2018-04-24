@@ -329,7 +329,7 @@ void quark_blake512_gpu_hash_80(const uint32_t threads,const uint32_t startNounc
 
 // ----------------------------- Host midstate for 80-bytes input ------------------------------------
 __host__
-void quark_blake512_cpu_setBlock_80(int thr_id, uint32_t *endiandata){
+void quark_blake512_cpu_setBlock_80(const int thr_id, uint32_t *endiandata){
 	uint64_t m[16],v[16],xors[128];
 	memcpy(m, endiandata, 80);
 	m[10] = 0x8000000000000000ull;
@@ -504,7 +504,7 @@ void quark_blake512_cpu_setBlock_80(int thr_id, uint32_t *endiandata){
 }
 
 __host__
-void quark_blake512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, const uint32_t tpb) {
+void quark_blake512_cpu_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, const uint32_t tpb) {
 
 	const dim3 grid((threads + tpb - 1) / tpb);
 	const dim3 block(tpb);
@@ -513,13 +513,13 @@ void quark_blake512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t sta
 }
 
 __host__
-void quark_blake512_cpu_init_80(int thr_id, uint32_t threads) {}
+void quark_blake512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_blake512_cpu_free_80(int thr_id) {}
+void quark_blake512_cpu_free_80(const int thr_id) {}
 
 __host__
-uint32_t quark_blake512_calc_tpb_80(int thr_id) {
+uint32_t quark_blake512_calc_tpb_80(const int thr_id) {
 
     int blockSize = 0;
     int minGridSize = 0;

@@ -383,7 +383,7 @@ void quark_bmw512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void quark_bmw512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
+void quark_bmw512_cpu_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_hash, const uint32_t tpb)
 {
 	//const uint32_t threadsperblock = 128;
 	//dim3 grid((threads + threadsperblock-1)/threadsperblock);
@@ -397,15 +397,15 @@ void quark_bmw512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t start
 }
 
 __host__
-void quark_bmw512_cpu_init_80(int thr_id, uint32_t threads) {}
+void quark_bmw512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_bmw512_cpu_free_80(int thr_id) {}
+void quark_bmw512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_bmw512_calc_tpb_80(int thr_id) {
+uint32_t quark_bmw512_calc_tpb_80(const int thr_id) {
 
     int blockSize = 0;
     int minGridSize = 0;

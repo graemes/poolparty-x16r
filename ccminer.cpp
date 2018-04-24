@@ -1566,10 +1566,12 @@ static void *miner_thread(void *userdata)
 		} else
 			nonceptr[0]++; //??
 
-		//if (opt_benchmark) {
+/*
+		if (opt_benchmark) {
 			// randomize work
-			//nonceptr[-1] += 1;
-		//}
+			nonceptr[-1] += 1;
+		}
+*/
 
 		pthread_mutex_unlock(&g_work_lock);
 
