@@ -315,7 +315,7 @@ void Compression512(uint2 *msg, uint2 *hash)
 }
 
 __global__ __launch_bounds__(TPB, TPF)
-void quark_bmw512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
+void quark_bmw512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *const __restrict__ g_hash)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)

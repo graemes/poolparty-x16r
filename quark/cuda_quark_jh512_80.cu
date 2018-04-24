@@ -283,7 +283,7 @@ __constant__ static uint32_t c_Message[4];
 
 //__global__ __launch_bounds__(TPB,TPF)
 __global__ __launch_bounds__(TPB)
-void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
+void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint32_t *const __restrict__ g_outhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)

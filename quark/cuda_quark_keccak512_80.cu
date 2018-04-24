@@ -433,7 +433,7 @@ keccak_block_80(uint64_t *s, const uint32_t *in, const uint64_t *keccak_round_co
 }
 
 __global__ __launch_bounds__( TPB, TPF )
-void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *g_hash)
+void quark_keccak512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *const __restrict__ g_hash)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)

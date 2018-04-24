@@ -36,7 +36,7 @@ __constant__ const uint2 buffer[152] = {
 
 __global__
 __launch_bounds__(TPB, TPF)
-void quark_skein512_gpu_hash_64(const uint32_t threads, uint64_t* g_hash){
+void quark_skein512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 

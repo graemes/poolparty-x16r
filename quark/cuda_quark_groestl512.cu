@@ -25,7 +25,7 @@ __global__ __launch_bounds__(TPB52, 2)
 #else
 __global__ __launch_bounds__(TPB50, 2)
 #endif
-void quark_groestl512_gpu_hash_64_quad(const uint32_t threads,  uint32_t* g_hash){
+void quark_groestl512_gpu_hash_64_quad(const uint32_t threads,  uint32_t *const __restrict__ g_hash){
 	uint32_t msgBitsliced[8];
 	uint32_t state[8];
 	uint32_t output[16];

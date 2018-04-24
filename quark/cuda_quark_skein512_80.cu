@@ -472,7 +472,7 @@ __launch_bounds__(TPB52, TPF52)
 #else
 __launch_bounds__(TPB50, TPF50)
 #endif
-void quark_skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *output64)
+void quark_skein512_gpu_hash_80(uint32_t threads, uint32_t startNounce, uint64_t *const __restrict__ output64)
 {
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
