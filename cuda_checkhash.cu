@@ -187,6 +187,8 @@ uint32_t cuda_check_hash_suppl(int thr_id, uint32_t threads, uint32_t startNounc
 {
 	uint32_t rescnt, result = 0;
 
+	applog(LOG_WARNING, "Checking extra nounces");
+
 	const uint32_t threadsperblock = 512;
 	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
 	dim3 block(threadsperblock);
