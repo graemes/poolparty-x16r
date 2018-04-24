@@ -240,7 +240,7 @@ void x16_shabal512_setBlock_80(void *pdata)
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void x16_shabal512_gpu_hash_80(uint32_t threads, const uint32_t startNonce, uint32_t *g_hash)
+void x16_shabal512_gpu_hash_80(uint32_t threads, const uint32_t startNonce, uint32_t *const __restrict__ g_hash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 

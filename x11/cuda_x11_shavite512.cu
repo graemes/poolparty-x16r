@@ -106,7 +106,7 @@ static void round_4_8_12(const uint32_t sharedMemory[4][256], uint32_t* r, uint4
 
 // GPU Hash
 __global__ __launch_bounds__(TPB,TPF) /* 64 registers with 128,8 - 72 regs with 128,7 */
-void x11_shavite512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash)
+void x11_shavite512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash)
 {
 	__shared__ uint32_t sharedMemory[4][256];
 

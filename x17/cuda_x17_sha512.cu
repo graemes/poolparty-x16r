@@ -86,7 +86,7 @@ uint64_t Tone(const uint64_t* K, uint64_t* r, uint64_t* W, const uint8_t a, cons
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
+void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	const uint64_t IV512[8] = {

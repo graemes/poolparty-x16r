@@ -12,7 +12,6 @@
 #define TPB 384
 #define TPF 2
 
-//__constant__ uint64_t c_PaddedMessage80[10]; // padded message (80 bytes + padding)
 __constant__ uint32_t _ALIGN(8) statebufferpre[8];
 __constant__ uint32_t _ALIGN(8) statechainvpre[40];
 
@@ -428,7 +427,7 @@ static void rnd512_nullhash(uint32_t *const __restrict__ state){
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void qubit_luffa512_gpu_hash_64(const uint32_t threads, uint32_t *g_hash){
+void qubit_luffa512_gpu_hash_64(const uint32_t threads, uint32_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint32_t statebuffer[8];

@@ -106,7 +106,7 @@ void ROTATE(uint32_t* A){
 /***************************************************/
 // GPU Hash Function
 __global__ __launch_bounds__(TPB,TPF)
-void x14_shabal512_gpu_hash_64(const uint32_t threads, uint32_t *g_hash){
+void x14_shabal512_gpu_hash_64(const uint32_t threads, uint32_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 

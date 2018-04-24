@@ -54,7 +54,7 @@ static void rrounds(uint32_t *x){
 /***************************************************/
 // GPU Hash Function
 __global__ __launch_bounds__(TPB, TPF)
-void x11_cubehash512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
+void x11_cubehash512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash){
 
 	uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 

@@ -235,7 +235,7 @@ static void SMIX_LDG(const uint32_t shared[4][256], uint32_t &x0,uint32_t &x1,ui
 /***************************************************/
 // Die Hash-Funktion
 __global__ __launch_bounds__(TPB,TPF)
-void x13_fugue512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash)
+void x13_fugue512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash)
 {
 	__shared__ uint32_t shared[4][256];
 

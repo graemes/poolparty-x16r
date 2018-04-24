@@ -1674,7 +1674,7 @@ void x16_simd512_setBlock_80(void *pdata)
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-static void x16_simd512_gpu_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_outputhash)
+static void x16_simd512_gpu_80(const uint32_t threads, const uint32_t startNonce, uint64_t *const __restrict__ g_outputhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)

@@ -306,7 +306,7 @@ void x16_fugue512_setBlock_80(void *pdata)
 
 //__global__ __launch_bounds__(TPB,TPF)
 __global__ __launch_bounds__(TPB)
-void x16_fugue512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
+void x16_fugue512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *const __restrict__ g_hash)
 {
 	__shared__ uint32_t mixtabs[1024];
 

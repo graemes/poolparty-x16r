@@ -200,7 +200,7 @@ extern void x15_whirlpool_cpu_free(const int thr_id){
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void x15_whirlpool512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash)
+void x15_whirlpool512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash)
 {
 	__shared__ uint2 sharedMemory[7][256];
 

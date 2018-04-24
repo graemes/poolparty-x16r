@@ -1033,7 +1033,7 @@ const int i0, const int i1, const int i2, const int i3, const int i4, const int 
 
 //__global__ __launch_bounds__(TPB,TPF)
 __global__
-void x15_whirlpool512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *outputHash, int swab)
+void x15_whirlpool512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *const __restrict__ outputHash, int swab)
 {
 	__shared__ uint64_t sharedMemory[2048];
 

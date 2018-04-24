@@ -228,7 +228,7 @@ void x11_cubehash512_setBlock_80(const int thr_id, uint32_t* endiandata)
 
 __global__
 __launch_bounds__(TPB, TPF)
-void x11_cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint64_t *g_outhash)
+void x11_cubehash512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint64_t *const __restrict__ g_outhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)

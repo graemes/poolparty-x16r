@@ -189,7 +189,7 @@ void x16_echo512_setBlock_80(void *endiandata)
 }
 
 __global__ __launch_bounds__(TPB,TPF) /* will force 72 registers */
-void x16_echo512_gpu_hash_80(uint32_t threads, uint32_t startNonce, uint64_t *g_hash)
+void x16_echo512_gpu_hash_80(uint32_t threads, uint32_t startNonce, uint64_t *const __restrict__ g_hash)
 {
 	__shared__ uint32_t sharedMemory[1024];
 
