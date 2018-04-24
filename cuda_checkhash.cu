@@ -187,8 +187,6 @@ uint32_t cuda_check_hash_suppl(int thr_id, uint32_t threads, uint32_t startNounc
 {
 	uint32_t rescnt, result = 0;
 
-	applog(LOG_WARNING, "Checking extra nounces");
-
 	const uint32_t threadsperblock = 512;
 	dim3 grid((threads + threadsperblock - 1) / threadsperblock);
 	dim3 block(threadsperblock);
@@ -210,8 +208,7 @@ uint32_t cuda_check_hash_suppl(int thr_id, uint32_t threads, uint32_t startNounc
 		if (numNonce <= rescnt) {
 			result = h_resNonces[thr_id][numNonce+1];
 		}
-//		if (opt_debug)
-		if (!opt_quiet)
+		if (opt_debug)
 			applog(LOG_WARNING, "Found %d nonces: %x + %x", rescnt, h_resNonces[thr_id][1], result);
 	}
 
