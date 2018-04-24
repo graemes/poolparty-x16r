@@ -384,6 +384,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 					pdata[19] = work->nonces[0] + 1; // cursor
 				}
 */
+				work->valid_nonces = 1;
 				work_set_target_ratio(work, vhash);
 				pdata[19] = work->nonces[0] + 1; // cursor
 				return work->valid_nonces;
