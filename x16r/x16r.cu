@@ -227,7 +227,7 @@ extern "C" void x16r_hash(void *output, const void *input)
 
 static int algo80_fails[HASH_FUNC_COUNT] = { 0 };
 
-extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
+extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
 {
 	const int dev_id = device_map[thr_id];
 
@@ -498,7 +498,7 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 	*sptr = '\0';
 }
 
-static void init_x16r(int thr_id, int dev_id)
+static void init_x16r(const int thr_id, const int dev_id)
 {
 	uint32_t throughput = 0;
 	int intensity = 18;

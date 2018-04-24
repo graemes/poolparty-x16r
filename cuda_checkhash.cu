@@ -208,7 +208,8 @@ uint32_t cuda_check_hash_suppl(int thr_id, uint32_t threads, uint32_t startNounc
 		if (numNonce <= rescnt) {
 			result = h_resNonces[thr_id][numNonce+1];
 		}
-		if (opt_debug)
+//		if (opt_debug)
+		if (!opt_quiet)
 			applog(LOG_WARNING, "Found %d nonces: %x + %x", rescnt, h_resNonces[thr_id][1], result);
 	}
 

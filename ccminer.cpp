@@ -1339,7 +1339,7 @@ void restart_threads(void)
 		work_restart[i].restart = 1;
 }
 
-static bool wanna_mine(int thr_id)
+static bool wanna_mine(const int thr_id)
 {
 	bool state = true;
 	bool allow_pool_rotate = (thr_id == 0 && num_pools > 1 && !pool_is_switching);
@@ -1406,7 +1406,7 @@ static void *miner_thread(void *userdata)
 {
 	struct thr_info *mythr = (struct thr_info *)userdata;
 	int switchn = pool_switch_count;
-	int thr_id = mythr->id;
+	const int thr_id = mythr->id;
 	int dev_id = device_map[thr_id % MAX_GPUS];
 	struct cgpu_info * cgpu = &thr_info[thr_id].gpu;
 	struct work work;
@@ -1566,10 +1566,10 @@ static void *miner_thread(void *userdata)
 		} else
 			nonceptr[0]++; //??
 
-		if (opt_benchmark) {
+		//if (opt_benchmark) {
 			// randomize work
 			//nonceptr[-1] += 1;
-		}
+		//}
 
 		pthread_mutex_unlock(&g_work_lock);
 
