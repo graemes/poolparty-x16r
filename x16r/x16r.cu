@@ -373,7 +373,6 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 				work->valid_nonces = 1;
 				// work->nonces[1] = cuda_check_hash_suppl(thr_id, throughput, pdata[19], d_hash[thr_id], 1);
 				work_set_target_ratio(work, vhash);
-/*
 				if (work->nonces[1] != 0) {
 					be32enc(&endiandata[19], work->nonces[1]);
 					x16r_hash(vhash, endiandata);
@@ -383,8 +382,6 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 				} else {
 					pdata[19] = work->nonces[0] + 1; // cursor
 				}
-*/
-				pdata[19] = work->nonces[0] + 1; // cursor
 				return work->valid_nonces;
 			}
 			else if (vhash[7] > Htarg) {
