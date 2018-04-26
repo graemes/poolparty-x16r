@@ -60,7 +60,7 @@ extern char* opt_bench_hash;
 extern bool opt_autotune;
 
 // Initialise tpb arrays to default values (based on sm > 50)
-static uint32_t tpb64[HASH_FUNC_COUNT + 1] = { 192, 32,512,512,128,512,384,768,384,128,128,384,256,384,384,256 } ;
+static uint32_t tpb64[HASH_FUNC_COUNT + 1] = { 256, 32,512,512,128,512,384,768,384,128,128,384,256,384,384,256 } ;
 static uint32_t tpb80[HASH_FUNC_COUNT + 1] = { 512,128,256,256,256,512,256,256,128,128,128,128,256,256,256,256 } ;
 
 static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
