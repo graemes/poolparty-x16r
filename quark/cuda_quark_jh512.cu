@@ -244,14 +244,13 @@ static void E8(uint32_t x[8][4])
 //----------------------------------------------------------------------------------------------------------
 //__global__ __launch_bounds__(TPB,TPF)
 __global__ __launch_bounds__(TPB)
-void quark_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash, const uint32_t* __restrict__ g_nonceVector){
+void quark_jh512_gpu_hash_64(const uint32_t threads, uint32_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
 	if (thread < threads){
-		const uint32_t hashPosition = (g_nonceVector != NULL) ? g_nonceVector[thread] : thread;
 
-		uint32_t *Hash = &g_hash[hashPosition<<4];
+		uint32_t *Hash = &g_hash[thread<<4];
 		
 		uint32_t hash[16];
 		
@@ -288,24 +287,24 @@ void quark_jh512_gpu_hash_64(uint32_t threads, uint32_t* g_hash, const uint32_t*
 }
 
 __host__
-void quark_jh512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+void quark_jh512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_jh512_gpu_hash_64<<<grid, block>>>(threads, d_hash, NULL);
+	quark_jh512_gpu_hash_64<<<grid, block>>>(threads, d_hash);
 }
 
 __host__
-void quark_jh512_cpu_init_64(int thr_id, uint32_t threads) {}
+void quark_jh512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_jh512_cpu_free_64(int thr_id) {}
+void quark_jh512_cpu_free_64(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_jh512_calc_tpb_64(int thr_id) {
+uint32_t quark_jh512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

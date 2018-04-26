@@ -178,7 +178,7 @@ static __constant__ const uint32_t d_T512[1024] = {
 	}
 
 __global__ __launch_bounds__(TPB,TPF)
-void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
+void x13_hamsi512_gpu_hash_64(const uint32_t threads, uint32_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -290,7 +290,7 @@ void x13_hamsi512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 }
 
 __host__
-void x13_hamsi512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+void x13_hamsi512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb - 1)/tpb);
 	dim3 block(tpb);
@@ -299,13 +299,13 @@ void x13_hamsi512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_ha
 }
 
 __host__
-void x13_hamsi512_cpu_init_64(int thr_id, uint32_t threads) {}
+void x13_hamsi512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void x13_hamsi512_cpu_free_64(int thr_id) {}
+void x13_hamsi512_cpu_free_64(const int thr_id) {}
 
 __host__
-uint32_t x13_hamsi512_calc_tpb_64(int thr_id) {
+uint32_t x13_hamsi512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

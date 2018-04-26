@@ -206,14 +206,12 @@ static void bmw512_round1(uint2* q,uint2* h,const uint64_t* msg){
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_hash, const uint32_t *const __restrict__ g_nonceVector){
+void quark_bmw512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads){
 
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
-
-		uint64_t *inpHash = &g_hash[8 * hashPosition];
+		uint64_t *inpHash = &g_hash[8 * thread];
 
 		uint64_t msg[16];
 		uint2    h[16];
@@ -413,31 +411,25 @@ void quark_bmw512_gpu_hash_64(uint32_t threads, uint64_t *const __restrict__ g_h
 	}
 }
 
-//__host__ void quark_bmw512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_nonceVector, uint32_t *d_hash)
-__host__ void quark_bmw512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+__host__ void quark_bmw512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
-	//const uint32_t threadsperblock = 32;
-
     // berechne wie viele Thread Blocks wir brauchen
-    //dim3 grid((threads + threadsperblock-1)/threadsperblock);
-    //dim3 block(threadsperblock);
-
     const dim3 grid((threads + tpb-1)/tpb);
     const dim3 block(tpb);
 
-    quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash, NULL);
+    quark_bmw512_gpu_hash_64<<<grid, block>>>(threads, (uint64_t*)d_hash);
 }
 
 #include "miner.h"
 
 __host__
-void quark_bmw512_cpu_init_64(int thr_id, uint32_t threads) {}
+void quark_bmw512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_bmw512_cpu_free_64(int thr_id) {}
+void quark_bmw512_cpu_free_64(const int thr_id) {}
 
 __host__
-uint32_t quark_bmw512_calc_tpb_64(int thr_id) {
+uint32_t quark_bmw512_calc_tpb_64(const int thr_id) {
 
     int blockSize = 0;
     int minGridSize = 0;

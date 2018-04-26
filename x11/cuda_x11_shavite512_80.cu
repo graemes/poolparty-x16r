@@ -1343,7 +1343,7 @@ void shavite_gpu_init(uint32_t *sharedMemory)
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *outputHash)
+void x11_shavite512_gpu_hash_80(uint32_t threads, uint32_t startNounce, void *const __restrict__ outputHash)
 {
 	__shared__ uint32_t sharedMemory[1024];
 
@@ -1398,7 +1398,7 @@ void x11_shavite512_setBlock_80(void *pdata)
 }
 
 __host__
-void x11_shavite512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, const uint32_t tpb)
+void x11_shavite512_cpu_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, const uint32_t tpb)
 {
 	const dim3 grid((threads+tpb-1)/tpb);
 	const dim3 block(tpb);
@@ -1407,18 +1407,18 @@ void x11_shavite512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t sta
 }
 
 __host__
-void x11_shavite512_cpu_init_80(int thr_id, uint32_t threads)
+void x11_shavite512_cpu_init_80(const int thr_id, uint32_t threads)
 {
 	aes_cpu_init(thr_id);
 }
 
 __host__
-void x11_shavite512_cpu_free_80(int thr_id) {}
+void x11_shavite512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t x11_shavite512_calc_tpb_80(int thr_id) {
+uint32_t x11_shavite512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

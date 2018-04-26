@@ -160,7 +160,7 @@ void pool_set_attr(int pooln, const char* key, char* arg)
 }
 
 // pool switching code
-bool pool_switch(int thr_id, int pooln)
+bool pool_switch(const int thr_id, int pooln)
 {
 	int prevn = cur_pooln;
 	bool algo_switch = false;
@@ -300,7 +300,7 @@ int pool_get_first_valid(int startfrom, bool donate)
 }
 
 // switch to next available pool
-bool pool_switch_next(int thr_id)
+bool pool_switch_next(const int thr_id)
 {
 	if (num_pools > 1) {
 		int pooln = pool_get_first_valid(cur_pooln+1, false);

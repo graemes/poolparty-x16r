@@ -1904,7 +1904,7 @@ int nvapi_init_settings()
 	return ret;
 }
 
-void nvapi_toggle_clocks(int thr_id, bool enable)
+void nvapi_toggle_clocks(const int thr_id, bool enable)
 {
 	int dev_id = device_map[thr_id % MAX_GPUS];
 	if (device_mem_offsets[dev_id]) {

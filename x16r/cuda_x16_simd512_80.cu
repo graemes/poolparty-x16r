@@ -1674,7 +1674,7 @@ void x16_simd512_setBlock_80(void *pdata)
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-static void x16_simd512_gpu_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_outputhash)
+static void x16_simd512_gpu_80(const uint32_t threads, const uint32_t startNonce, uint64_t *const __restrict__ g_outputhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -1823,7 +1823,7 @@ static void x16_simd512_gpu_80(const uint32_t threads, const uint32_t startNonce
 /***************************************************/
 
 __host__
-void x16_simd512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
+void x16_simd512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb - 1) / tpb);
 	const dim3 block(tpb);
@@ -1832,13 +1832,13 @@ void x16_simd512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t
 }
 
 __host__
-void x16_simd512_cpu_init_80(int thr_id, uint32_t threads) {}
+void x16_simd512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void x16_simd512_cpu_free_80(int thr_id) {}
+void x16_simd512_cpu_free_80(const int thr_id) {}
 
 __host__
-uint32_t x16_simd512_calc_tpb_80(int thr_id) {
+uint32_t x16_simd512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

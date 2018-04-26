@@ -77,7 +77,7 @@ static void echo_round(const uint32_t sharedMemory[4][256], uint32_t *W, uint32_
 }
 
 __global__ __launch_bounds__(TPB, TPF) /* will force 80 registers */
-static void x11_echo512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
+static void x11_echo512_gpu_hash_64(const uint32_t threads, uint32_t *const __restrict__ g_hash)
 {
 	__shared__ uint32_t sharedMemory[4][256];
 
@@ -236,7 +236,7 @@ static void x11_echo512_gpu_hash_64(uint32_t threads, uint32_t *g_hash)
 }
 
 __host__
-void x11_echo512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
+void x11_echo512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
 	dim3 grid((threads + tpb - 1)/ tpb);
 	dim3 block(tpb);
@@ -245,15 +245,15 @@ void x11_echo512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_has
 }
 
 __host__
-void x11_echo512_cpu_init_64(int thr_id, uint32_t threads) {}
+void x11_echo512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void x11_echo512_cpu_free_64(int thr_id) {}
+void x11_echo512_cpu_free_64(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t x11_echo512_calc_tpb_64(int thr_id) {
+uint32_t x11_echo512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

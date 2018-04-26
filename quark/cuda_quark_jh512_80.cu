@@ -283,7 +283,7 @@ __constant__ static uint32_t c_Message[4];
 
 //__global__ __launch_bounds__(TPB,TPF)
 __global__ __launch_bounds__(TPB)
-void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
+void quark_jh512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, uint32_t *const __restrict__ g_outhash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -348,7 +348,7 @@ extern "C" {
 }
 
 __host__
-void quark_jh512_setBlock_80(int thr_id, uint32_t *endiandata)
+void quark_jh512_setBlock_80(const int thr_id, uint32_t *endiandata)
 {
 	sph_jh512_context ctx_jh;
 
@@ -360,15 +360,15 @@ void quark_jh512_setBlock_80(int thr_id, uint32_t *endiandata)
 }
 
 __host__
-void quark_jh512_cpu_init_80(int thr_id, uint32_t threads) {}
+void quark_jh512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_jh512_cpu_free_80(int thr_id) {}
+void quark_jh512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_jh512_calc_tpb_80(int thr_id) {
+uint32_t quark_jh512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

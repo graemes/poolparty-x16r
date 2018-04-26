@@ -19,13 +19,13 @@
 __constant__ static uint32_t c_Message80[20];
 
 __host__
-void quark_groestl512_setBlock_80(int thr_id, uint32_t *endiandata)
+void quark_groestl512_setBlock_80(const int thr_id, uint32_t *endiandata)
 {
 	cudaMemcpyToSymbol(c_Message80, endiandata, sizeof(c_Message80), 0, cudaMemcpyHostToDevice);
 }
 
 __global__ __launch_bounds__(TPB, THF)
-void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNounce, uint32_t * g_outhash)
+void groestl512_gpu_hash_80_quad(const uint32_t threads, const uint32_t startNounce, uint32_t *const __restrict__ g_outhash)
 {
 	// BEWARE : 4-WAY CODE (one hash need 4 threads)
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
@@ -90,15 +90,15 @@ void quark_groestl512_cuda_hash_80(const int thr_id, const uint32_t threads, con
 }
 
 __host__
-void quark_groestl512_cpu_init_80(int thr_id, uint32_t threads) {}
+void quark_groestl512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_groestl512_cpu_free_80(int thr_id) {}
+void quark_groestl512_cpu_free_80(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_groestl512_calc_tpb_80(int thr_id) {
+uint32_t quark_groestl512_calc_tpb_80(const int thr_id) {
 
         int blockSize = 0;
         int minGridSize = 0;

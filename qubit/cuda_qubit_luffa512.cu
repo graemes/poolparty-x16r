@@ -12,7 +12,6 @@
 #define TPB 384
 #define TPF 2
 
-__constant__ uint64_t c_PaddedMessage80[10]; // padded message (80 bytes + padding)
 __constant__ uint32_t _ALIGN(8) statebufferpre[8];
 __constant__ uint32_t _ALIGN(8) statechainvpre[40];
 
@@ -428,7 +427,7 @@ static void rnd512_nullhash(uint32_t *const __restrict__ state){
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void qubit_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
+void qubit_luffa512_gpu_hash_64(const uint32_t threads, uint32_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	uint32_t statebuffer[8];
@@ -489,7 +488,7 @@ void qubit_luffa512_gpu_hash_64(uint32_t threads, uint32_t *g_hash){
 }
 
 __host__
-void qubit_luffa512_cpu_hash_64(int thr_id, const uint32_t threads,uint32_t *d_hash, const uint32_t tpb)
+void qubit_luffa512_cpu_hash_64(const int thr_id, const uint32_t threads,uint32_t *d_hash, const uint32_t tpb)
 {
     // berechne wie viele Thread Blocks wir brauchen
     const dim3 grid((threads + tpb-1)/tpb);
@@ -499,13 +498,13 @@ void qubit_luffa512_cpu_hash_64(int thr_id, const uint32_t threads,uint32_t *d_h
 }
 
 __host__
-void qubit_luffa512_cpu_init_64(int thr_id, uint32_t threads) {}
+void qubit_luffa512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void qubit_luffa512_cpu_free_64(int thr_id) {}
+void qubit_luffa512_cpu_free_64(const int thr_id) {}
 
 __host__
-uint32_t qubit_luffa512_calc_tpb_64(int thr_id) {
+uint32_t qubit_luffa512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

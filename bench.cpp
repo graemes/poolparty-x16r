@@ -46,14 +46,14 @@ void bench_free()
 }
 
 // required to switch algos
-void algo_free_all(int thr_id)
+void algo_free_all(const int thr_id)
 {
 	// only initialized algos will be freed
 	free_x16r(thr_id);
 }
 
 // benchmark all algos (called once per mining thread)
-bool bench_algo_switch_next(int thr_id)
+bool bench_algo_switch_next(const int thr_id)
 {
 	int algo = (int) opt_algo;
 	int prev_algo = algo;
@@ -133,7 +133,7 @@ bool bench_algo_switch_next(int thr_id)
 	return true;
 }
 
-void bench_set_throughput(int thr_id, uint32_t throughput)
+void bench_set_throughput(const int thr_id, uint32_t throughput)
 {
 	algo_throughput[thr_id][opt_algo] = throughput;
 }

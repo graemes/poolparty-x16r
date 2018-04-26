@@ -86,7 +86,7 @@ uint64_t Tone(const uint64_t* K, uint64_t* r, uint64_t* W, const uint8_t a, cons
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
+void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash){
 
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	const uint64_t IV512[8] = {
@@ -139,7 +139,7 @@ void x17_sha512_gpu_hash_64(const uint32_t threads, uint64_t *g_hash){
 }
 
 __host__
-void x17_sha512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+void x17_sha512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
@@ -149,13 +149,13 @@ void x17_sha512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash
 }
 
 __host__
-void x17_sha512_cpu_init_64(int thr_id, uint32_t threads) {}
+void x17_sha512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void x17_sha512_cpu_free_64(int thr_id) {}
+void x17_sha512_cpu_free_64(const int thr_id) {}
 
 __host__
-uint32_t x17_sha512_calc_tpb_64(int thr_id) {
+uint32_t x17_sha512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

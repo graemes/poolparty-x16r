@@ -1033,7 +1033,7 @@ const int i0, const int i1, const int i2, const int i3, const int i4, const int 
 
 //__global__ __launch_bounds__(TPB,TPF)
 __global__
-void x15_whirlpool512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *outputHash, int swab)
+void x15_whirlpool512_gpu_hash_80(const uint32_t threads, const uint32_t startNounce, void *const __restrict__ outputHash, int swab)
 {
 	__shared__ uint64_t sharedMemory[2048];
 
@@ -1108,7 +1108,7 @@ void x15_whirlpool512_gpu_hash_80(const uint32_t threads, const uint32_t startNo
 // ------------------------------------------------------------------------------------------------
 
 __host__
-void x15_whirlpool512_cpu_init_80(int thr_id, uint32_t threads)
+void x15_whirlpool512_cpu_init_80(const int thr_id, uint32_t threads)
 {
 	cudaMemcpyToSymbol(InitVector_RC, plain_RC, sizeof(plain_RC), 0, cudaMemcpyHostToDevice);
 	cudaMemcpyToSymbol(mixTob0Tox, plain_T0, sizeof(plain_T0), 0, cudaMemcpyHostToDevice);
@@ -1152,7 +1152,7 @@ void x15_whirlpool512_setBlock_80(void *pdata)
 }
 
 __host__
-void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_outputHash, const uint32_t tpb)
+void x15_whirlpool512_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_outputHash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb - 1) / tpb);
 	const dim3 block(tpb);
@@ -1164,10 +1164,10 @@ void x15_whirlpool512_hash_80(int thr_id, const uint32_t threads, const uint32_t
 }
 
 __host__
-void x15_whirlpool512_cpu_free_80(int thr_id) {}
+void x15_whirlpool512_cpu_free_80(const int thr_id) {}
 
 __host__
-uint32_t x15_whirlpool512_calc_tpb_80(int thr_id) {
+uint32_t x15_whirlpool512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

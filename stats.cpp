@@ -28,7 +28,7 @@ uint32_t thr_samples[MAX_GPUS] = { 0 };
 /**
  * Store speed per thread
  */
-void stats_remember_speed(int thr_id, uint32_t hashcount, double hashrate, uint8_t found, uint32_t height)
+void stats_remember_speed(const int thr_id, uint32_t hashcount, double hashrate, uint8_t found, uint32_t height)
 {
 	// Enough hashes to give right stats?
 	//if (hashcount < 1000 || hashrate < 0.01)
@@ -73,7 +73,7 @@ void stats_remember_speed(int thr_id, uint32_t hashcount, double hashrate, uint8
  * Get the computed average speed
  * @param thr_id int (-1 for all threads)
  */
-double stats_get_speed(int thr_id, double def_speed)
+double stats_get_speed(const int thr_id, double def_speed)
 {
 	double speed = 0.0;
 	uint32_t samples_used = 0;
@@ -138,7 +138,7 @@ double stats_get_gpu_speed(int gpu_id)
 /**
  * Export data for api calls
  */
-int stats_get_history(int thr_id, struct stats_data *data, int max_records)
+int stats_get_history(const int thr_id, struct stats_data *data, int max_records)
 {
 	int records = 0;
 

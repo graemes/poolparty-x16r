@@ -306,7 +306,7 @@ void x16_fugue512_setBlock_80(void *pdata)
 
 //__global__ __launch_bounds__(TPB,TPF)
 __global__ __launch_bounds__(TPB)
-void x16_fugue512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *g_hash)
+void x16_fugue512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce, uint64_t *const __restrict__ g_hash)
 {
 	__shared__ uint32_t mixtabs[1024];
 
@@ -445,13 +445,13 @@ void x16_fugue512_gpu_hash_80(const uint32_t threads, const uint32_t startNonce,
 }
 
 __host__
-void x16_fugue512_cpu_init_80(int thr_id, uint32_t threads)
+void x16_fugue512_cpu_init_80(const int thr_id, uint32_t threads)
 {
 	texDef(0, mixTab0Tex, mixTab0m, mixtab0, sizeof(uint32_t)*256);
 }
 
 __host__
-void x16_fugue512_cpu_free_80(int thr_id)
+void x16_fugue512_cpu_free_80(const int thr_id)
 {
 	cudaFree(d_textures[thr_id][0]);
 }
@@ -459,7 +459,7 @@ void x16_fugue512_cpu_free_80(int thr_id)
 #include "miner.h"
 
 __host__
-void x16_fugue512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
+void x16_fugue512_cuda_hash_80(const int thr_id, const uint32_t threads, const uint32_t startNonce, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
@@ -468,7 +468,7 @@ void x16_fugue512_cuda_hash_80(int thr_id, const uint32_t threads, const uint32_
 }
 
 __host__
-uint32_t x16_fugue512_calc_tpb_80(int thr_id) {
+uint32_t x16_fugue512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

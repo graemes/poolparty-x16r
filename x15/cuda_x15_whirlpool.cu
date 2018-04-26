@@ -165,27 +165,15 @@ static void ROUND_KSCHED(const uint64_t *in,uint64_t *out,const uint64_t c){
 //--------END OF WHIRLPOOL HOST MACROS-------------------------------------------------------------------------------
 
 __host__
-extern void x15_whirlpool512_cpu_init_64(int thr_id, uint32_t threads){
-
-	int mode = 0;
+extern void x15_whirlpool512_cpu_init_64(const int thr_id, uint32_t threads){
 
 	uint64_t* table0 = NULL;
 
-	switch (mode) {
-	case 0: /* x15 with rotated T1-T7 (based on T0) */
-		table0 = (uint64_t*)plain_T0;
-		cudaMemcpyToSymbol(InitVector_RC, plain_RC, 10*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
-		cudaMemcpyToSymbol(precomputed_round_key_64, plain_precomputed_round_key_64, 72*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
-		break;
-	case 1: /* old whirlpool */
-		table0 = (uint64_t*)old1_T0;
-		cudaMemcpyToSymbol(InitVector_RC, old1_RC, 10*sizeof(uint64_t),0,cudaMemcpyHostToDevice);
-		cudaMemcpyToSymbol(precomputed_round_key_64, old1_precomputed_round_key_64, 72*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
-		break;
-	default:
-		applog(LOG_ERR,"Bad whirlpool mode");
-		exit(0);
-	}
+	// x15 with rotated T1-T7 (based on T0)
+	table0 = (uint64_t*)plain_T0;
+	cudaMemcpyToSymbol(InitVector_RC, plain_RC, 10*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
+	cudaMemcpyToSymbol(precomputed_round_key_64, plain_precomputed_round_key_64, 72*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
+
 	cudaMemcpyToSymbol(b0, table0, 256*sizeof(uint64_t),0, cudaMemcpyHostToDevice);
 	uint64_t table7[256];
 	for(int i=0;i<256;i++){
@@ -205,14 +193,14 @@ void whirl_midstate(void *state, const void *input)
 }
 
 __host__
-extern void x15_whirlpool_cpu_free(int thr_id){
+extern void x15_whirlpool_cpu_free(const int thr_id){
 	cudaFree(InitVector_RC);
 	cudaFree(b0);
 	cudaFree(b7);
 }
 
 __global__ __launch_bounds__(TPB,TPF)
-void x15_whirlpool512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
+void x15_whirlpool512_gpu_hash_64(const uint32_t threads, uint64_t *const __restrict__ g_hash)
 {
 	__shared__ uint2 sharedMemory[7][256];
 
@@ -320,7 +308,7 @@ void x15_whirlpool512_gpu_hash_64(uint32_t threads, uint64_t *g_hash)
 }
 
 __host__
-extern void x15_whirlpool512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
+extern void x15_whirlpool512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb)
 {
 	const dim3 grid((threads + tpb - 1) / tpb);
 	const dim3 block(tpb);
@@ -329,10 +317,10 @@ extern void x15_whirlpool512_cpu_hash_64(int thr_id, const uint32_t threads, uin
 }
 
 __host__
-void x15_whirlpool512_cpu_free_64(int thr_id) {}
+void x15_whirlpool512_cpu_free_64(const int thr_id) {}
 
 __host__
-uint32_t x15_whirlpool512_calc_tpb_64(int thr_id) {
+uint32_t x15_whirlpool512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

@@ -25,19 +25,18 @@ __global__ __launch_bounds__(TPB52, 2)
 #else
 __global__ __launch_bounds__(TPB50, 2)
 #endif
-void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint32_t* g_nonceVector){
+void quark_groestl512_gpu_hash_64_quad(const uint32_t threads,  uint32_t *const __restrict__ g_hash){
 	uint32_t msgBitsliced[8];
 	uint32_t state[8];
 	uint32_t output[16];
+
 	// durch 4 dividieren, weil jeweils 4 Threads zusammen ein Hash berechnen
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x) >> 2;
+
 	if (thread < threads){
-	        // GROESTL
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : __ldg(&g_nonceVector[thread]);
-
-	        uint32_t *inpHash = &g_hash[hashPosition<<4];
-
-	        const uint32_t thr = threadIdx.x & (THF-1);
+		// GROESTL
+		uint32_t *inpHash = &g_hash[thread<<4];
+		const uint32_t thr = threadIdx.x & (THF-1);
 
 		uint32_t message[8] = {
 			#if __CUDA_ARCH__ > 500
@@ -48,9 +47,7 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 		};
 
 		to_bitslice_quad(message, msgBitsliced);
-
-	        groestl512_progressMessage_quad(state, msgBitsliced,thr);
-
+		groestl512_progressMessage_quad(state, msgBitsliced,thr);
 		from_bitslice_quad52(state, output);
 
 #if __CUDA_ARCH__ <= 500
@@ -111,25 +108,25 @@ void quark_groestl512_gpu_hash_64_quad(uint32_t threads, uint32_t* g_hash, uint3
 }
 
 __host__
-void quark_groestl512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
+void quark_groestl512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
 	// Compute 3.0 benutzt die registeroptimierte Quad Variante mit Warp Shuffle
 	const dim3 grid((THF*threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash, NULL);
+	quark_groestl512_gpu_hash_64_quad<<<grid, block>>>(threads, d_hash);
 }
 
 __host__
-void quark_groestl512_cpu_init_64(int thr_id, uint32_t threads) {}
+void quark_groestl512_cpu_init_64(const int thr_id, uint32_t threads) {}
 
 __host__
-void quark_groestl512_cpu_free_64(int thr_id) {}
+void quark_groestl512_cpu_free_64(const int thr_id) {}
 
 #include "miner.h"
 
 __host__
-uint32_t quark_groestl512_calc_tpb_64(int thr_id) {
+uint32_t quark_groestl512_calc_tpb_64(const int thr_id) {
 
         int blockSize = 0;
         int minGridSize = 0;

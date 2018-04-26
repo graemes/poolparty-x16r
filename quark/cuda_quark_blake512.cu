@@ -12,9 +12,7 @@
 #define TPB50_64 192
 
 __constant__ uint2 _ALIGN(16) c_m[16]; // padded message (80 bytes + padding)
-
 __constant__ uint2 _ALIGN(16) c_v[16]; //state
-
 __constant__ uint2 _ALIGN(16) c_x[128]; //precomputed xors
 
 // ---------------------------- BEGIN CUDA quark_blake512 functions ------------------------------------
@@ -107,16 +105,15 @@ __constant__ const uint2 h[8] = {
 }
 
 __global__ __launch_bounds__(TPB50_64, 1)
-void quark_blake512_gpu_hash_64(uint32_t threads, const uint32_t *const __restrict__ g_nonceVector, uint2* g_hash)
+void quark_blake512_gpu_hash_64(const uint32_t threads, uint2 *const __restrict__ g_hash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
 	if (thread < threads){
-		const uint32_t hashPosition = (g_nonceVector == NULL) ? thread : g_nonceVector[thread];
 
 		uint2 msg[16];
 
-		uint2x4 *phash = (uint2x4*)&g_hash[hashPosition<<3];
+		uint2x4 *phash = (uint2x4*)&g_hash[thread<<3];
 		uint2x4 *outpt = (uint2x4*)msg;
 		outpt[0] = __ldg4(&phash[0]);
 		outpt[1] = __ldg4(&phash[1]);
@@ -176,8 +173,6 @@ void quark_blake512_gpu_hash_64(uint32_t threads, const uint32_t *const __restri
 		GS4(0, 4, 8, 12, 10, 2,		1, 5, 9, 13, 8, 4,		2, 6, 10, 14, 7, 6,		3, 7, 11, 15, 1, 5);
 		GS4(0, 5, 10, 15,15,11,		1, 6, 11, 12, 9, 14,		2, 7, 8, 13, 3, 12,		3, 4, 9, 14, 13, 0);
 
-//		#if __CUDA_ARCH__ == 500
-
 		GS4(0, 4, 8,12, 0, 1,		1, 5, 9,13, 2, 3,		2, 6,10,14, 4, 5,		3, 7,11,15, 6, 7);
 		GS4(0, 5,10,15, 8, 9,		1, 6,11,12,10,11,		2, 7, 8,13,12,13,		3, 4, 9,14,14,15);
 
@@ -196,15 +191,6 @@ void quark_blake512_gpu_hash_64(uint32_t threads, const uint32_t *const __restri
 		GS4(0, 4, 8, 12, 2, 12,		1, 5, 9, 13, 6, 10,		2, 6, 10, 14, 0, 11,		3, 7, 11, 15, 8, 3);
 		GS4(0, 5, 10, 15, 4, 13,	1, 6, 11, 12, 7, 5,		2, 7, 8, 13, 15, 14,		3, 4, 9, 14, 1, 9);
 
-//		#else*/
-/*
-		for (int i = 0; i < 6; i++)
-		{
-			G4(0,	0, 4, 8,12,	1, 5, 9,13,	2, 6,10,14,	3, 7,11,15);
-			G4(8,	0, 5,10,15,	1, 6,11,12,	2, 7, 8,13,	3, 4, 9,14);
-		}
-*/
-//		#endif
 		v[0] = cuda_swab64_U2(xor3x(v[0],h[0],v[ 8]));
 		v[1] = cuda_swab64_U2(xor3x(v[1],h[1],v[ 9]));
 		v[2] = cuda_swab64_U2(xor3x(v[2],h[2],v[10]));
@@ -225,31 +211,23 @@ void quark_blake512_gpu_hash_64(uint32_t threads, const uint32_t *const __restri
 }
 
 // ---------------------------- END CUDA quark_blake512 functions ------------------------------------
-/*
 __host__
-void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_outputHash){
-	uint32_t tpb = TPB52_64;
-	int dev_id = device_map[thr_id];
-	
-	if (device_sm[dev_id] <= 500) tpb = TPB50_64;
-*/
-__host__
-void quark_blake512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb){
+void quark_blake512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb){
 
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	quark_blake512_gpu_hash_64<<<grid, block>>>(threads, NULL, (uint2*)d_outputHash);
+	quark_blake512_gpu_hash_64<<<grid, block>>>(threads, (uint2*)d_outputHash);
 }
 
 __host__
-void quark_blake512_cpu_init_64(int thr_id, uint32_t threads) {}
+void quark_blake512_cpu_init_64(const int thr_id, uint32_t threads){}
 
 __host__
-void quark_blake512_cpu_free_64(int thr_id) {}
+void quark_blake512_cpu_free_64(const int thr_id){}
 
 __host__
-uint32_t quark_blake512_calc_tpb_64(int thr_id) {
+uint32_t quark_blake512_calc_tpb_64(const int thr_id) {
 
     int blockSize = 0;
     int minGridSize = 0;

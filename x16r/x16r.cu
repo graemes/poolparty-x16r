@@ -42,9 +42,9 @@ extern "C" {
 // Internal functions
 static void getAlgoSequence(const uint32_t* prevblock, uint8_t *output);
 static void getAlgoString(const uint32_t* prevblock, char *output);
-static void init_x16r(int thr_id, int dev_id);
+static void init_x16r(const int thr_id, int dev_id);
 static void setBenchHash();
-static void calcOptimumTPBs(int thr_id);
+static void calcOptimumTPBs(const int thr_id);
 
 // Local variables
 static uint32_t *d_hash[MAX_GPUS];
@@ -82,6 +82,7 @@ static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
 	x15_whirlpool512_cpu_hash_64,
 	x17_sha512_cpu_hash_64
 };
+
 static void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
 {
 	quark_blake512_cpu_hash_80,
@@ -226,7 +227,7 @@ extern "C" void x16r_hash(void *output, const void *input)
 
 static int algo80_fails[HASH_FUNC_COUNT] = { 0 };
 
-extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
+extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_nonce, unsigned long *hashes_done)
 {
 	const int dev_id = device_map[thr_id];
 
@@ -329,14 +330,29 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 	int warn = 0;
 	do {
 		// Hash with CUDA
-		if (work_restart[thr_id].restart) return -127;
 		pAlgo80[hashOrder[0]](thr_id, throughput, pdata[19], d_hash[thr_id],tpb80[hashOrder[0]]);
-		for (uint8_t j = 1; j < HASH_FUNC_COUNT; j++) {
-			pAlgo64[hashOrder[j]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[j]]);
-		}
-		if (work_restart[thr_id].restart) return -127;
+		//for (uint8_t j = 1; j < HASH_FUNC_COUNT; j++) {
+		//	pAlgo64[hashOrder[j]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[j]]);
+		//}
+		pAlgo64[hashOrder[1]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[1]]);
+		pAlgo64[hashOrder[2]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[2]]);
+		pAlgo64[hashOrder[3]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[3]]);
+		pAlgo64[hashOrder[4]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[4]]);
+		pAlgo64[hashOrder[5]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[5]]);
+		pAlgo64[hashOrder[6]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[6]]);
+		pAlgo64[hashOrder[7]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[7]]);
+		pAlgo64[hashOrder[8]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[8]]);
+		pAlgo64[hashOrder[9]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[9]]);
+		pAlgo64[hashOrder[10]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[10]]);
+		pAlgo64[hashOrder[11]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[11]]);
+		pAlgo64[hashOrder[12]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[12]]);
+		pAlgo64[hashOrder[13]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[13]]);
+		pAlgo64[hashOrder[14]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[14]]);
+		pAlgo64[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]]);
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
+		// No point continuing if we've already been told to restart
+		if (work_restart[thr_id].restart) break;
 
 		work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
 #ifdef _DEBUG
@@ -355,7 +371,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 
 			if (vhash[7] <= Htarg && fulltest(vhash, ptarget)) {
 				work->valid_nonces = 1;
-				work->nonces[1] = cuda_check_hash_suppl(thr_id, throughput, pdata[19], d_hash[thr_id], 1);
+				// work->nonces[1] = cuda_check_hash_suppl(thr_id, throughput, pdata[19], d_hash[thr_id], 1);
 				work_set_target_ratio(work, vhash);
 				if (work->nonces[1] != 0) {
 					be32enc(&endiandata[19], work->nonces[1]);
@@ -400,7 +416,7 @@ extern "C" int scanhash_x16r(int thr_id, struct work* work, uint32_t max_nonce, 
 }
 
 // cleanup
-extern "C" void free_x16r(int thr_id)
+extern "C" void free_x16r(const int thr_id)
 {
 	if (!init[thr_id])
 		return;
@@ -482,7 +498,7 @@ static void getAlgoString(const uint32_t* prevblock, char *output)
 	*sptr = '\0';
 }
 
-static void init_x16r(int thr_id, int dev_id)
+static void init_x16r(const int thr_id, const int dev_id)
 {
 	uint32_t throughput = 0;
 	int intensity = 18;
@@ -582,7 +598,7 @@ static void setBenchHash() {
 	}
 }
 
-static void calcOptimumTPBs(int thr_id){
+static void calcOptimumTPBs(const int thr_id){
 
 	tpb64[BLAKE] = quark_blake512_calc_tpb_64(thr_id);
 	tpb80[BLAKE] = quark_blake512_calc_tpb_80(thr_id);
@@ -631,5 +647,4 @@ static void calcOptimumTPBs(int thr_id){
 
 	tpb64[SHA512] = x17_sha512_calc_tpb_64(thr_id);
 	tpb80[SHA512] = x17_sha512_calc_tpb_80(thr_id);
-
 }

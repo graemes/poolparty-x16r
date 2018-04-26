@@ -464,7 +464,7 @@ static void FFT_16(int *y){
 
 /***************************************************/
 __global__ __launch_bounds__(TPB,TPF_EXPAND)
-static void x11_simd512_gpu_expand_64(uint32_t threads,const uint32_t* __restrict__ g_hash, uint4 *g_temp4)
+static void x11_simd512_gpu_expand_64(const uint32_t threads,const uint32_t* __restrict__ g_hash, uint4 *g_temp4)
 {
 	const uint32_t threadBloc = (blockDim.x * blockIdx.x + threadIdx.x)>>3;
 	const uint8_t thr        = (threadIdx.x & 7);
@@ -680,7 +680,7 @@ __launch_bounds__(TPB,TPF)
 #else
 __launch_bounds__(TPB,TPF50)
 #endif
-static void x11_simd512_gpu_compress_64_maxwell(uint32_t threads, uint32_t *g_hash,const uint4 *const __restrict__ g_fft4)
+static void x11_simd512_gpu_compress_64_maxwell(const uint32_t threads, uint32_t *g_hash,const uint4 *const __restrict__ g_fft4)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	const uint32_t thr_offset = thread << 6; // thr_id * 128 (je zwei elemente)
@@ -736,7 +736,7 @@ static void x11_simd512_gpu_compress_64_maxwell(uint32_t threads, uint32_t *g_ha
 }
 
 __host__
-void x11_simd512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
+void x11_simd512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_hash, const uint32_t tpb){
 
 	const dim3 grid1((8*threads + tpb - 1) / tpb);
 	const dim3 block1(tpb);
@@ -749,17 +749,17 @@ void x11_simd512_cpu_hash_64(int thr_id, const uint32_t threads, uint32_t *d_has
 }
 
 __host__
-void x11_simd512_cpu_init_64(int thr_id, uint32_t threads){
+void x11_simd512_cpu_init_64(const int thr_id, uint32_t threads){
 	cudaMalloc(&d_temp4[thr_id], 64*sizeof(uint4)*threads);
 }
 
 __host__
-void x11_simd512_cpu_free_64(int thr_id){
+void x11_simd512_cpu_free_64(const int thr_id){
 	cudaFree(d_temp4[thr_id]);
 }
 
 __host__
-uint32_t x11_simd512_calc_tpb_64(int thr_id) {
+uint32_t x11_simd512_calc_tpb_64(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;

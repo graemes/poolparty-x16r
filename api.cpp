@@ -113,7 +113,7 @@ char driver_version[32] = { 0 };
 
 /***************************************************************/
 
-static void gpustatus(int thr_id)
+static void gpustatus(const int thr_id)
 {
 	struct pool_infos *p = &pools[cur_pooln];
 
@@ -1333,7 +1333,7 @@ void *api_thread(void *userdata)
 }
 
 /* to be able to report the default value set in each algo */
-void api_set_throughput(int thr_id, uint32_t throughput)
+void api_set_throughput(const int thr_id, uint32_t throughput)
 {
 	if (thr_id < MAX_GPUS && thr_info) {
 		struct cgpu_info *cgpu = &thr_info[thr_id].gpu;

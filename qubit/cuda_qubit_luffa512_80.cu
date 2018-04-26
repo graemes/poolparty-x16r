@@ -515,7 +515,7 @@ static void rnd512_nullhash(uint32_t *const __restrict__ state){
 
 /***************************************************/
 __global__ __launch_bounds__(TPB,TPF)
-void qubit_luffa512_gpu_hash_80(const uint32_t threads,const uint32_t startNounce, uint32_t *outputHash)
+void qubit_luffa512_gpu_hash_80(const uint32_t threads,const uint32_t startNounce, uint32_t *const __restrict__ outputHash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 	if (thread < threads)
@@ -646,7 +646,7 @@ void qubit_luffa512_cpu_setBlock_80(void *pdata)
 }
 
 __host__
-void qubit_luffa512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, const uint32_t tpb){
+void qubit_luffa512_cpu_hash_80(const int thr_id, const uint32_t threads, uint32_t startNounce, uint32_t *d_outputHash, const uint32_t tpb){
 
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
@@ -655,13 +655,13 @@ void qubit_luffa512_cpu_hash_80(int thr_id, const uint32_t threads, uint32_t sta
 }
 
 __host__
-void qubit_luffa512_cpu_init_80(int thr_id, uint32_t threads) {}
+void qubit_luffa512_cpu_init_80(const int thr_id, uint32_t threads) {}
 
 __host__
-void qubit_luffa512_cpu_free_80(int thr_id) {}
+void qubit_luffa512_cpu_free_80(const int thr_id) {}
 
 __host__
-uint32_t qubit_luffa512_calc_tpb_80(int thr_id) {
+uint32_t qubit_luffa512_calc_tpb_80(const int thr_id) {
 
 	int blockSize = 0;
 	int minGridSize = 0;
