@@ -12,7 +12,7 @@
 #define TPB50_64 192
 
 // store MAX_GPUS device arrays of 8 nounces
-__constant__ uint32_t pTarget[8]; // 32 bytes
+__constant__ uint32_t pBlakeTarget[8]; // 32 bytes
 
 static uint32_t* h_resNonces[MAX_GPUS] = { NULL };
 static uint32_t* d_resNonces[MAX_GPUS] = { NULL };
@@ -367,7 +367,7 @@ void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __res
 		phash[1] = *(uint2x4*)&v[ 4];
 
 		if (resNonces[0] == UINT32_MAX) {
-			if (hashbelowtarget((uint32_t*)phash, pTarget))
+			if (hashbelowtarget((uint32_t*)phash, pBlakeTarget))
 				resNonces[0] = (startNounce + thread);
 		}
 	}
@@ -425,7 +425,7 @@ void quark_blake512_cpu_free_64(const int thr_id)
 __host__
 void quark_blake512_check_cpu_setTarget(const void *ptarget)
 {
-	CUDA_SAFE_CALL(cudaMemcpyToSymbol(pTarget, ptarget, 32, 0, cudaMemcpyHostToDevice));
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(pBlakeTarget, ptarget, 32, 0, cudaMemcpyHostToDevice));
 	//CUDA_SAFE_CALL(cudaMemcpyToSymbol(pTarget, ptarget, 32, 0, cudaMemcpyDefault));
 }
 
