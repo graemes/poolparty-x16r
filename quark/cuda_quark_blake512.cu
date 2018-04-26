@@ -217,7 +217,7 @@ void quark_blake512_gpu_hash_64(const uint32_t threads, uint2 *const __restrict_
 }
 
 __device__ __forceinline__
-static bool hashbelowtarget(uint32_t *hash, uint32_t *target)
+static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
 {
 	if (hash[7] > target[7])
 		return false;
@@ -363,10 +363,8 @@ void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __res
 		phash[1] = *(uint2x4*)&v[ 4];
 
 		if (resNonces[0] == UINT32_MAX) {
-			//uint32_t *pHash = phash;
-			uint32_t threadid = thread;
 			if (hashbelowtarget((uint32_t*)phash, ptarget))
-				resNonces[0] = (startNounce + threadid);
+				resNonces[0] = (startNounce + thread);
 		}
 	}
 }
