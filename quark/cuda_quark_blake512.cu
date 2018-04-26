@@ -378,6 +378,8 @@ uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threa
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
+	gpulog(LOG_INFO, thr_id, "Memory set");
+
 	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce, ptarget, d_resNonces[thr_id]);
 
 	cudaMemcpy(h_resNonces[thr_id], d_resNonces[thr_id], sizeof(uint32_t), cudaMemcpyDeviceToHost);
