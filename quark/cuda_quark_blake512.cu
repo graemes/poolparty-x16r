@@ -217,7 +217,8 @@ void quark_blake512_gpu_hash_64(const uint32_t threads, uint2 *const __restrict_
 }
 
 __device__ __forceinline__
-static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
+//static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
+static bool hashbelowtarget(uint32_t *hash, uint32_t *const target)
 {
 	if (hash[7] > target[7])
 		return false;
