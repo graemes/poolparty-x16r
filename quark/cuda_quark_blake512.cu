@@ -382,15 +382,15 @@ uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threa
 	const dim3 grid((threads + tpb-1)/tpb);
 	const dim3 block(tpb);
 
-	gpulog(LOG_INFO, thr_id, "Memory set");
+	//gpulog(LOG_INFO, thr_id, "Memory set");
 
 	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce, d_resNonces[thr_id]);
 	cudaThreadSynchronize();
 //	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce);
 //	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash);
 	cudaMemcpy(h_resNonces[thr_id], d_resNonces[thr_id], sizeof(uint32_t), cudaMemcpyDeviceToHost);
-	//return h_resNonces[thr_id][0];
-	return UINT32_MAX;
+	return h_resNonces[thr_id][0];
+	//return UINT32_MAX;
 }
 
 __host__
