@@ -257,9 +257,9 @@ static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
 }
 
 __global__ __launch_bounds__(TPB50_64, 1)
-//void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce, uint32_t *ptarget, uint32_t *resNonces)
+void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce, uint32_t *ptarget, uint32_t *resNonces)
 //void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce)
-void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash)
+//void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash)
 {
 	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
 
@@ -384,9 +384,9 @@ uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threa
 
 	gpulog(LOG_INFO, thr_id, "Memory set");
 
-//	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce, ptarget, d_resNonces[thr_id]);
+	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce, ptarget, d_resNonces[thr_id]);
 //	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce);
-	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash);
+//	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash);
 	cudaMemcpy(h_resNonces[thr_id], d_resNonces[thr_id], sizeof(uint32_t), cudaMemcpyDeviceToHost);
 	//return h_resNonces[thr_id][0];
 	return UINT32_MAX;
