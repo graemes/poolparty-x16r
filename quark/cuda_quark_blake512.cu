@@ -11,13 +11,6 @@
 #define TPB52_64 192
 #define TPB50_64 192
 
-// store MAX_GPUS device arrays of 8 nounces
-__constant__ uint32_t pBlakeTarget[8]; // 32 bytes
-
-static uint32_t* h_resNonces[MAX_GPUS] = { NULL };
-static uint32_t* d_resNonces[MAX_GPUS] = { NULL };
-static __thread bool init_done = false;
-
 __constant__ uint2 _ALIGN(16) c_m[16]; // padded message (80 bytes + padding)
 
 __constant__ uint2 _ALIGN(16) c_v[16]; //state
@@ -219,180 +212,7 @@ void quark_blake512_gpu_hash_64(const uint32_t threads, uint2 *const __restrict_
 	}
 }
 
-__device__ __forceinline__
-static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
-//static bool hashbelowtarget(uint32_t *hash, uint32_t *const target)
-{
-	if (hash[7] > target[7])
-		return false;
-	if (hash[7] < target[7])
-		return true;
-	if (hash[6] > target[6])
-		return false;
-	if (hash[6] < target[6])
-		return true;
-
-	if (hash[5] > target[5])
-		return false;
-	if (hash[5] < target[5])
-		return true;
-	if (hash[4] > target[4])
-		return false;
-	if (hash[4] < target[4])
-		return true;
-
-	if (hash[3] > target[3])
-		return false;
-	if (hash[3] < target[3])
-		return true;
-	if (hash[2] > target[2])
-		return false;
-	if (hash[2] < target[2])
-		return true;
-
-	if (hash[1] > target[1])
-		return false;
-	if (hash[1] < target[1])
-		return true;
-	if (hash[0] > target[0])
-		return false;
-
-	return true;
-}
-
-__global__ __launch_bounds__(TPB52_64, 1)
-void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce, uint32_t *resNonces)
-//void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce)
-//void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash)
-{
-	const uint32_t thread = (blockDim.x * blockIdx.x + threadIdx.x);
-
-	if (thread < threads){
-
-		uint2 msg[16];
-
-		uint2x4 *phash = (uint2x4*)&g_hash[thread<<3];
-		uint2x4 *outpt = (uint2x4*)msg;
-		outpt[0] = __ldg4(&phash[0]);
-		outpt[1] = __ldg4(&phash[1]);
-
-		uint2 m[16];
-		m[ 0] = cuda_swab64_U2(msg[0]);
-		m[ 1] = cuda_swab64_U2(msg[1]);
-		m[ 2] = cuda_swab64_U2(msg[2]);
-		m[ 3] = cuda_swab64_U2(msg[3]);
-		m[ 4] = cuda_swab64_U2(msg[4]);
-		m[ 5] = cuda_swab64_U2(msg[5]);
-		m[ 6] = cuda_swab64_U2(msg[6]);
-		m[ 7] = cuda_swab64_U2(msg[7]);
-		m[ 8] = make_uint2(0,0x80000000);
-		m[ 9] = make_uint2(0,0);
-		m[10] = make_uint2(0,0);
-		m[11] = make_uint2(0,0);
-		m[12] = make_uint2(0,0);
-		m[13] = make_uint2(1,0);
-		m[14] = make_uint2(0,0);
-		m[15] = make_uint2(0x200,0);
-
-		uint2 v[16] = {
-			h[0], h[1], h[2], h[3], h[4], h[5], h[6], h[7],
-			z[0], z[1], z[2], z[3], z[4], z[5], z[6], z[7]
-		};
-		v[12].x ^= 512U;
-		v[13].x ^= 512U;
-
-		GS4(0, 4, 8,12, 0, 1,		1, 5, 9,13, 2, 3,		2, 6,10,14, 4, 5,		3, 7,11,15, 6, 7);
-		GS4(0, 5,10,15, 8, 9,		1, 6,11,12,10,11,		2, 7, 8,13,12,13,		3, 4, 9,14,14,15);
-
-		GS4(0, 4, 8, 12, 14, 10,	1, 5, 9, 13, 4, 8,		2, 6, 10, 14, 9, 15,		3, 7, 11, 15, 13, 6);
-		GS4(0, 5, 10, 15, 1, 12,	1, 6, 11, 12, 0, 2,		2, 7, 8, 13, 11, 7,		3, 4, 9, 14, 5, 3);
-
-		GS4(0, 4, 8, 12, 11, 8,		1, 5, 9, 13, 12, 0,		2, 6, 10, 14, 5, 2,		3, 7, 11, 15, 15, 13);
-		GS4(0, 5, 10, 15, 10, 14,	1, 6, 11, 12, 3, 6,		2, 7, 8, 13, 7, 1,		3, 4, 9, 14, 9, 4);
-
-		GS4(0, 4, 8, 12, 7, 9,		1, 5, 9, 13, 3, 1,		2, 6, 10, 14, 13, 12,		3, 7, 11, 15, 11, 14);
-		GS4(0, 5, 10, 15, 2, 6,		1, 6, 11, 12, 5, 10,		2, 7, 8, 13, 4, 0,		3, 4, 9, 14, 15, 8);
-
-		GS4(0, 4, 8, 12, 9, 0,		1, 5, 9, 13, 5, 7,		2, 6, 10, 14, 2, 4,		3, 7, 11, 15, 10, 15);
-		GS4(0, 5, 10, 15, 14, 1,	1, 6, 11, 12, 11, 12,		2, 7, 8, 13, 6, 8,		3, 4, 9, 14, 3, 13);
-
-		GS4(0, 4, 8, 12, 2, 12,		1, 5, 9, 13, 6, 10,		2, 6, 10, 14, 0, 11,		3, 7, 11, 15, 8, 3);
-		GS4(0, 5, 10, 15, 4, 13,	1, 6, 11, 12, 7, 5,		2, 7, 8, 13, 15, 14,		3, 4, 9, 14, 1, 9);
-
-		GS4(0, 4, 8, 12, 12, 5,		1, 5, 9, 13, 1, 15,		2, 6, 10, 14, 14, 13,		3, 7, 11, 15, 4, 10);
-		GS4(0, 5, 10, 15, 0, 7,		1, 6, 11, 12, 6, 3,		2, 7, 8, 13, 9, 2,		3, 4, 9, 14, 8, 11);
-
-		GS4(0, 4, 8, 12, 13, 11,	1, 5, 9, 13, 7, 14,		2, 6, 10, 14, 12, 1,		3, 7, 11, 15, 3, 9);
-		GS4(0, 5, 10, 15, 5, 0,		1, 6, 11, 12, 15, 4,		2, 7, 8, 13, 8, 6,		3, 4, 9, 14, 2, 10);
-
-		GS4(0, 4, 8, 12, 6, 15,		1, 5, 9, 13, 14, 9,		2, 6, 10, 14, 11, 3,		3, 7, 11, 15, 0, 8);
-		GS4(0, 5, 10, 15, 12, 2,	1, 6, 11, 12, 13, 7,		2, 7, 8, 13, 1, 4,		3, 4, 9, 14, 10, 5);
-
-		GS4(0, 4, 8, 12, 10, 2,		1, 5, 9, 13, 8, 4,		2, 6, 10, 14, 7, 6,		3, 7, 11, 15, 1, 5);
-		GS4(0, 5, 10, 15,15,11,		1, 6, 11, 12, 9, 14,		2, 7, 8, 13, 3, 12,		3, 4, 9, 14, 13, 0);
-
-		GS4(0, 4, 8,12, 0, 1,		1, 5, 9,13, 2, 3,		2, 6,10,14, 4, 5,		3, 7,11,15, 6, 7);
-		GS4(0, 5,10,15, 8, 9,		1, 6,11,12,10,11,		2, 7, 8,13,12,13,		3, 4, 9,14,14,15);
-
-		GS4(0, 4, 8, 12, 14, 10,	1, 5, 9, 13, 4, 8,		2, 6, 10, 14, 9, 15,		3, 7, 11, 15, 13, 6);
-		GS4(0, 5, 10, 15, 1, 12,	1, 6, 11, 12, 0, 2,		2, 7, 8, 13, 11, 7,		3, 4, 9, 14, 5, 3);
-
-		GS4(0, 4, 8, 12, 11, 8,		1, 5, 9, 13, 12, 0,		2, 6, 10, 14, 5, 2,		3, 7, 11, 15, 15, 13);
-		GS4(0, 5, 10, 15, 10, 14,	1, 6, 11, 12, 3, 6,		2, 7, 8, 13, 7, 1,		3, 4, 9, 14, 9, 4);
-
-		GS4(0, 4, 8, 12, 7, 9,		1, 5, 9, 13, 3, 1,		2, 6, 10, 14, 13, 12,		3, 7, 11, 15, 11, 14);
-		GS4(0, 5, 10, 15, 2, 6,		1, 6, 11, 12, 5, 10,		2, 7, 8, 13, 4, 0,		3, 4, 9, 14, 15, 8);
-
-		GS4(0, 4, 8, 12, 9, 0,		1, 5, 9, 13, 5, 7,		2, 6, 10, 14, 2, 4,		3, 7, 11, 15, 10, 15);
-		GS4(0, 5, 10, 15, 14, 1,	1, 6, 11, 12, 11, 12,		2, 7, 8, 13, 6, 8,		3, 4, 9, 14, 3, 13);
-
-		GS4(0, 4, 8, 12, 2, 12,		1, 5, 9, 13, 6, 10,		2, 6, 10, 14, 0, 11,		3, 7, 11, 15, 8, 3);
-		GS4(0, 5, 10, 15, 4, 13,	1, 6, 11, 12, 7, 5,		2, 7, 8, 13, 15, 14,		3, 4, 9, 14, 1, 9);
-
-		v[0] = cuda_swab64_U2(xor3x(v[0],h[0],v[ 8]));
-		v[1] = cuda_swab64_U2(xor3x(v[1],h[1],v[ 9]));
-		v[2] = cuda_swab64_U2(xor3x(v[2],h[2],v[10]));
-		v[3] = cuda_swab64_U2(xor3x(v[3],h[3],v[11]));
-		v[4] = cuda_swab64_U2(xor3x(v[4],h[4],v[12]));
-		v[5] = cuda_swab64_U2(xor3x(v[5],h[5],v[13]));
-		v[6] = cuda_swab64_U2(xor3x(v[6],h[6],v[14]));
-		v[7] = cuda_swab64_U2(xor3x(v[7],h[7],v[15]));
-
-/*		uint2* outHash = &g_hash[hashPosition<<3];
-		#pragma unroll 8
-		for(uint32_t i=0;i<8;i++){
-			outHash[i] = v[i];
-		}*/
-		phash[0] = *(uint2x4*)&v[ 0];
-		phash[1] = *(uint2x4*)&v[ 4];
-
-		if (resNonces[0] == UINT32_MAX) {
-			if (hashbelowtarget((uint32_t*)phash, pBlakeTarget))
-				resNonces[0] = (startNounce + thread);
-		}
-	}
-}
-
 // ---------------------------- END CUDA quark_blake512 functions ------------------------------------
-__host__
-uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb, uint32_t startNounce){
-
-	cudaMemset(d_resNonces[thr_id], 0xff, sizeof(uint32_t));
-
-	const dim3 grid((threads + tpb-1)/tpb);
-	const dim3 block(tpb);
-
-	//gpulog(LOG_INFO, thr_id, "Memory set");
-
-	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce, d_resNonces[thr_id]);
-	cudaThreadSynchronize();
-//	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce);
-//	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash);
-	cudaMemcpy(h_resNonces[thr_id], d_resNonces[thr_id], sizeof(uint32_t), cudaMemcpyDeviceToHost);
-	return h_resNonces[thr_id][0];
-	//return UINT32_MAX;
-}
-
 __host__
 void quark_blake512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb){
 
@@ -403,31 +223,10 @@ void quark_blake512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32
 }
 
 __host__
-void quark_blake512_cpu_init_64(const int thr_id, uint32_t threads)
-{
-    CUDA_CALL_OR_RET(cudaMalloc(&d_resNonces[thr_id], 32));
-    CUDA_SAFE_CALL(cudaMallocHost(&h_resNonces[thr_id], 32));
-    init_done = true;
-}
+void quark_blake512_cpu_init_64(const int thr_id, uint32_t threads){}
 
 __host__
-void quark_blake512_cpu_free_64(const int thr_id)
-{
-	if (!init_done) return;
-	cudaFree(d_resNonces[thr_id]);
-	cudaFreeHost(h_resNonces[thr_id]);
-	d_resNonces[thr_id] = NULL;
-	h_resNonces[thr_id] = NULL;
-	init_done = false;
-}
-
-// Target Difficulty
-__host__
-void quark_blake512_check_cpu_setTarget(const void *ptarget)
-{
-	CUDA_SAFE_CALL(cudaMemcpyToSymbol(pBlakeTarget, ptarget, 32, 0, cudaMemcpyHostToDevice));
-	//CUDA_SAFE_CALL(cudaMemcpyToSymbol(pTarget, ptarget, 32, 0, cudaMemcpyDefault));
-}
+void quark_blake512_cpu_free_64(const int thr_id){}
 
 __host__
 uint32_t quark_blake512_calc_tpb_64(const int thr_id) {
