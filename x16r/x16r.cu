@@ -384,7 +384,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 		// No point continuing if we've already been told to restart
 		if (work_restart[thr_id].restart) break;
 
-		//gpulog(LOG_INFO, thr_id, "Pass completed");
+		gpulog(LOG_INFO, thr_id, "Pass completed");
 
 		//work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
 #ifdef _DEBUG
