@@ -260,7 +260,7 @@ static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
 	return true;
 }
 
-__global__ __launch_bounds__(TPB50_64, 1)
+__global__ __launch_bounds__(160, 1)
 void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce, uint32_t *resNonces)
 //void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce)
 //void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash)
