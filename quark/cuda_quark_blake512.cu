@@ -9,13 +9,11 @@
 #include "cuda_vectors.h"
 
 #define TPB52_64 192
-#define TPB50_64 192
+#define TPB50_64 256
 
-__constant__ uint2 _ALIGN(16) c_m[16]; // padded message (80 bytes + padding)
-
-__constant__ uint2 _ALIGN(16) c_v[16]; //state
-
-__constant__ uint2 _ALIGN(16) c_x[128]; //precomputed xors
+//__constant__ uint2 _ALIGN(16) c_m[16]; // padded message (80 bytes + padding)
+//__constant__ uint2 _ALIGN(16) c_v[16]; //state
+//__constant__ uint2 _ALIGN(16) c_x[128]; //precomputed xors
 
 // ---------------------------- BEGIN CUDA quark_blake512 functions ------------------------------------
 
