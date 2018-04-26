@@ -288,6 +288,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 	}
 
 	cuda_check_cpu_setTarget(ptarget);
+	quark_blake512_check_cpu_setTarget(ptarget);
 	//uint32_t resNounce[MAX_GPUS] = {UINT32_MAX} ;
 
 	switch (hashOrder[0]) {
@@ -380,7 +381,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 		gpulog(LOG_INFO, thr_id, "Hash check point");
 
 		//pAlgo64Check[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]], *ptarget, &resNounce );
-		work->nonces[0] = quark_blake512_cpu_hash_64_check(thr_id, throughput, d_hash[thr_id], tpb64[hashOrder[15]], pdata[19], ptarget);
+		work->nonces[0] = quark_blake512_cpu_hash_64_check(thr_id, throughput, d_hash[thr_id], tpb64[hashOrder[15]], pdata[19]);
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
 		// No point continuing if we've already been told to restart

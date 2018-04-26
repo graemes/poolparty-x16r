@@ -11,9 +11,12 @@
 #define TPB52_64 192
 #define TPB50_64 192
 
-// store MAX_GPUS device arrays of 8 nonces
+// store MAX_GPUS device arrays of 8 nounces
+__constant__ uint32_t pTarget[8]; // 32 bytes
+
 static uint32_t* h_resNonces[MAX_GPUS] = { NULL };
 static uint32_t* d_resNonces[MAX_GPUS] = { NULL };
+static __thread bool init_done = false;
 
 __constant__ uint2 _ALIGN(16) c_m[16]; // padded message (80 bytes + padding)
 
@@ -217,8 +220,8 @@ void quark_blake512_gpu_hash_64(const uint32_t threads, uint2 *const __restrict_
 }
 
 __device__ __forceinline__
-//static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
-static bool hashbelowtarget(uint32_t *hash, uint32_t *const target)
+static bool hashbelowtarget(uint32_t *hash, uint32_t *const __restrict__ target)
+//static bool hashbelowtarget(uint32_t *hash, uint32_t *const target)
 {
 	if (hash[7] > target[7])
 		return false;
@@ -258,7 +261,7 @@ static bool hashbelowtarget(uint32_t *hash, uint32_t *const target)
 }
 
 __global__ __launch_bounds__(TPB50_64, 1)
-void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce, uint32_t *ptarget, uint32_t *resNonces)
+void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce, uint32_t *resNonces)
 //void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash, uint32_t startNounce)
 //void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __restrict__ g_hash)
 {
@@ -364,7 +367,7 @@ void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __res
 		phash[1] = *(uint2x4*)&v[ 4];
 
 		if (resNonces[0] == UINT32_MAX) {
-			if (hashbelowtarget((uint32_t*)phash, ptarget))
+			if (hashbelowtarget((uint32_t*)phash, pTarget))
 				resNonces[0] = (startNounce + thread);
 		}
 	}
@@ -372,7 +375,7 @@ void quark_blake512_gpu_hash_64_check(const uint32_t threads, uint2 *const __res
 
 // ---------------------------- END CUDA quark_blake512 functions ------------------------------------
 __host__
-uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb, uint32_t startNounce, uint32_t *ptarget){
+uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb, uint32_t startNounce){
 
 	cudaMemset(d_resNonces[thr_id], 0xff, sizeof(uint32_t));
 
@@ -381,7 +384,7 @@ uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threa
 
 	gpulog(LOG_INFO, thr_id, "Memory set");
 
-	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce, ptarget, d_resNonces[thr_id]);
+	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce, d_resNonces[thr_id]);
 	cudaThreadSynchronize();
 //	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash, startNounce);
 //	quark_blake512_gpu_hash_64_check<<<grid, block>>>(threads, (uint2*)d_outputHash);
@@ -400,10 +403,31 @@ void quark_blake512_cpu_hash_64(const int thr_id, const uint32_t threads, uint32
 }
 
 __host__
-void quark_blake512_cpu_init_64(const int thr_id, uint32_t threads) {}
+void quark_blake512_cpu_init_64(const int thr_id, uint32_t threads)
+{
+    CUDA_CALL_OR_RET(cudaMalloc(&d_resNonces[thr_id], 32));
+    CUDA_SAFE_CALL(cudaMallocHost(&h_resNonces[thr_id], 32));
+    init_done = true;
+}
 
 __host__
-void quark_blake512_cpu_free_64(const int thr_id) {}
+void quark_blake512_cpu_free_64(const int thr_id)
+{
+	if (!init_done) return;
+	cudaFree(d_resNonces[thr_id]);
+	cudaFreeHost(h_resNonces[thr_id]);
+	d_resNonces[thr_id] = NULL;
+	h_resNonces[thr_id] = NULL;
+	init_done = false;
+}
+
+// Target Difficulty
+__host__
+void quark_blake512_check_cpu_setTarget(const void *ptarget)
+{
+	CUDA_SAFE_CALL(cudaMemcpyToSymbol(pTarget, ptarget, 32, 0, cudaMemcpyHostToDevice));
+	//CUDA_SAFE_CALL(cudaMemcpyToSymbol(pTarget, ptarget, 32, 0, cudaMemcpyDefault));
+}
 
 __host__
 uint32_t quark_blake512_calc_tpb_64(const int thr_id) {

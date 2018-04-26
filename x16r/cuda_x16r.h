@@ -103,7 +103,8 @@ static const uint64_t algo80_hashes[] = {
 // ---- 64 byte kernels
 extern void quark_blake512_cpu_init_64(int thr_id, uint32_t threads);
 extern void quark_blake512_cpu_hash_64(int thr_id, uint32_t threads, uint32_t *d_hash, uint32_t tpb);
-extern uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb, uint32_t startNounce, uint32_t *ptarget);
+extern void quark_blake512_check_cpu_setTarget(const void *ptarget);
+extern uint32_t quark_blake512_cpu_hash_64_check(const int thr_id, const uint32_t threads, uint32_t *d_outputHash, const uint32_t tpb, uint32_t startNounce);
 extern uint32_t quark_blake512_calc_tpb_64(int thr_id);
 extern void quark_blake512_cpu_free_64(int thr_id);
 
