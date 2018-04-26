@@ -83,6 +83,28 @@ static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
 	x17_sha512_cpu_hash_64
 };
 
+//static void(*pAlgo64Check[1])(int, uint32_t, uint32_t*, uint32_t, uint32_t*, uint32_t*) =
+//{
+//	quark_blake512_cpu_hash_64_check
+/*
+	quark_bmw512_cpu_hash_64,
+	quark_groestl512_cpu_hash_64,
+	quark_jh512_cpu_hash_64,
+	quark_keccak512_cpu_hash_64,
+	quark_skein512_cpu_hash_64,
+	qubit_luffa512_cpu_hash_64,
+	x11_cubehash512_cpu_hash_64,
+	x11_shavite512_cpu_hash_64,
+	x11_simd512_cpu_hash_64,
+	x11_echo512_cpu_hash_64,
+	x13_hamsi512_cpu_hash_64,
+	x13_fugue512_cpu_hash_64,
+	x14_shabal512_cpu_hash_64,
+	x15_whirlpool512_cpu_hash_64,
+	x17_sha512_cpu_hash_64
+*/
+//};
+
 static void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
 {
 	quark_blake512_cpu_hash_80,
@@ -266,6 +288,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 	}
 
 	cuda_check_cpu_setTarget(ptarget);
+	//uint32_t resNounce[MAX_GPUS] = {UINT32_MAX} ;
 
 	switch (hashOrder[0]) {
 		case BLAKE:
@@ -348,13 +371,16 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 		pAlgo64[hashOrder[12]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[12]]);
 		pAlgo64[hashOrder[13]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[13]]);
 		pAlgo64[hashOrder[14]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[14]]);
-		pAlgo64[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]]);
+		//pAlgo64[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]]);
+
+		//pAlgo64Check[hashOrder[15]](thr_id, throughput, d_hash[thr_id],tpb64[hashOrder[15]], *ptarget, &resNounce );
+		work->nonces[0] = quark_blake512_cpu_hash_64_check(thr_id, throughput, d_hash[thr_id], tpb64[hashOrder[15]], pdata[19], ptarget);
 
 		*hashes_done = pdata[19] - first_nonce + throughput;
 		// No point continuing if we've already been told to restart
 		if (work_restart[thr_id].restart) break;
 
-		work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
+		//work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
 #ifdef _DEBUG
 		uint32_t _ALIGN(64) dhash[8];
 		be32enc(&endiandata[19], pdata[19]);
