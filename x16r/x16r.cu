@@ -287,7 +287,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 		}
 	}
 
-	cuda_check_cpu_setTarget(ptarget);
+	//cuda_check_cpu_setTarget(ptarget);
 	quark_blake512_check_cpu_setTarget(ptarget);
 	//uint32_t resNounce[MAX_GPUS] = {UINT32_MAX} ;
 
