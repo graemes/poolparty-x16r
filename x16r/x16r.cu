@@ -83,28 +83,6 @@ static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
 	x17_sha512_cpu_hash_64
 };
 
-/*
-static void(*pAlgo64Check[1])(int, uint32_t, uint32_t*, uint32_t, uint32_t*, uint32_t*) =
-{
-	quark_blake512_cpu_hash_64_check,
-	quark_bmw512_cpu_hash_64,
-	quark_groestl512_cpu_hash_64,
-	quark_jh512_cpu_hash_64,
-	quark_keccak512_cpu_hash_64,
-	quark_skein512_cpu_hash_64,
-	qubit_luffa512_cpu_hash_64,
-	x11_cubehash512_cpu_hash_64,
-	x11_shavite512_cpu_hash_64,
-	x11_simd512_cpu_hash_64,
-	x11_echo512_cpu_hash_64,
-	x13_hamsi512_cpu_hash_64,
-	x13_fugue512_cpu_hash_64,
-	x14_shabal512_cpu_hash_64,
-	x15_whirlpool512_cpu_hash_64,
-	x17_sha512_cpu_hash_64
-};
-*/
-
 static void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
 {
 	quark_blake512_cpu_hash_80,
