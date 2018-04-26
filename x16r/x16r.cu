@@ -83,10 +83,9 @@ static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
 	x17_sha512_cpu_hash_64
 };
 
-//static void(*pAlgo64Check[1])(int, uint32_t, uint32_t*, uint32_t, uint32_t*, uint32_t*) =
-//{
-//	quark_blake512_cpu_hash_64_check
-/*
+static void(*pAlgo64Check[1])(int, uint32_t, uint32_t*, uint32_t, uint32_t*, uint32_t*) =
+{
+	quark_blake512_cpu_hash_64_check,
 	quark_bmw512_cpu_hash_64,
 	quark_groestl512_cpu_hash_64,
 	quark_jh512_cpu_hash_64,
@@ -102,8 +101,7 @@ static void(*pAlgo64[16])(int, uint32_t, uint32_t*, uint32_t) =
 	x14_shabal512_cpu_hash_64,
 	x15_whirlpool512_cpu_hash_64,
 	x17_sha512_cpu_hash_64
-*/
-//};
+};
 
 static void(*pAlgo80[16])(int, uint32_t, uint32_t, uint32_t*, uint32_t) =
 {
@@ -379,6 +377,8 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 		*hashes_done = pdata[19] - first_nonce + throughput;
 		// No point continuing if we've already been told to restart
 		if (work_restart[thr_id].restart) break;
+
+		gpulog(LOG_INFO, thr_id, "First pass completed");
 
 		work->nonces[0] = cuda_check_hash(thr_id, throughput, pdata[19], d_hash[thr_id]);
 #ifdef _DEBUG
