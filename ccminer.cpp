@@ -145,6 +145,11 @@ int opt_led_mode = 0;
 int opt_cudaschedule = -1;
 static bool opt_keep_clocks = false;
 
+// logging
+FILE *logfilepointer;
+char *logfilename;
+bool opt_logfile = false;
+
 // un-linked to cmdline scrypt options (useless)
 int device_batchsize[MAX_GPUS] = { 0 };
 int device_texturecache[MAX_GPUS] = { 0 };
@@ -283,7 +288,8 @@ Options:\n\
   -b, --api-bind=port   IP:port for the miner API (for example 127.0.0.1:4068), disabled by default\n\
       --api-remote      Allow remote control, like pool switching, imply --api-allow=0/0\n\
       --api-allow=...   IP/mask of the allowed api client(s), 0/0 for all\n\
-      --max-temp=N      Only mine if gpu temp is less than specified value\n\
+      --logfile=FILE    create logfile\n\
+	  --max-temp=N      Only mine if gpu temp is less than specified value\n\
       --max-rate=N[KMG] Only mine if net hashrate is less than specified value\n\
       --max-diff=N      Only mine if net difficulty is less than specified value\n\
                         Can be tuned with --resume-diff=N to set a resume value\n\
@@ -390,6 +396,7 @@ struct option options[] = {
 	{ "plimit", 1, NULL, 1073 },
 	{ "keep-clocks", 0, NULL, 1074 },
 	{ "tlimit", 1, NULL, 1075 },
+	{ "logfile", 1, NULL, 1076},
 	{ "led", 1, NULL, 1080 },
 	{ "max-log-rate", 1, NULL, 1019 },
 #ifdef HAVE_SYSLOG_H
@@ -531,6 +538,7 @@ void proper_exit(int reason)
 #	endif
 	}
 #endif
+	if(opt_logfile) fclose(logfilepointer);
 	free(opt_syslog_pfx);
 	free(opt_api_bind);
 	if (opt_api_allow) free(opt_api_allow);
@@ -2233,8 +2241,7 @@ wait_stratum_url:
 			if (switchn != pool_switch_count) goto pool_switched;
 		}
 		if (!stratum_full) {
-			if (opt_debug)
-				applog(LOG_WARNING, "Stratum connection timed out");
+			if (!opt_quiet) applog(LOG_WARNING, "Stratum connection timed out");
 			s = NULL;
 		} else
 			s = stratum_recv_line(&stratum);
@@ -2663,6 +2670,23 @@ void parse_arg(int key, char *arg)
 			}
 		}
 		break;
+	case 1076: /* --logfile */
+		{
+			if (strlen(arg) > 0) {
+				logfilename = strdup(arg);
+				logfilepointer = fopen(logfilename, "w");
+				if (logfilepointer == NULL) {
+					printf("\nWarning: can't create file %s\nLogging to file is disabled\n", logfilename);
+				}
+				else {
+					printf("\nLogfile = %s\n", logfilename);
+					opt_logfile = true;
+				}
+			}
+			else
+				printf("\nNo logfile name.\nLogging to file is disabled\n ");
+		}
+		break;
 	case 1080: /* --led */
 		{
 			if (!opt_led_mode)
@@ -2822,7 +2846,6 @@ void parse_arg(int key, char *arg)
 			}
 		}
 		break;
-
 	case 'f': // --diff-factor
 		d = atof(arg);
 		if (d <= 0.)

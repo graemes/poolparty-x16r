@@ -40,6 +40,9 @@ extern pthread_mutex_t stratum_sock_lock;
 extern pthread_mutex_t stratum_work_lock;
 extern bool opt_debug_diff;
 
+extern bool opt_logfile;
+extern FILE *logfilepointer;
+
 bool opt_tracegpu = false;
 
 struct data_buffer {
@@ -106,6 +109,7 @@ void applog(int prio, const char *fmt, ...)
 		const char* color = "";
 		const time_t now = time(NULL);
 		char *f;
+		char *fl;
 		int len;
 		struct tm tm;
 
@@ -127,6 +131,28 @@ void applog(int prio, const char *fmt, ...)
 			color = "";
 
 		len = 40 + (int) strlen(fmt) + 2;
+		pthread_mutex_lock(&applog_lock);
+
+		if (opt_logfile)
+		{
+			va_list ap2;
+			va_copy(ap2, ap);
+
+			fl = (char*) alloca(len);
+			sprintf(fl, "[%d-%02d-%02d %02d:%02d:%02d] %s\n",
+					tm.tm_year + 1900,
+					tm.tm_mon + 1,
+					tm.tm_mday,
+					tm.tm_hour,
+					tm.tm_min,
+					tm.tm_sec,
+					fmt
+			);
+			vfprintf(logfilepointer, fl, ap2);	// atomic write to logfile
+			fflush(logfilepointer);
+			va_end(ap2);
+		}
+
 		f = (char*) alloca(len);
 		sprintf(f, "[%d-%02d-%02d %02d:%02d:%02d]%s %s%s\n",
 			tm.tm_year + 1900,
@@ -143,9 +169,10 @@ void applog(int prio, const char *fmt, ...)
 			// no time prefix, for ccminer -n
 			sprintf(f, "%s%s\n", fmt, CL_N);
 		}
-		pthread_mutex_lock(&applog_lock);
-		vfprintf(stdout, f, ap);	/* atomic write to stdout */
+
+		vfprintf(stdout, f, ap);	// atomic write to stdout
 		fflush(stdout);
+
 		pthread_mutex_unlock(&applog_lock);
 	}
 	va_end(ap);

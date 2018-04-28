@@ -371,7 +371,7 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 
 			if (vhash[7] <= Htarg && fulltest(vhash, ptarget)) {
 				work->valid_nonces = 1;
-				// work->nonces[1] = cuda_check_hash_suppl(thr_id, throughput, pdata[19], d_hash[thr_id], 1);
+				work->nonces[1] = cuda_check_hash_suppl(thr_id, throughput, pdata[19], d_hash[thr_id], 1);
 				work_set_target_ratio(work, vhash);
 				if (work->nonces[1] != 0) {
 					be32enc(&endiandata[19], work->nonces[1]);
@@ -379,6 +379,8 @@ extern "C" int scanhash_x16r(const int thr_id, struct work* work, uint32_t max_n
 					bn_set_target_ratio(work, vhash, 1);
 					work->valid_nonces++;
 					pdata[19] = max(work->nonces[0], work->nonces[1]) + 1;
+					if (!opt_quiet) applog(LOG_INFO, "Extra nonce found - Nonce0: %08x ; Nonce1: %08x ",
+							work->nonces[0], work->nonces[1] );
 				} else {
 					pdata[19] = work->nonces[0] + 1; // cursor
 				}

@@ -46,6 +46,9 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir /conf
 VOLUME ["/conf"]
 
+RUN mkdir /log
+VOLUME ["/log"]
+
 RUN groupadd -r miner && useradd --no-log-init -m -g miner miner
 USER miner
 WORKDIR /home/miner

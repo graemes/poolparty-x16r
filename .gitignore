@@ -68,8 +68,8 @@ compat/curl-for-windows/
 *.cudafe1.c
 *.cudafe2.c
 
-#build-*.sh
-#configure-*.sh
+build-*.sh
+configure-*.sh
 releases/
 compiler-output/
 misc/
