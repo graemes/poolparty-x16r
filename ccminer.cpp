@@ -2241,7 +2241,7 @@ wait_stratum_url:
 			if (switchn != pool_switch_count) goto pool_switched;
 		}
 		if (!stratum_full) {
-			if (!opt_quiet) applog(LOG_WARNING, "Stratum connection timed out");
+			//if (!opt_quiet) applog(LOG_WARNING, "Stratum connection timed out");
 			s = NULL;
 		} else
 			s = stratum_recv_line(&stratum);

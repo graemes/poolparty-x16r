@@ -37,6 +37,9 @@ FROM nvidia/cuda:9.1-base
 
 LABEL maintainer="graemes@graemes.com"
 
+ENV UID 8777
+ENV GID 8777
+
 RUN apt-get update && apt-get install -y \
     libcurl3 \
     libjansson4 \
@@ -46,10 +49,11 @@ RUN apt-get update && apt-get install -y \
 RUN mkdir /conf
 VOLUME ["/conf"]
 
+RUN groupadd -r -g ${GID} miner && useradd --no-log-init -m -u ${UID} -g miner miner 
 RUN mkdir /log
+RUN chown -R miner:miner /log
 VOLUME ["/log"]
 
-RUN groupadd -r miner && useradd --no-log-init -m -g miner miner
 USER miner
 WORKDIR /home/miner
 
