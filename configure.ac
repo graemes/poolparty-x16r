@@ -1,4 +1,4 @@
-AC_INIT([poolparty], [1.5.1], [], [poolparty], [https://github.com/graemes/poolparty-x16r])
+AC_INIT([poolparty], [1.6.1], [], [poolparty], [https://github.com/graemes/poolparty-x16r])
 
 AC_PREREQ([2.59c])
 AC_CANONICAL_SYSTEM

@@ -8,8 +8,9 @@
 # ex: docker run -it --rm --runtime=nvidia graemes/poolparty:latest -o cryptopool.party:3636 -u RH4KkDFJV7FuURwrZDyQZoPWAKc4hSHuDU -p x
 #
 
+ARG REPOSITORY 
 # Build
-FROM nvidia/cuda:9.1-devel as builder
+FROM ${REPOSITORY}:9.2-devel as builder
 
 ARG COMPUTE
 
@@ -30,20 +31,25 @@ RUN cd /app/ && \
     rm -f config.status && \
     ./autogen.sh || echo done && \
     ./configure.sh --enable-compute=$COMPUTE && \
-    make -j 8
+    make -j 8 && \
+    gcc --version
 
 # App
-FROM nvidia/cuda:9.1-base
+FROM ${REPOSITORY}:9.2-base
 
-LABEL maintainer="graemes@graemes.com"
+LABEL maintainer="graemes@github"
+
+ENV UID 8777
+ENV GID 8777
 
 ENV UID 8777
 ENV GID 8777
 
 RUN apt-get update && apt-get install -y \
-    libcurl3 \
+    libcurl4 \
     libjansson4 \
     libgomp1 \
+    cuda-nvml-dev-9-2 \
   && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir /conf

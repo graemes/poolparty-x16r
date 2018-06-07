@@ -996,7 +996,7 @@ char *stratum_recv_line(struct stratum_ctx *sctx)
 		bool ret = true;
 		time_t rstart = time(NULL);
 		if (!socket_full(sctx->sock, timeout)) {
-			applog(LOG_ERR, "stratum_recv_line timed out");
+			if (!opt_quiet) applog(LOG_WARNING, "stratum_recv_line timed out");
 			goto out;
 		}
 		do {
@@ -1019,7 +1019,7 @@ char *stratum_recv_line(struct stratum_ctx *sctx)
 		} while (time(NULL) - rstart < timeout && !strstr(sctx->sockbuf, "\n"));
 
 		if (!ret) {
-			if (opt_debug) applog(LOG_ERR, "stratum_recv_line failed");
+			if (!opt_quiet) applog(LOG_WARNING, "stratum_recv_line failed");
 			goto out;
 		}
 	}
